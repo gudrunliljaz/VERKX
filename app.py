@@ -71,12 +71,11 @@ if st.button("Keyra spá"):
                         st.pyplot(fig)
 
             with tabs[1]:
-                st.subheader("Hlaða niður CSV skrá")
 
                 csv = df.to_csv(index=False).encode('utf-8')
 
                 st.download_button(
-                    label="Hlaða niður CSV skránni",
+                    label="Hlaða niður CSV skrá",
                     data=csv,
                     file_name="spa_nidurstodur.csv",
                     mime="text/csv"
