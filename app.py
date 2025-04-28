@@ -45,7 +45,7 @@ with col4:
 
 st.set_page_config(
     page_title="Cubit Spá",
-    page_icon="logo.png",  # Nýja myndin
+    page_icon="assets/logo.png",  # Nýja myndin
     layout="wide"
 )
 
