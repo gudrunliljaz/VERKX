@@ -29,13 +29,12 @@ with st.container():
 
     if st.button("🚀 Keyra spá"):
         try:
-            # HÉR lagaði ég unpack-ið:
             df, figures, used_years = main_forecast_logic(housing_type, region, future_years, final_market_share)
 
             if used_years < future_years:
-                st.warning(f"Aðeins {used_years} ár fundust í framtíðarspá fyrir valin gögn.")
+                st.warning(f"Aðeins {used_years} ár fundust í framtíðarspá — notum bara þau ár.")
 
-            st.subheader("📊 Níðurstöður")
+            st.subheader("📊 Niðurstöður")
             st.dataframe(df.set_index("Ár").style.format("{:.2f}"))
 
             st.subheader("🎯 Monte Carlo dreifing")
@@ -44,6 +43,7 @@ with st.container():
 
         except Exception as e:
             st.error(f"🛑 Villa kom upp: {e}")
+
 
 
 
