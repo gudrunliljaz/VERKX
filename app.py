@@ -45,7 +45,8 @@ with col3:
     future_years = st.number_input("Fjöldi ára fram í tímann:", min_value=1, max_value=1000, value=5)
 
 with col4:
-    final_market_share = st.slider("Markaðshlutdeild:", min_value=0.01, max_value=1.0, value=0.3)
+    market_share_percent = st.slider("Markaðshlutdeild (%):", min_value=1, max_value=100, value=30)
+    final_market_share = market_share_percent / 100
 
 
 # Keyra spá takki
