@@ -53,10 +53,10 @@ if st.button("Keyra spá"):
                 st.warning(f"Aðeins {used_years} ár fundust í framtíðarspá — notum bara þau ár.")
 
             # Flipar: Niðurstöður og Hlaða niður
-            tabs = st.tabs(["Niðurstöður", "Hlaða niður"])
+            tabs = st.tabs(["Niðurstöður", "Vista niðurstöður"])
 
             with tabs[0]:
-                st.subheader("Niðurstöður Tafla")
+                st.subheader("Niðurstöður")
                 st.dataframe(df.set_index("Ár").style.format("{:.2f}"))
 
                 st.subheader("Monte Carlo dreifing")
@@ -66,7 +66,7 @@ if st.button("Keyra spá"):
                         st.pyplot(fig)
 
             with tabs[1]:
-                st.subheader("Hlaða niður CSV")
+                st.subheader("Hlaða niður CSV skrá")
 
                 csv = df.to_csv(index=False).encode('utf-8')
 
