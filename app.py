@@ -25,7 +25,7 @@ st.markdown("---")
 col1, col2 = st.columns(2)
 
 with col1:
-    housing_options = ["Íbúðir", "Leikskólar", "Gistirými", "Elliheimili", "Atvinnuhúsnæði"]
+    housing_options = ["Íbúðir", "Leikskólar", "Gistirými", "Elliheimili", "Atvinnuhús"]
     housing_type = st.selectbox("Hvaða tegund húsnæðis viltu skoða?", housing_options)
 
 with col2:
