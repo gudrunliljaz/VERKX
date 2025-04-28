@@ -41,14 +41,15 @@ def monte_carlo_simulation(values, market_shares, simulations=10000, volatility=
     return np.array(results)
 
 def plot_distribution(sim_data, title):
-    fig, ax = plt.subplots(figsize=(6, 4))
+    fig, ax = plt.subplots(figsize=(5, 3))  # Minni myndir
     totals = np.sum(sim_data, axis=1)
     ax.hist(totals, bins=40, alpha=0.7, edgecolor='black')
-    ax.set_title(title)
+    ax.set_title(title, fontsize=14, color='#003366')  # Dökkblár titill
     ax.set_xlabel("Heildar spáð þörf")
     ax.set_ylabel("Tíðni")
     plt.tight_layout()
     return fig
+
 
 def main_forecast_logic(housing_type, region, future_years, final_market_share):
     sheet_name = f"{housing_type} eftir landshlutum"
