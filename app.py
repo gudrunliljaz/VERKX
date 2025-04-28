@@ -56,7 +56,7 @@ if st.button("Keyra spá"):
             tabs = st.tabs(["Niðurstöður", "Vista niðurstöður"])
 
             with tabs[0]:
-                st.subheader("Niðurstöður")
+                st.subheader("Einingar")
                 st.dataframe(df.set_index("Ár").style.format("{:.2f}"))
 
                 st.subheader("Monte Carlo dreifing")
