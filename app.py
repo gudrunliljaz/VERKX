@@ -24,7 +24,7 @@ region_options = [
 ]
 region = st.selectbox("Hvaða landshluta?", region_options)
 
-future_years = st.number_input("Fjöldi ára fram í tímann:", min_value=1, max_value=500, value=5)
+future_years = st.number_input("Fjöldi ára fram í tímann:", min_value=1, max_value=100, value=5)
 final_market_share = st.slider("Markaðshlutdeild:", min_value=0.01, max_value=1.0, value=0.3)
 
 # --- Keyra spá ---
