@@ -7,7 +7,7 @@ from verkx_code import load_excel, filter_data, linear_forecast, monte_carlo_sim
 st.set_page_config(page_title="Cubit spá", layout="wide")
 
 st.markdown(
-    "<h1 style='text-align: center; color: #4CAF50;'>📈 Cubit Spá</h1>",
+    "<h1 style='text-align: center; color: #001F54;'>Cubit Spá</h1>",
     unsafe_allow_html=True
 )
 
