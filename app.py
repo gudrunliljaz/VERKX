@@ -4,30 +4,21 @@ import numpy as np
 import io
 from verkx_code import main_forecast_logic
 
-# Set page config
-st.set_page_config(page_title="Cubit spá", layout="wide", page_icon="📊")
+# Stillum síðuna
+st.set_page_config(page_title="Cubit Spá", layout="wide")
 
-# Custom CSS
+# Custom stíll fyrir dökkbláan titil
 st.markdown("""
     <style>
-    .stSlider > div > div > div > div {
-        background: #add8e6;  /* Ljósblár slider */
-    }
-    div.stButton > button {
-        background-color: #add8e6; /* Ljósblár takki */
-        color: black;
-        font-weight: bold;
-        border: none;
-        height: 3em;
-        width: 100%;
-        font-size: 18px;
-        border-radius: 10px;
+    h1 {
+        color: #003366;
+        text-align: center;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Titill
-st.markdown("<h1 style='text-align: center; color: #4CAF50;'>📈 Cubit Spá</h1>", unsafe_allow_html=True)
+# Dökkblár titill
+st.markdown("<h1>Cubit Spá</h1>", unsafe_allow_html=True)
 st.markdown("---")
 
 # Valmöguleikar
@@ -52,48 +43,43 @@ with col3:
 with col4:
     final_market_share = st.slider("Markaðshlutdeild:", min_value=0.01, max_value=1.0, value=0.3)
 
-# Takki til að keyra spá
-if st.button("🚀 Keyra spá"):
-    with st.spinner('🔄 Reikna spá, vinsamlegast bíðið...'):
+# Keyra spá takki
+if st.button("Keyra spá"):
+    with st.spinner('Reikna spá, vinsamlegast bíðið...'):
         try:
             df, figures, used_years = main_forecast_logic(housing_type, region, future_years, final_market_share)
 
             if used_years < future_years:
                 st.warning(f"Aðeins {used_years} ár fundust í framtíðarspá — notum bara þau ár.")
 
-            # Flipar (Tabs) fyrir niðurstöður og niðurhal
-            tabs = st.tabs(["📊 Niðurstöður", "📥 Hlaða niður"])
+            # Flipar: Niðurstöður og Hlaða niður
+            tabs = st.tabs(["Niðurstöður", "Hlaða niður"])
 
             with tabs[0]:
-                st.subheader("📊 Niðurstöður Tafla")
+                st.subheader("Niðurstöður Tafla")
                 st.dataframe(df.set_index("Ár").style.format("{:.2f}"))
 
-                st.subheader("🎯 Monte Carlo dreifing")
-
-                # Myndir hlið við hlið
+                st.subheader("Monte Carlo dreifing")
                 img_cols = st.columns(len(figures))
-
                 for col, fig in zip(img_cols, figures):
                     with col:
                         st.pyplot(fig)
 
             with tabs[1]:
-                st.subheader("📥 Sækja niðurstöður sem Excel")
+                st.subheader("Hlaða niður CSV")
 
-                buffer = io.BytesIO()
-                with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-                    df.to_excel(writer, index=False)
-                    writer.save()
+                csv = df.to_csv(index=False).encode('utf-8')
 
                 st.download_button(
-                    label="📥 Hlaða niður spá niðurstöðum",
-                    data=buffer,
-                    file_name="spa_nidurstodur.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    label="Hlaða niður CSV skránni",
+                    data=csv,
+                    file_name="spa_nidurstodur.csv",
+                    mime="text/csv"
                 )
 
         except Exception as e:
-            st.error(f"🛑 Villa kom upp: {e}")
+            st.error(f"Villa kom upp: {e}")
+
 
 
 
