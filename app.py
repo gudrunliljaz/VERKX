@@ -1,146 +1,119 @@
-import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from verkx_code import load_excel, filter_data, linear_forecast, monte_carlo_simulation, PAST_FILE, FUTURE_FILE
+from sklearn.linear_model import LinearRegression
 
-st.set_page_config(page_title="Cubit spá", layout="wide")
+PAST_FILE = "data/GÖGN_VERKX.xlsx"
+FUTURE_FILE = "data/Framtíðarspá.xlsx"
 
-st.markdown(
-    "<h1 style='text-align: center; color: #001F54;'>Cubit Spá</h1>",
-    unsafe_allow_html=True
-)
+def load_excel(file_path, sheet_name):
+    df = pd.read_excel(file_path, sheet_name=sheet_name, engine="openpyxl")
+    df.columns = [col.strip().lower() for col in df.columns]
+    return df
 
-st.markdown("---")
+def filter_data(df, region, demand_column):
+    df = df[df['landshluti'].str.strip() == region.strip()].copy()
+    df.columns = [col.strip().lower() for col in df.columns]
+    demand_column = demand_column.lower()
+    if demand_column not in df.columns:
+        raise KeyError(f"Dálkur '{demand_column}' fannst ekki.")
+    df['ar'] = pd.to_numeric(df['ar'], errors='coerce')
+    df = df.dropna(subset=['ar', demand_column])
+    df = df.sort_values('ar')
+    return df[['ar', demand_column]]
 
-housing_options = ["Íbúðir", "Leikskólar", "Gistirými", "Elliheimili", "Atvinnuhúsnæði"]
-housing_type = st.selectbox("Hvaða tegund húsnæðis viltu skoða?", housing_options)
+def linear_forecast(df, demand_column, start_year, future_years):
+    X = df[['ar']].values
+    y = df[demand_column].values
+    model = LinearRegression().fit(X, y)
+    future_years_range = np.array(range(start_year, start_year + future_years))
+    predictions = model.predict(future_years_range.reshape(-1, 1))
+    return future_years_range, predictions
 
-region_options = [
-    "Höfuðborgarsvæðið", "Suðurnes", "Vesturland", "Vestfirðir", 
-    "Norðurland vestra", "Norðurland eystra", "Austurland", "Suðurland"
-]
-region = st.selectbox("Hvaða landshluta?", region_options)
+def monte_carlo_simulation(values, market_shares, simulations=10000, volatility=0.1):
+    mean_val = np.mean(values)
+    scale = abs(mean_val * volatility)
+    results = []
+    for _ in range(simulations):
+        noise = np.random.normal(0, scale, len(values))
+        simulated = (values + noise) * market_shares
+        results.append(simulated)
+    return np.array(results)
 
-future_years = st.number_input("Fjöldi ára fram í tímann:", min_value=1, max_value=500, value=5)
-final_market_share = st.slider("Markaðshlutdeild:", min_value=0.01, max_value=1.0, value=0.3)
+def plot_distribution(sim_data, title):
+    fig, ax = plt.subplots(figsize=(6, 4))
+    totals = np.sum(sim_data, axis=1)
+    ax.hist(totals, bins=40, alpha=0.7, edgecolor='black')
+    ax.set_title(title)
+    ax.set_xlabel("Heildar spáð þörf")
+    ax.set_ylabel("Tíðni")
+    plt.tight_layout()
+    return fig
 
-if st.button("Keyra spá"):
-    with st.spinner('Reikna spá...'):
-        try:
-            sheet_name = f"{housing_type} eftir landshlutum"
-            past_df = load_excel(PAST_FILE, sheet_name)
-            past_data = filter_data(past_df, region, 'fjoldi eininga')
+def main_forecast_logic(housing_type, region, future_years, final_market_share):
+    sheet_name = f"{housing_type} eftir landshlutum"
+    use_forecast = housing_type.lower() in ["íbúðir", "leikskólar"]
 
-            use_forecast = housing_type.lower() in ["íbúðir", "leikskólar"]
-            start_year = 2025
+    past_df = load_excel(PAST_FILE, sheet_name)
+    demand_column = 'fjoldi eininga'
+    past_data = filter_data(past_df, region, demand_column)
 
-            if past_data.empty:
-                st.error("Engin fortíðargögn fundust fyrir valinn landshluta.")
-            else:
-                initial_share = final_market_share * np.random.uniform(0.05, 0.1)
-                market_shares = np.linspace(initial_share, final_market_share, future_years)
+    if past_data.empty:
+        raise ValueError("Engin fortíðargögn fundust fyrir valinn landshluta.")
 
-                if use_forecast:
-                    future_df = load_excel(FUTURE_FILE, sheet_name)
-                    if 'sviðsmynd' in future_df.columns:
-                        future_df = future_df[future_df['sviðsmynd'].str.lower() == 'miðspá']
+    initial_share = final_market_share * np.random.uniform(0.05, 0.1)
+    market_shares = np.linspace(initial_share, final_market_share, future_years)
 
-                    future_df['ar'] = pd.to_numeric(future_df['ar'], errors='coerce')
-                    future_data = filter_data(future_df, region, 'fjoldi eininga')
-                    future_data = future_data[future_data['ar'] >= 2025]
+    if use_forecast:
+        future_df = load_excel(FUTURE_FILE, sheet_name)
+        if 'sviðsmynd' in future_df.columns:
+            future_df = future_df[future_df['sviðsmynd'].str.lower() == 'miðspá']
 
-                    if future_data.empty:
-                        st.warning("Engin framtíðarspágögn fundust. Notum aðeins fortíðargögn.")
-                        use_forecast = False
-                    else:
-                        future_vals = future_data['fjoldi eininga'].values[:future_years]
-                        future_years_vals = future_data['ar'].values[:future_years]
+        future_df['ar'] = pd.to_numeric(future_df['ar'], errors='coerce')
+        future_data = filter_data(future_df, region, demand_column)
+        future_data = future_data[future_data['ar'] > past_data['ar'].max()]
 
-                linear_years, linear_pred = linear_forecast(past_data, 'fjoldi eininga', start_year, future_years)
-                linear_pred_adj = linear_pred * market_shares
+        future_vals = future_data['fjoldi eininga'].values[:future_years]
+        future_years_vals = future_data['ar'].values[:future_years]
 
-                if use_forecast and len(future_vals) >= future_years:
-                    avg_vals = (linear_pred + future_vals) / 2
+        linear_years, linear_pred = linear_forecast(past_data, demand_column, start_year=2025, future_years=future_years)
+        linear_pred = linear_pred[:len(future_vals)]
 
-                    future_vals_adj = future_vals * market_shares
-                    avg_vals_adj = avg_vals * market_shares
+        avg_vals = (linear_pred + future_vals) / 2
 
-                    df_results = pd.DataFrame({
-                        "Ár": future_years_vals,
-                        "Fortíðargreining": linear_pred_adj,
-                        "Framtíðarspá": future_vals_adj,
-                        "Meðaltal": avg_vals_adj
-                    })
+        linear_pred_adj = linear_pred * market_shares
+        future_vals_adj = future_vals * market_shares
+        avg_vals_adj = avg_vals * market_shares
 
-                    st.success("Spá lokið!")
+        df = pd.DataFrame({
+            'Ár': future_years_vals,
+            'Fortíðargögn spá': linear_pred_adj,
+            'Framtíðarspá': future_vals_adj,
+            'Meðaltal': avg_vals_adj
+        })
 
-                    st.subheader("Niðurstöður")
-                    st.dataframe(df_results.set_index("Ár").style.format("{:.2f}"))
+        figures = [
+            plot_distribution(monte_carlo_simulation(linear_pred, market_shares), "Monte Carlo - Fortíðargögn"),
+            plot_distribution(monte_carlo_simulation(future_vals, market_shares), "Monte Carlo - Framtíðarspá"),
+            plot_distribution(monte_carlo_simulation(avg_vals, market_shares), "Monte Carlo - Meðaltal")
+        ]
 
-                    csv = df_results.to_csv(index=False).encode('utf-8')
-                    st.download_button(
-                        "Hlaða niður niðurstöðum (CSV)",
-                        data=csv,
-                        file_name='spá_cubit.csv',
-                        mime='text/csv'
-                    )
+        return df, figures
 
-                    # Monte Carlo hermun
-                    sim_past = monte_carlo_simulation(linear_pred, market_shares)
-                    sim_future = monte_carlo_simulation(future_vals, market_shares)
-                    sim_avg = monte_carlo_simulation(avg_vals, market_shares)
+    else:
+        linear_years, linear_pred = linear_forecast(past_data, demand_column, start_year=2025, future_years=future_years)
+        past_pred_adj = linear_pred * market_shares
 
-                    st.subheader("Monte Carlo dreifing")
-                    col1, col2, col3 = st.columns(3)
+        df = pd.DataFrame({
+            'Ár': linear_years,
+            'Spá útfrá fortíðargögnum': past_pred_adj
+        })
 
-                    with col1:
-                        fig1, ax1 = plt.subplots()
-                        ax1.hist(np.sum(sim_past, axis=1), bins=40, alpha=0.7, edgecolor='black')
-                        ax1.set_title("Fortíðargreining")
-                        st.pyplot(fig1)
+        figures = [
+            plot_distribution(monte_carlo_simulation(linear_pred, market_shares), "Monte Carlo - Fortíðargögn")
+        ]
 
-                    with col2:
-                        fig2, ax2 = plt.subplots()
-                        ax2.hist(np.sum(sim_future, axis=1), bins=40, alpha=0.7, edgecolor='black')
-                        ax2.set_title("Framtíðarspá")
-                        st.pyplot(fig2)
+        return df, figures
 
-                    with col3:
-                        fig3, ax3 = plt.subplots()
-                        ax3.hist(np.sum(sim_avg, axis=1), bins=40, alpha=0.7, edgecolor='black')
-                        ax3.set_title("Meðaltal")
-                        st.pyplot(fig3)
-
-                else:
-                    df_results = pd.DataFrame({
-                        "Ár": linear_years,
-                        "Fortíðargreining": linear_pred_adj
-                    })
-
-                    st.success("Spá lokið!")
-
-                    st.subheader("Spá niðurstöður (bara fortíðargreining)")
-                    st.dataframe(df_results.set_index("Ár").style.format("{:.2f}"))
-
-                    csv = df_results.to_csv(index=False).encode('utf-8')
-                    st.download_button(
-                        "Hlaða niður niðurstöðum (CSV)",
-                        data=csv,
-                        file_name='spá_cubit.csv',
-                        mime='text/csv'
-                    )
-
-                    # Hér laga ég það sem vantaði:
-                    sim_past = monte_carlo_simulation(linear_pred, market_shares)
-
-                    st.subheader("Monte Carlo dreifing")
-                    fig, ax = plt.subplots()
-                    ax.hist(np.sum(sim_past, axis=1), bins=40, alpha=0.7, edgecolor='black')
-                    ax.set_title("Fortíðargreining")
-                    st.pyplot(fig)
-
-        except Exception as e:
-            st.error(f"Villa kom upp: {e}")
 
 
