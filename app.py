@@ -1,16 +1,10 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
 from verkx_code import main_forecast_logic
 
 st.set_page_config(page_title="Cubit spá", layout="wide", page_icon="📊")
 
 with st.container():
-    st.markdown(
-        "<h1 style='text-align: center; color: #4CAF50;'>📈 Cubit Spá</h1>",
-        unsafe_allow_html=True
-    )
-    st.markdown("---")
+    st.title("📈 Cubit Spá")
 
     col1, col2 = st.columns(2)
 
@@ -20,7 +14,7 @@ with st.container():
 
     with col2:
         region_options = [
-            "Höfuðborgarsvæðið", "Suðurnes", "Vesturland", "Vestfirðir",
+            "Höfuðborgarsvæðið", "Suðurnes", "Vesturland", "Vestfirðir", 
             "Norðurland vestra", "Norðurland eystra", "Austurland", "Suðurland"
         ]
         region = st.selectbox("Hvaða landshluta?", region_options)
@@ -35,29 +29,18 @@ with st.container():
 
     if st.button("🚀 Keyra spá"):
         try:
+            # HÉR lagaði ég unpack-ið:
             df, figures, used_years = main_forecast_logic(housing_type, region, future_years, final_market_share)
 
             if used_years < future_years:
-                st.warning(
-                    f"Aðeins {used_years} ár voru í boði í framtíðarspá fyrir \"{housing_type}\" í \"{region}\". "
-                    f"Spáin var stillt sjálfkrafa á {used_years} ár."
-                )
+                st.warning(f"Aðeins {used_years} ár fundust í framtíðarspá fyrir valin gögn.")
 
-            st.subheader("📊 Niðurstöður")
+            st.subheader("📊 Níðurstöður")
             st.dataframe(df.set_index("Ár").style.format("{:.2f}"))
 
             st.subheader("🎯 Monte Carlo dreifing")
             for fig in figures:
                 st.pyplot(fig)
-
-            # Download hnappur
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                "📥 Hlaða niður niðurstöðum (CSV)",
-                data=csv,
-                file_name="spá_niðurstöður.csv",
-                mime="text/csv"
-            )
 
         except Exception as e:
             st.error(f"🛑 Villa kom upp: {e}")
