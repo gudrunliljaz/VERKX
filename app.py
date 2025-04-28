@@ -42,7 +42,7 @@ with col2:
 col3, col4 = st.columns(2)
 
 with col3:
-    future_years = st.number_input("Fjöldi ára fram í tímann:", min_value=1, max_value=50, value=5)
+    future_years = st.number_input("Fjöldi ára fram í tímann:", min_value=1, max_value=1000, value=5)
 
 with col4:
     final_market_share = st.slider("Markaðshlutdeild:", min_value=0.01, max_value=1.0, value=0.3)
