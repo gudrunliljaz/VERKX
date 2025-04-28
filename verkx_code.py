@@ -1,5 +1,3 @@
-### verkx_code.py
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -69,12 +67,12 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
     if use_forecast:
         future_df = load_excel(FUTURE_FILE, sheet_name)
         if 'sviðsmynd' in future_df.columns:
-            future_df = future_df[future_df['sviðsmynd'].str.lower() == 'íðspá']
+            future_df = future_df[future_df['sviðsmynd'].str.lower() == 'miðspá']
 
         future_df['ar'] = pd.to_numeric(future_df['ar'], errors='coerce')
         future_data = filter_data(future_df, region, demand_column)
-
         future_data = future_data[future_data['ar'] > past_data['ar'].max()]
+
         future_vals = future_data['fjoldi eininga'].values[:future_years]
         future_years_vals = future_data['ar'].values[:future_years]
 
@@ -87,7 +85,6 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
         future_vals_adj = future_vals * market_shares
         avg_vals_adj = avg_vals * market_shares
 
-        import pandas as pd
         df = pd.DataFrame({
             'Ár': future_years_vals,
             'Fortíðargögn spá': linear_pred_adj,
@@ -95,10 +92,11 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
             'Meðaltal': avg_vals_adj
         })
 
-        figures = []
-        figures.append(plot_distribution(monte_carlo_simulation(linear_pred, market_shares), "Monte Carlo - Fortíðargögn"))
-        figures.append(plot_distribution(monte_carlo_simulation(future_vals, market_shares), "Monte Carlo - Framtíðarspá"))
-        figures.append(plot_distribution(monte_carlo_simulation(avg_vals, market_shares), "Monte Carlo - Meðaltal"))
+        figures = [
+            plot_distribution(monte_carlo_simulation(linear_pred, market_shares), "Monte Carlo - Fortíðargögn"),
+            plot_distribution(monte_carlo_simulation(future_vals, market_shares), "Monte Carlo - Framtíðarspá"),
+            plot_distribution(monte_carlo_simulation(avg_vals, market_shares), "Monte Carlo - Meðaltal")
+        ]
 
         return df, figures
 
@@ -111,58 +109,12 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
             'Spá útfrá fortíðargögnum': past_pred_adj
         })
 
-        figures = []
-        figures.append(plot_distribution(monte_carlo_simulation(linear_pred, market_shares), "Monte Carlo - Fortíðargögn"))
+        figures = [
+            plot_distribution(monte_carlo_simulation(linear_pred, market_shares), "Monte Carlo - Fortíðargögn")
+        ]
 
         return df, figures
 
-
-### app.py
-
-import streamlit as st
-import pandas as pd
-import numpy as np
-from verkx_code import main_forecast_logic
-
-st.set_page_config(page_title="Cubit spá", layout="wide", page_icon="📊")
-
-with st.container():
-    st.title("Cubit spá")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        housing_options = ["Íbúðir", "Leikskólar", "Gistirými", "Elliheimili", "Atvinnuhúsnæði"]
-        housing_type = st.selectbox("Hvaða tegund húsnæðis viltu skoða?", housing_options)
-
-    with col2:
-        region_options = [
-            "Höfuðborgarsvæðið", "Suðurnes", "Vesturland", "Vestfirðir", 
-            "Norðurland vestra", "Norðurland eystra", "Austurland", "Suðurland"
-        ]
-        region = st.selectbox("Hvaða landshluta?", region_options)
-
-    col3, col4 = st.columns(2)
-
-    with col3:
-        future_years = st.number_input("Fjöldi ára fram í tímann:", min_value=1, max_value=50, value=5)
-
-    with col4:
-        final_market_share = st.slider("Markaðshlutdeild:", min_value=0.01, max_value=1.0, value=0.3)
-
-    if st.button("Keyra spá"):
-        try:
-            df, figures = main_forecast_logic(housing_type, region, future_years, final_market_share)
-
-            st.subheader("Níðurstöður")
-            st.dataframe(df.set_index("Ár").style.format("{:.2f}"))
-
-            st.subheader("Monte Carlo dreifing")
-            for fig in figures:
-                st.pyplot(fig)
-
-        except Exception as e:
-            st.error(f"🛑 Villa kom upp: {e}")
 
 
 
