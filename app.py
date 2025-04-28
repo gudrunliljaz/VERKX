@@ -6,15 +6,13 @@ from verkx_code import load_excel, filter_data, linear_forecast, monte_carlo_sim
 
 st.set_page_config(page_title="Cubit spá", layout="wide")
 
-# --- Falleg fyrirsögn ---
 st.markdown(
-    "<h1 style='text-align: center; color: #4CAF50;'>Cubit Spá</h1>",
+    "<h1 style='text-align: center; color: #4CAF50;'>📈 Cubit Spá</h1>",
     unsafe_allow_html=True
 )
 
 st.markdown("---")
 
-# --- Inntak notanda ---
 housing_options = ["Íbúðir", "Leikskólar", "Gistirými", "Elliheimili", "Atvinnuhúsnæði"]
 housing_type = st.selectbox("Hvaða tegund húsnæðis viltu skoða?", housing_options)
 
@@ -24,11 +22,10 @@ region_options = [
 ]
 region = st.selectbox("Hvaða landshluta?", region_options)
 
-future_years = st.number_input("Fjöldi ára fram í tímann:", min_value=1, max_value=100, value=5)
+future_years = st.number_input("Fjöldi ára fram í tímann:", min_value=1, max_value=50, value=5)
 final_market_share = st.slider("Markaðshlutdeild:", min_value=0.01, max_value=1.0, value=0.3)
 
-# --- Keyra spá ---
-if st.button("Keyra spá"):
+if st.button("🚀 Keyra spá"):
     with st.spinner('Reikna spá...'):
         try:
             sheet_name = f"{housing_type} eftir landshlutum"
@@ -39,7 +36,7 @@ if st.button("Keyra spá"):
             start_year = 2025
 
             if past_data.empty:
-                st.error("Engin fortíðargögn fundust fyrir valinn landshluta.")
+                st.error("❌ Engin fortíðargögn fundust fyrir valinn landshluta.")
             else:
                 initial_share = final_market_share * np.random.uniform(0.05, 0.1)
                 market_shares = np.linspace(initial_share, final_market_share, future_years)
@@ -54,18 +51,18 @@ if st.button("Keyra spá"):
                     future_data = future_data[future_data['ar'] >= 2025]
 
                     if future_data.empty:
-                        st.warning("Engin framtíðarspágögn fundust. Notum aðeins fortíðargögn.")
+                        st.warning("⚠️ Engin framtíðarspágögn fundust. Notum aðeins fortíðargögn.")
                         use_forecast = False
                     else:
                         future_vals = future_data['fjoldi eininga'].values[:future_years]
                         future_years_vals = future_data['ar'].values[:future_years]
 
                 linear_years, linear_pred = linear_forecast(past_data, 'fjoldi eininga', start_year, future_years)
+                linear_pred_adj = linear_pred * market_shares
 
                 if use_forecast and len(future_vals) >= future_years:
                     avg_vals = (linear_pred + future_vals) / 2
 
-                    linear_pred_adj = linear_pred * market_shares
                     future_vals_adj = future_vals * market_shares
                     avg_vals_adj = avg_vals * market_shares
 
@@ -76,21 +73,20 @@ if st.button("Keyra spá"):
                         "Meðaltal": avg_vals_adj
                     })
 
-                    st.success("Spá lokið!")
+                    st.success("✅ Spá lokið!")
 
                     st.subheader("Niðurstöður")
                     st.dataframe(df_results.set_index("Ár").style.format("{:.2f}"))
 
-                    # --- Download hnappur ---
                     csv = df_results.to_csv(index=False).encode('utf-8')
                     st.download_button(
-                        "Hlaða niður niðurstöðum (CSV)",
+                        "📥 Hlaða niður niðurstöðum (CSV)",
                         data=csv,
                         file_name='spá_cubit.csv',
                         mime='text/csv'
                     )
 
-                    # --- Monte Carlo myndir ---
+                    # Monte Carlo hermun
                     sim_past = monte_carlo_simulation(linear_pred, market_shares)
                     sim_future = monte_carlo_simulation(future_vals, market_shares)
                     sim_avg = monte_carlo_simulation(avg_vals, market_shares)
@@ -117,25 +113,26 @@ if st.button("Keyra spá"):
                         st.pyplot(fig3)
 
                 else:
-                    linear_pred_adj = linear_pred * market_shares
                     df_results = pd.DataFrame({
                         "Ár": linear_years,
                         "Fortíðargreining": linear_pred_adj
                     })
 
-                    st.success("Spá lokið!")
+                    st.success("✅ Spá lokið!")
 
                     st.subheader("Spá niðurstöður (bara fortíðargreining)")
                     st.dataframe(df_results.set_index("Ár").style.format("{:.2f}"))
 
-                    # --- Download hnappur ---
                     csv = df_results.to_csv(index=False).encode('utf-8')
                     st.download_button(
-                        "Hlaða niður niðurstöðum (CSV)",
+                        "📥 Hlaða niður niðurstöðum (CSV)",
                         data=csv,
                         file_name='spá_cubit.csv',
                         mime='text/csv'
                     )
+
+                    # Hér laga ég það sem vantaði:
+                    sim_past = monte_carlo_simulation(linear_pred, market_shares)
 
                     st.subheader("Monte Carlo dreifing")
                     fig, ax = plt.subplots()
@@ -144,6 +141,6 @@ if st.button("Keyra spá"):
                     st.pyplot(fig)
 
         except Exception as e:
-            st.error(f"Villa kom upp: {e}")
+            st.error(f"❌ Villa kom upp: {e}")
 
 
