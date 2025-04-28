@@ -4,8 +4,12 @@ import numpy as np
 import io
 from verkx_code import main_forecast_logic
 
-# Stillum síðuna
-st.set_page_config(page_title="Cubit Spá", layout="wide")
+st.set_page_config(
+    page_title="Cubit Spá",
+    page_icon="assets/logo.png",  # Nýja myndin
+    layout="wide"
+)
+
 
 # Custom stíll fyrir dökkbláan titil
 st.markdown("""
@@ -43,11 +47,6 @@ with col3:
 with col4:
     final_market_share = st.slider("Markaðshlutdeild:", min_value=0.01, max_value=1.0, value=0.3)
 
-st.set_page_config(
-    page_title="Cubit Spá",
-    page_icon="assets/logo.png",  # Nýja myndin
-    layout="wide"
-)
 
 # Keyra spá takki
 if st.button("Keyra spá"):
