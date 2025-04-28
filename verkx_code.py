@@ -62,7 +62,6 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
         raise ValueError("Engin fortíðargögn fundust fyrir valinn landshluta.")
 
     initial_share = final_market_share * np.random.uniform(0.05, 0.1)
-    market_shares = np.linspace(initial_share, final_market_share, future_years)
 
     if use_forecast:
         future_df = load_excel(FUTURE_FILE, sheet_name)
@@ -73,11 +72,18 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
         future_data = filter_data(future_df, region, demand_column)
         future_data = future_data[future_data['ar'] > past_data['ar'].max()]
 
-        future_vals = future_data['fjoldi eininga'].values[:future_years]
-        future_years_vals = future_data['ar'].values[:future_years]
+        available_years = min(len(future_data), future_years)
 
-        linear_years, linear_pred = linear_forecast(past_data, demand_column, start_year=2025, future_years=future_years)
-        linear_pred = linear_pred[:len(future_vals)]
+        if available_years == 0:
+            raise ValueError("Engin framtíðarspágögn tiltæk fyrir valinn landshluta.")
+
+        future_vals = future_data['fjoldi eininga'].values[:available_years]
+        future_years_vals = future_data['ar'].values[:available_years]
+
+        linear_years, linear_pred = linear_forecast(past_data, demand_column, start_year=2025, future_years=available_years)
+        linear_pred = linear_pred[:available_years]
+
+        market_shares = np.linspace(initial_share, final_market_share, available_years)
 
         avg_vals = (linear_pred + future_vals) / 2
 
@@ -98,10 +104,12 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
             plot_distribution(monte_carlo_simulation(avg_vals, market_shares), "Monte Carlo - Meðaltal")
         ]
 
-        return df, figures
+        return df, figures, available_years
 
     else:
         linear_years, linear_pred = linear_forecast(past_data, demand_column, start_year=2025, future_years=future_years)
+
+        market_shares = np.linspace(initial_share, final_market_share, future_years)
         past_pred_adj = linear_pred * market_shares
 
         df = pd.DataFrame({
@@ -113,7 +121,8 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
             plot_distribution(monte_carlo_simulation(linear_pred, market_shares), "Monte Carlo - Fortíðargögn")
         ]
 
-        return df, figures
+        return df, figures, future_years
+
 
 
 
