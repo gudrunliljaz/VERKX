@@ -35,17 +35,33 @@ with st.container():
 
     if st.button("🚀 Keyra spá"):
         try:
-            df, figures = main_forecast_logic(housing_type, region, future_years, final_market_share)
+            df, figures, used_years = main_forecast_logic(housing_type, region, future_years, final_market_share)
 
-            st.subheader("Niðurstöður")
+            if used_years < future_years:
+                st.warning(
+                    f"Aðeins {used_years} ár voru í boði í framtíðarspá fyrir \"{housing_type}\" í \"{region}\". "
+                    f"Spáin var stillt sjálfkrafa á {used_years} ár."
+                )
+
+            st.subheader("📊 Niðurstöður")
             st.dataframe(df.set_index("Ár").style.format("{:.2f}"))
 
-            st.subheader("Monte Carlo dreifing")
+            st.subheader("🎯 Monte Carlo dreifing")
             for fig in figures:
                 st.pyplot(fig)
 
+            # Download hnappur
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                "📥 Hlaða niður niðurstöðum (CSV)",
+                data=csv,
+                file_name="spá_niðurstöður.csv",
+                mime="text/csv"
+            )
+
         except Exception as e:
             st.error(f"🛑 Villa kom upp: {e}")
+
 
 
 
