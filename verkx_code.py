@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
-PAST_FILE = "/Users/gillazoega/downloads/GÖGN_VERKX.xlsx"
-FUTURE_FILE = "/Users/gillazoega/downloads/Framtíðarspá.xlsx"
+PAST_FILE = "GÖGN_VERKX.xlsx"
+FUTURE_FILE = "Framtíðarspá.xlsx"
 
 def load_excel(file_path, sheet_name):
     df = pd.read_excel(file_path, sheet_name=sheet_name, engine="openpyxl")
