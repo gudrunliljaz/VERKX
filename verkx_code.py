@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
 PAST_FILE = "data/GÖGN_VERKX.xlsx"
-FUTURE_FILE = "data/Framtíðarspá.xlsx"
+FUTURE_FILE = "data/Framtidarspa.xlsx"
 
 def load_excel(file_path, sheet_name):
     df = pd.read_excel(file_path, sheet_name=sheet_name, engine="openpyxl")
