@@ -1,26 +1,22 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import io
-from verkx_code import main_forecast_logic
+from verkx_code import main_forecast_logic, calculate_financials
 
-# Page config – verður að vera fyrst
 st.set_page_config(
     page_title="Cubit Spá",
     page_icon="assets/logo.png",
     layout="wide"
 )
 
-
 st.markdown("""
     <style>
-    div[data-testid="stSidebar"] div.language-dropdown {
+    .language-dropdown {
         position: absolute;
         top: 10px;
         right: 20px;
         z-index: 9999;
     }
-    div.language-dropdown select {
+    .language-dropdown select {
         font-size: 13px !important;
         padding: 2px 6px !important;
         border-radius: 4px;
@@ -29,12 +25,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
+# Tungumálaval
 with st.container():
     st.markdown('<div class="language-dropdown">', unsafe_allow_html=True)
     language = st.selectbox("Language", ["Íslenska", "English"], label_visibility="collapsed", index=0)
     st.markdown('</div>', unsafe_allow_html=True)
-
 
 # Þýðingar
 labels = {
@@ -53,7 +48,12 @@ labels = {
         "download_button": "Hlaða niður CSV skrá",
         "download_name": "spa_nidurstodur.csv",
         "warning": "Aðeins {} ár fundust í framtíðarspá — notum bara þau ár.",
-        "error": "Villa kom upp"
+        "error": "Villa kom upp",
+        "fin_title": "Fjárhagsleg samantekt",
+        "demand": "Eftirspurn",
+        "contribution": "Framlegð",
+        "profit": "Hagnaður",
+        "npv": "NPV"
     },
     "English": {
         "title": "Cubit Forecast",
@@ -70,21 +70,25 @@ labels = {
         "download_button": "Download CSV file",
         "download_name": "forecast_results.csv",
         "warning": "Only {} years found in future data — using only those.",
-        "error": "An error occurred"
+        "error": "An error occurred",
+        "fin_title": "Financial Summary",
+        "demand": "Demand",
+        "contribution": "Contribution",
+        "profit": "Profit",
+        "npv": "NPV"
     }
 }
 
 # Titill
 st.markdown(f"<h1>{labels[language]['title']}</h1><hr>", unsafe_allow_html=True)
 
-# Housing mappings
+# Valmöguleikar
 housing_map = {
     "Íslenska": ["Íbúðir", "Leikskólar", "Gistirými", "Elliheimili", "Atvinnuhús"],
-    "English": ["Apartments", "Kindergartens", "Accommodation facilities", "Nursing homes", "Commercial buildings"]
+    "English": ["Apartments", "Kindergartens", "Accommodation", "Nursing homes", "Commercial buildings"]
 }
 housing_reverse = dict(zip(housing_map["English"], housing_map["Íslenska"]))
 
-# Region mappings
 region_map = {
     "Íslenska": [
         "Höfuðborgarsvæðið", "Suðurnes", "Vesturland", "Vestfirðir",
@@ -97,11 +101,10 @@ region_map = {
 }
 region_reverse = dict(zip(region_map["English"], region_map["Íslenska"]))
 
-# Input form
+# Inputar
 col1, col2 = st.columns(2)
 with col1:
     housing_display = st.selectbox(labels[language]["housing"], housing_map[language])
-    # Reverse to íslenska
     housing_type = housing_reverse[housing_display] if language == "English" else housing_display
 
 with col2:
@@ -119,15 +122,7 @@ with col4:
 if st.button(labels[language]["run"]):
     with st.spinner(labels[language]["loading"]):
         try:
-            df, figures, used_years = main_forecast_logic(housing_type, region, future_years, final_market_share)
-            if language == "English":
-                df = df.rename(columns={
-                    "Ár": "Year",
-                    "Fortíðargögn spá": "Historical Forecast",
-                    "Framtíðarspá": "Future Forecast",
-                    "Meðaltal": "Average",
-                    "Spá útfrá fortíðargögnum": "Forecast from historical data"
-                })
+            df, figures, used_years, sim_result = main_forecast_logic(housing_type, region, future_years, final_market_share)
 
             if used_years < future_years:
                 st.warning(labels[language]["warning"].format(used_years))
@@ -135,53 +130,44 @@ if st.button(labels[language]["run"]):
             tabs = st.tabs([labels[language]["result_tab"], labels[language]["download_tab"]])
 
             with tabs[0]:
-                st.subheader(labels[language]["table_title"])
+                # Tafla
                 index_col = "Ár" if language == "Íslenska" else "Year"
-                st.dataframe(df.set_index(index_col).style.format("{:.2f}"))
-
-
-                st.subheader(labels[language]["distribution"])
-                img_cols = st.columns(len(figures))
-                for col, fig in zip(img_cols, figures):
-                    with col:
-                        st.pyplot(fig)
-                from verkx_code import calculate_financials  # ef ekki nú þegar importað
-
-# Reikna fjárhagslegar niðurstöður fyrir sim_avg
-                financials = calculate_financials(sim_avg)
-
-# Sýna niðurstöður í þrem dálkum
-                st.subheader("📈 Fjárhagsleg úttekt")
-                col_fin1, col_fin2, col_fin3 = st.columns(3)
-                col_fin1.metric("Heildar framlegð", f"{financials['Heildar framlegð']:,.0f} kr.")
-                col_fin2.metric("Hagnaður", f"{financials['Hagnaður']:,.0f} kr.")
-                col_fin3.metric("NPV", f"{financials['NPV']:,.0f} kr.")
-
-
-            with tabs[1]:
-    # Tryggjum rétt dálkheiti fyrir niðurhal
                 if language == "English":
-                    df_to_export = df.rename(columns={
+                    df = df.rename(columns={
                         "Ár": "Year",
                         "Fortíðargögn spá": "Historical Forecast",
                         "Framtíðarspá": "Future Forecast",
                         "Meðaltal": "Average",
                         "Spá útfrá fortíðargögnum": "Forecast from historical data"
                     })
-                else:
-                    df_to_export = df.copy()
+                st.subheader(labels[language]["table_title"])
+                st.dataframe(df.set_index(index_col).style.format("{:.2f}"))
 
-    # Búum til CSV með utf-8-sig (mikilvægt fyrir Windows Excel)
-                csv_bytes = df_to_export.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
+                # Dreifing
+                st.subheader(labels[language]["distribution"])
+                img_cols = st.columns(len(figures))
+                for col, fig in zip(img_cols, figures):
+                    with col:
+                        st.pyplot(fig)
 
-    # Download hnappur
+                # Fjárhagur
+                financials = calculate_financials(sim_result)
+                st.subheader(f"💰 {labels[language]['fin_title']}")
+                col_a, col_b, col_c, col_d = st.columns(4)
+                col_a.metric(labels[language]["demand"], f"{financials['Total Forecasted Demand']:,} units")
+                col_b.metric(labels[language]["contribution"], f"{financials['Total Contribution Margin']:,} ISK")
+                col_c.metric(labels[language]["profit"], f"{financials['Total Profit']:,} ISK")
+                col_d.metric(labels[language]["npv"], f"{financials['NPV']:,} ISK")
+
+            with tabs[1]:
+                csv = df.to_csv(index=False).encode("utf-8")
                 st.download_button(
                     label=labels[language]["download_button"],
-                    data=csv_bytes,
+                    data=csv,
                     file_name=labels[language]["download_name"],
                     mime="text/csv"
-                 )
-
+                )
 
         except Exception as e:
             st.error(f"{labels[language]['error']}: {e}")
+
