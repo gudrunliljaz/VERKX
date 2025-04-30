@@ -4,90 +4,121 @@ import numpy as np
 import io
 from verkx_code import main_forecast_logic
 
+# --- Tungumálaval
+language = st.selectbox("Language / Tungumál", ["Íslenska", "English"])
+
+# --- Texti eftir tungumáli
+labels = {
+    "Íslenska": {
+        "title": "Cubit Spá",
+        "housing": "Hvaða tegund húsnæðis viltu skoða?",
+        "region": "Hvaða landshluta?",
+        "years": "Fjöldi ára fram í tímann:",
+        "market_share": "Markaðshlutdeild (%):",
+        "run": "Keyra spá",
+        "loading": "Reikna spá, vinsamlegast bíðið...",
+        "years_warning": "Aðeins {used} ár fundust í framtíðarspá — notum bara þau ár.",
+        "results": "Niðurstöður",
+        "download": "Vista niðurstöður",
+        "table": "Cubit einingar",
+        "distribution": "Dreifing",
+        "csv": "Hlaða niður CSV skrá",
+        "error": "Villa kom upp"
+    },
+    "English": {
+        "title": "Cubit Forecast",
+        "housing": "What type of housing do you want to view?",
+        "region": "Which region?",
+        "years": "Number of years into the future:",
+        "market_share": "Market share (%):",
+        "run": "Run forecast",
+        "loading": "Calculating forecast, please wait...",
+        "years_warning": "Only {used} years found in forecast — using those years only.",
+        "results": "Results",
+        "download": "Download results",
+        "table": "Cubit units",
+        "distribution": "Distribution",
+        "csv": "Download CSV file",
+        "error": "An error occurred"
+    }
+}
+
+# --- Page config (page_icon þarf að vísa í mynd í assets/)
 st.set_page_config(
-    page_title="Cubit Spá",
-    page_icon="assets/logo.png",  # Nýja myndin
+    page_title=labels[language]["title"],
+    page_icon="assets/logo.png",
     layout="wide"
 )
 
-
-# Custom stíll fyrir dökkbláan titil
-st.markdown("""
+# --- Dökkblár titill
+st.markdown(f"""
     <style>
-    h1 {
+    h1 {{
         color: #003366;
         text-align: center;
-    }
+    }}
     </style>
+    <h1>{labels[language]["title"]}</h1>
 """, unsafe_allow_html=True)
 
-# Dökkblár titill
-st.markdown("<h1>Cubit Spá</h1>", unsafe_allow_html=True)
 st.markdown("---")
 
-# Valmöguleikar
+# --- Valmöguleikar
 col1, col2 = st.columns(2)
 
 with col1:
     housing_options = ["Íbúðir", "Leikskólar", "Gistirými", "Elliheimili", "Atvinnuhús"]
-    housing_type = st.selectbox("Hvaða tegund húsnæðis viltu skoða?", housing_options)
+    housing_type = st.selectbox(labels[language]["housing"], housing_options)
 
 with col2:
     region_options = [
         "Höfuðborgarsvæðið", "Suðurnes", "Vesturland", "Vestfirðir",
         "Norðurland vestra", "Norðurland eystra", "Austurland", "Suðurland"
     ]
-    region = st.selectbox("Hvaða landshluta?", region_options)
+    region = st.selectbox(labels[language]["region"], region_options)
 
 col3, col4 = st.columns(2)
 
 with col3:
-    future_years = st.number_input("Fjöldi ára fram í tímann:", min_value=1, max_value=1000, value=5)
+    future_years = st.number_input(labels[language]["years"], min_value=1, max_value=1000, value=5)
 
 with col4:
-    market_share_percent = st.slider("Markaðshlutdeild (%):", min_value=0, max_value=100, value=50)
+    market_share_percent = st.slider(labels[language]["market_share"], min_value=0, max_value=100, value=50)
     final_market_share = market_share_percent / 100
 
-
-# Keyra spá takki
-if st.button("Keyra spá"):
-    with st.spinner('Reikna spá, vinsamlegast bíðið...'):
+# --- Keyra spá
+if st.button(labels[language]["run"]):
+    with st.spinner(labels[language]["loading"]):
         try:
             df, figures, used_years = main_forecast_logic(housing_type, region, future_years, final_market_share)
 
             if used_years < future_years:
-                st.warning(f"Aðeins {used_years} ár fundust í framtíðarspá — notum bara þau ár.")
+                st.warning(labels[language]["years_warning"].format(used=used_years))
 
-            # Flipar: Niðurstöður og Hlaða niður
-            tabs = st.tabs(["Niðurstöður", "Vista niðurstöður"])
+            # Flipar
+            tabs = st.tabs([labels[language]["results"], labels[language]["download"]])
 
             with tabs[0]:
-                st.subheader("Cubit einingar")
+                st.subheader(labels[language]["table"])
                 st.dataframe(df.set_index("Ár").style.format("{:.2f}"))
 
-                st.subheader("Dreifing")
+                st.subheader(labels[language]["distribution"])
                 img_cols = st.columns(len(figures))
                 for col, fig in zip(img_cols, figures):
                     with col:
                         st.pyplot(fig)
 
             with tabs[1]:
-
                 csv = df.to_csv(index=False).encode('utf-8')
-
                 st.download_button(
-                    label="Hlaða niður CSV skrá",
+                    label=labels[language]["csv"],
                     data=csv,
                     file_name="spa_nidurstodur.csv",
                     mime="text/csv"
                 )
 
         except Exception as e:
-            st.error(f"Villa kom upp: {e}")
-
-
-
-
+            st.error(f"{labels[language]['error']}: {e}")
 
 
 
