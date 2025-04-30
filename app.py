@@ -4,8 +4,11 @@ import numpy as np
 import io
 from verkx_code import main_forecast_logic
 
-# --- Tungumálaval
-language = st.selectbox("Language / Tungumál", ["Íslenska", "English"])
+# Þarf að koma fyrst
+st.set_page_config(page_title="Cubit Spá", page_icon="assets/logo.png", layout="wide")
+
+# --- Val á tungumáli í hliðarstiku
+language = st.sidebar.selectbox("Language / Tungumál", ["Íslenska", "English"])
 
 # --- Texti eftir tungumáli
 labels = {
@@ -42,13 +45,6 @@ labels = {
         "error": "An error occurred"
     }
 }
-
-# --- Page config (page_icon þarf að vísa í mynd í assets/)
-st.set_page_config(
-    page_title=labels[language]["title"],
-    page_icon="assets/logo.png",
-    layout="wide"
-)
 
 # --- Dökkblár titill
 st.markdown(f"""
@@ -119,6 +115,7 @@ if st.button(labels[language]["run"]):
 
         except Exception as e:
             st.error(f"{labels[language]['error']}: {e}")
+
 
 
 
