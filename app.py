@@ -4,28 +4,34 @@ import numpy as np
 import io
 from verkx_code import main_forecast_logic
 
-# SET PAGE CONFIG FIRST
-st.set_page_config(
-    page_title="Cubit",
-    page_icon="assets/logo.png",
-    layout="wide"
-)
+# Set page config – MUST BE FIRST
+st.set_page_config(page_title="Cubit", page_icon="assets/logo.png", layout="wide")
 
-# Language selection aligned top right
+# Custom style for top-right language selector
 st.markdown("""
     <style>
-        div[data-testid="stSidebarNav"] {display: none;}
-        div[data-testid="stToolbar"] {display: none;}
-        div[data-testid="stDecoration"] {display: none;}
-        .css-1rs6os.edgvbvh3 {justify-content: flex-end;}
+        .lang-select-box {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: -50px;
+        }
+        .lang-select-box select {
+            padding: 6px;
+            font-size: 14px;
+        }
+        h1 {
+            color: #003366;
+            text-align: center;
+        }
     </style>
 """, unsafe_allow_html=True)
 
-col_lang, _ = st.columns([0.15, 0.85])
-with col_lang:
-    language = st.selectbox("", ["Íslenska", "English"], key="lang_selector")
+# Language selection at top-right
+st.markdown('<div class="lang-select-box">', unsafe_allow_html=True)
+language = st.selectbox("", ["Íslenska", "English"], key="language")
+st.markdown('</div>', unsafe_allow_html=True)
 
-# Language dictionary
+# Label translations
 labels = {
     "Íslenska": {
         "title": "Cubit Spá",
@@ -63,36 +69,25 @@ labels = {
     }
 }
 
-# Title with custom dark blue styling
-st.markdown(f"""
-    <style>
-        h1 {{
-            color: #003366;
-            text-align: center;
-        }}
-    </style>
-    <h1>{labels[language]["title"]}</h1>
-    <hr>
-""", unsafe_allow_html=True)
+# Title
+st.markdown(f"<h1>{labels[language]['title']}</h1><hr>", unsafe_allow_html=True)
 
-# Inputs
-col1, col2 = st.columns(2)
-
-housing_options = {
+# User inputs
+housing_opts = {
     "Íslenska": ["Íbúðir", "Leikskólar", "Gistirými", "Elliheimili", "Atvinnuhús"],
     "English": ["Apartments", "Preschools", "Guesthouses", "Nursing homes", "Commercial"]
 }
 
-region_options = [
+regions = [
     "Höfuðborgarsvæðið", "Suðurnes", "Vesturland", "Vestfirðir",
     "Norðurland vestra", "Norðurland eystra", "Austurland", "Suðurland"
 ]
 
+col1, col2 = st.columns(2)
 with col1:
-    housing_type = st.selectbox(labels[language]["housing"], housing_options[language])
-
+    housing_type = st.selectbox(labels[language]["housing"], housing_opts[language])
 with col2:
-    region = st.selectbox(labels[language]["region"], region_options)
+    region = st.selectbox(labels[language]["region"], regions)
 
 col3, col4 = st.columns(2)
 with col3:
@@ -101,7 +96,7 @@ with col4:
     market_share_percent = st.slider(labels[language]["market"], min_value=0, max_value=100, value=50)
     final_market_share = market_share_percent / 100
 
-# Button
+# Forecast button
 if st.button(labels[language]["run"]):
     with st.spinner(labels[language]["loading"]):
         try:
@@ -123,19 +118,15 @@ if st.button(labels[language]["run"]):
                         st.pyplot(fig)
 
             with tabs[1]:
-                csv = df.to_csv(index=False).encode('utf-8')
+                csv = df.to_csv(index=False).encode("utf-8")
                 st.download_button(
                     label=labels[language]["download_button"],
                     data=csv,
                     file_name=labels[language]["download_name"],
                     mime="text/csv"
                 )
-
         except Exception as e:
-            st.error(f"{labels[language]['error']}: {e}")
-
-
-
+            st.error(f"{labels[language]['error']']}: {e}")
 
 
 
