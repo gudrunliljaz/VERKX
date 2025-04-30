@@ -14,28 +14,27 @@ st.set_page_config(
 
 st.markdown("""
     <style>
-    .language-dropdown {
+    div[data-testid="stSidebar"] div.language-dropdown {
         position: absolute;
-        top: 15px;
-        right: 25px;
+        top: 10px;
+        right: 20px;
         z-index: 9999;
-        font-size: 13px;
-        width: 140px;
     }
-    .language-dropdown select {
+    div.language-dropdown select {
         font-size: 13px !important;
-        padding: 4px !important;
+        padding: 2px 6px !important;
+        border-radius: 4px;
+        border: 1px solid #ccc;
     }
     </style>
 """, unsafe_allow_html=True)
 
 
+with st.container():
+    st.markdown('<div class="language-dropdown">', unsafe_allow_html=True)
+    language = st.selectbox("Language", ["Íslenska", "English"], label_visibility="collapsed", index=0)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-
-# Tungumálaval efst hægra megin
-st.markdown('<div class="language-dropdown">', unsafe_allow_html=True)
-language = st.selectbox("", ["Íslenska", "English"], key="lang_box")
-st.markdown('</div>', unsafe_allow_html=True)
 
 # Þýðingar
 labels = {
