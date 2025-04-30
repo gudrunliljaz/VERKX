@@ -137,7 +137,9 @@ if st.button(labels[language]["run"]):
 
             with tabs[0]:
                 st.subheader(labels[language]["table_title"])
-                st.dataframe(df.set_index("Ár").style.format("{:.2f}"))
+                index_col = "Ár" if language == "Íslenska" else "Year"
+                st.dataframe(df.set_index(index_col).style.format("{:.2f}"))
+
 
                 st.subheader(labels[language]["distribution"])
                 img_cols = st.columns(len(figures))
