@@ -58,6 +58,36 @@ def plot_distribution(sim_data, title):
     plt.tight_layout()
     return fig
 
+def calculate_financials(sim_avg, used_years):
+    unit_size = 6.5
+    price_per_sqm = 467_308
+    cost_per_sqm = 452_308
+    transport_cost_per_sqm = 92_308
+    fixed_cost = 37_200_000
+
+    total_units = np.mean(np.sum(sim_avg, axis=1))
+    total_sqm = total_units * unit_size
+
+    revenue = total_sqm * price_per_sqm
+    variable_cost = total_sqm * (cost_per_sqm + transport_cost_per_sqm)
+    contribution_margin = total_sqm * (price_per_sqm - cost_per_sqm)
+    total_cost = variable_cost + fixed_cost
+    profit = revenue - total_cost
+
+    cash_flows = [profit] * used_years
+    discount_rate = 0.07
+    npv = np.npv(discount_rate, cash_flows)
+
+    return {
+        "Total Units": total_units,
+        "Revenue": revenue,
+        "Total Cost": total_cost,
+        "Contribution Margin": contribution_margin,
+        "Profit": profit,
+        "NPV": npv
+    }
+
+
 def main_forecast_logic(housing_type, region, future_years, final_market_share):
     sheet_name = f"{housing_type} eftir landshlutum"
     use_forecast = housing_type.lower() in ["íbúðir", "leikskólar"]
@@ -135,7 +165,9 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
         "NPV": round(npv)
     }
 
-    return df, figures, years, financials
+    financials = calculate_financials(sim_avg, available_years)
+return df, figures, available_years, financials
+
 
 
 
