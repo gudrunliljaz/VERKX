@@ -12,8 +12,7 @@ top_left, top_right = st.columns([6, 1])  # 6:1 hlutfall
 with top_right:
     language = st.selectbox("", ["Íslenska", "English"])
 
-# --- Val á tungumáli í hliðarstiku
-language = st.sidebar.selectbox("Language / Tungumál", ["Íslenska", "English"])
+
 
 # --- Texti eftir tungumáli
 labels = {
