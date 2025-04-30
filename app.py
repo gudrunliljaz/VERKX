@@ -4,13 +4,28 @@ import numpy as np
 import io
 from verkx_code import main_forecast_logic
 
-# Page config
-st.set_page_config(page_title="Cubit Forecast", page_icon="📊", layout="wide")
+# SET PAGE CONFIG FIRST
+st.set_page_config(
+    page_title="Cubit",
+    page_icon="assets/logo.png",
+    layout="wide"
+)
 
-# Language toggle top right
-language = st.sidebar.selectbox("Language / Tungumál", ["Íslenska", "English"])
+# Language selection aligned top right
+st.markdown("""
+    <style>
+        div[data-testid="stSidebarNav"] {display: none;}
+        div[data-testid="stToolbar"] {display: none;}
+        div[data-testid="stDecoration"] {display: none;}
+        .css-1rs6os.edgvbvh3 {justify-content: flex-end;}
+    </style>
+""", unsafe_allow_html=True)
 
-# Labels
+col_lang, _ = st.columns([0.15, 0.85])
+with col_lang:
+    language = st.selectbox("", ["Íslenska", "English"], key="lang_selector")
+
+# Language dictionary
 labels = {
     "Íslenska": {
         "title": "Cubit Spá",
@@ -48,7 +63,7 @@ labels = {
     }
 }
 
-# Title (centered + dark blue)
+# Title with custom dark blue styling
 st.markdown(f"""
     <style>
         h1 {{
@@ -60,7 +75,7 @@ st.markdown(f"""
     <hr>
 """, unsafe_allow_html=True)
 
-# Housing + region selection
+# Inputs
 col1, col2 = st.columns(2)
 
 housing_options = {
@@ -79,17 +94,14 @@ with col1:
 with col2:
     region = st.selectbox(labels[language]["region"], region_options)
 
-# Forecast params
 col3, col4 = st.columns(2)
-
 with col3:
     future_years = st.number_input(labels[language]["years"], min_value=1, max_value=1000, value=5)
-
 with col4:
     market_share_percent = st.slider(labels[language]["market"], min_value=0, max_value=100, value=50)
     final_market_share = market_share_percent / 100
 
-# Run forecast
+# Button
 if st.button(labels[language]["run"]):
     with st.spinner(labels[language]["loading"]):
         try:
