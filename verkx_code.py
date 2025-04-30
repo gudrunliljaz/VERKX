@@ -122,6 +122,32 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
 
         return df, figures, len(future_vals)
 
+def calculate_financials(sim_data, margin_per_unit=15000, fixed_cost=3000000, discount_rate=0.07):
+    """
+    Reiknar framlegð, hagnað, cash flow og NPV fyrir Monte Carlo hermun.
+    """
+    # Heildarfjöldi eininga fyrir hverja hermun
+    total_units = np.sum(sim_data, axis=1)
+
+    # Reiknum árlegar framlegðir út frá fjölda eininga og framlegð á einingu
+    annual_margin = sim_data * margin_per_unit  # shape: (sim, years)
+    annual_cashflow = annual_margin - fixed_cost  # dregur fastan kostnað frá á hverju ári
+
+    # NPV útreikningur fyrir hverja hermun
+    years = np.arange(1, sim_data.shape[1] + 1)
+    discount_factors = 1 / (1 + discount_rate) ** years
+    npvs = np.sum(annual_cashflow * discount_factors, axis=1)
+
+    # Meðaltalsútkomur fyrir appið
+    avg_total_margin = np.mean(np.sum(annual_margin, axis=1))
+    avg_profit = np.mean(np.sum(annual_cashflow, axis=1))
+    avg_npv = np.mean(npvs)
+
+    return {
+        "Heildar framlegð": avg_total_margin,
+        "Hagnaður": avg_profit,
+        "NPV": avg_npv
+    }
 
 
 
