@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-from verkx_code import main_forecast_logic
+from verkx_code import main_forecast_logic, calculate_financials
 
 st.set_page_config(page_title="Cubit Spá", layout="wide", page_icon="📊")
 
@@ -28,49 +27,43 @@ with col4:
 if st.button("Keyra spá"):
     with st.spinner("Reikna spá, vinsamlegast bíðið..."):
         try:
-            df, figures, used_years, sim_avg = main_forecast_logic(housing_type, region, future_years, final_market_share)
+            df, figures, used_years, sim_avg = main_forecast_logic(
+                housing_type, region, future_years, final_market_share
+            )
 
-            st.subheader("Einingar")
+            # Sýna töflu
+            st.subheader("📊 Spá niðurstöður")
             st.dataframe(df.set_index(df.columns[0]).style.format("{:.2f}"))
 
-            st.subheader("Dreifing")
+            # Dreifingarmyndir
+            st.subheader("📉 Monte Carlo dreifing")
             img_cols = st.columns(len(figures))
             for col, fig in zip(img_cols, figures):
                 with col:
                     st.pyplot(fig)
 
-            #Tekjumódel
-            st.subheader("Fjárhagslegt mat")
+            # Fjárhagsleg niðurstaða
+            financials = calculate_financials(sim_avg)
 
-            # Forsendur
-            price_per_unit = 375000 
-            cost_per_unit = 360000
-            fixed_cost = 3000000
-            contribution_per_unit = price_per_unit - cost_per_unit
-            discount_rate = 0.10
+            st.subheader("📈 Fjárhagslegar niðurstöður")
+            st.markdown(f"""
+            - **Heildarspáð einingaþörf:** {financials['expected_demand']:.0f}
+            - **Heildar fermetrar:** {financials['total_sqm']:.0f} m²  
+            - **Heildartekjur:** {financials['total_revenue']:,.0f} kr.
+            - **Heildarkostnaður (breytilegur):** {financials['total_variable_cost']:,.0f} kr.
+            - **Heildarframlegð:** {financials['total_contribution']:,.0f} kr.
+            - **Hagnaður:** {financials['total_profit']:,.0f} kr.
+            - **Núvirði (NPV):** {financials['npv']:,.0f} kr.
+            """)
 
-            total_demand_per_sim = np.sum(sim_avg, axis=1)  # heildar spáða þörf per simulation
-            expected_total_demand = total_demand_per_sim.mean()
-            expected_contribution_total = expected_total_demand * contribution_per_unit
-
-            # Árlegt cash flow – deilt jafnt yfir notuð ár
-            yearly_demand = expected_total_demand / used_years
-            annual_cash_flow = yearly_demand * contribution_per_unit - fixed_cost
-
-            # Heildar hagnaður og NPV
-            total_profit = annual_cash_flow * used_years
-            years = np.arange(1, used_years + 1)
-            discounted_cash_flows = [annual_cash_flow / ((1 + discount_rate) ** year) for year in years]
-            npv = sum(discounted_cash_flows)
-
-            colf1, colf2 = st.columns(2)
-            with colf1:
-                st.metric("Heildar spáð þörf", f"{expected_total_demand:,.0f} einingar")
-                st.metric("Heildar framlegð", f"{expected_contribution_total:,.0f} kr.")
-
-            with colf2:
-                st.metric("Heildar hagnaður", f"{total_profit:,.0f} kr.")
-                st.metric("Núvirði (NPV)", f"{npv:,.0f} kr.")
+            # Hlaða niður CSV
+            csv = df.to_csv(index=False).encode("utf-8")
+            st.download_button(
+                label="📥 Hlaða niður spá sem CSV",
+                data=csv,
+                file_name="spa_nidurstodur.csv",
+                mime="text/csv"
+            )
 
         except Exception as e:
             st.error(f"Villa kom upp: {e}")
