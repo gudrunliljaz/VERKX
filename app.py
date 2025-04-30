@@ -4,34 +4,35 @@ import numpy as np
 import io
 from verkx_code import main_forecast_logic
 
-# Set page config – MUST BE FIRST
-st.set_page_config(page_title="Cubit", page_icon="assets/logo.png", layout="wide")
+# Page config – þetta verður að vera fyrst
+st.set_page_config(
+    page_title="Cubit Spá",
+    page_icon="assets/logo.png",
+    layout="wide"
+)
 
-# Custom style for top-right language selector
+# CSS stíll til að færa tungumálaboxið efst hægra megin
 st.markdown("""
     <style>
-        .lang-select-box {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: -50px;
-        }
-        .lang-select-box select {
-            padding: 6px;
-            font-size: 14px;
-        }
-        h1 {
-            color: #003366;
-            text-align: center;
-        }
+    div.language-dropdown {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        z-index: 9999;
+    }
+    h1 {
+        color: #003366;
+        text-align: center;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# Language selection at top-right
-st.markdown('<div class="lang-select-box">', unsafe_allow_html=True)
-language = st.selectbox("", ["Íslenska", "English"], key="language")
+# Tungumálaval – innan CSS box
+st.markdown('<div class="language-dropdown">', unsafe_allow_html=True)
+language = st.selectbox("", ["Íslenska", "English"], key="lang_box")
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Label translations
+# Þýðingar
 labels = {
     "Íslenska": {
         "title": "Cubit Spá",
@@ -69,10 +70,10 @@ labels = {
     }
 }
 
-# Title
+# Titill
 st.markdown(f"<h1>{labels[language]['title']}</h1><hr>", unsafe_allow_html=True)
 
-# User inputs
+# Valmöguleikar
 housing_opts = {
     "Íslenska": ["Íbúðir", "Leikskólar", "Gistirými", "Elliheimili", "Atvinnuhús"],
     "English": ["Apartments", "Preschools", "Guesthouses", "Nursing homes", "Commercial"]
@@ -96,7 +97,7 @@ with col4:
     market_share_percent = st.slider(labels[language]["market"], min_value=0, max_value=100, value=50)
     final_market_share = market_share_percent / 100
 
-# Forecast button
+# Takki
 if st.button(labels[language]["run"]):
     with st.spinner(labels[language]["loading"]):
         try:
@@ -126,7 +127,8 @@ if st.button(labels[language]["run"]):
                     mime="text/csv"
                 )
         except Exception as e:
-            st.error(f"{labels[language]['error']']}: {e}")
+            st.error(f"{labels[language]['error']}: {e}")
+
 
 
 
