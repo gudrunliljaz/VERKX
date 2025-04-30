@@ -12,9 +12,23 @@ st.set_page_config(
 )
 
 
-st.markdown('<div class="language-dropdown">', unsafe_allow_html=True)
-language = st.selectbox("", ["Íslenska", "English"], key="lang_box")
-st.markdown('</div>', unsafe_allow_html=True)
+st.markdown("""
+    <style>
+    .language-dropdown {
+        position: absolute;
+        top: 15px;
+        right: 25px;
+        z-index: 9999;
+        font-size: 13px;
+        width: 140px;
+    }
+    .language-dropdown select {
+        font-size: 13px !important;
+        padding: 4px !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 
 
 
