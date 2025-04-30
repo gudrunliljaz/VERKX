@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import io
 from verkx_code import main_forecast_logic
 
 st.set_page_config(
@@ -10,7 +9,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS
+# Stíll fyrir tungumálabox
 st.markdown("""
     <style>
     div[data-testid="stSidebar"] div.language-dropdown {
@@ -28,13 +27,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Language toggle
 with st.container():
     st.markdown('<div class="language-dropdown">', unsafe_allow_html=True)
     language = st.selectbox("Language", ["Íslenska", "English"], label_visibility="collapsed", index=0)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Text translations
 labels = {
     "Íslenska": {
         "title": "Cubit Spá",
@@ -48,12 +45,11 @@ labels = {
         "download_tab": "Vista niðurstöður",
         "table_title": "Cubit einingar",
         "distribution": "Dreifing",
+        "profit": "Áætlaður hagnaður",
         "download_button": "Hlaða niður CSV skrá",
         "download_name": "spa_nidurstodur.csv",
         "warning": "Aðeins {} ár fundust í framtíðarspá — notum bara þau ár.",
-        "error": "Villa kom upp",
-        "profit_title": "Hagnaður samkvæmt spá",
-        "profit_distribution": "Dreifing hagnaðar"
+        "error": "Villa kom upp"
     },
     "English": {
         "title": "Cubit Forecast",
@@ -67,19 +63,16 @@ labels = {
         "download_tab": "Download",
         "table_title": "Cubit units",
         "distribution": "Distribution",
+        "profit": "Estimated profit",
         "download_button": "Download CSV file",
         "download_name": "forecast_results.csv",
         "warning": "Only {} years found in future data — using only those.",
-        "error": "An error occurred",
-        "profit_title": "Profit based on forecast",
-        "profit_distribution": "Profit distribution"
+        "error": "An error occurred"
     }
 }
 
-# Title
 st.markdown(f"<h1>{labels[language]['title']}</h1><hr>", unsafe_allow_html=True)
 
-# Mappings
 housing_map = {
     "Íslenska": ["Íbúðir", "Leikskólar", "Gistirými", "Elliheimili", "Atvinnuhús"],
     "English": ["Apartments", "Kindergartens", "Accommodation facilities", "Nursing homes", "Commercial buildings"]
@@ -98,7 +91,6 @@ region_map = {
 }
 region_reverse = dict(zip(region_map["English"], region_map["Íslenska"]))
 
-# Inputs
 col1, col2 = st.columns(2)
 with col1:
     housing_display = st.selectbox(labels[language]["housing"], housing_map[language])
@@ -115,11 +107,12 @@ with col4:
     market_share_percent = st.slider(labels[language]["market"], min_value=0, max_value=100, value=50)
     final_market_share = market_share_percent / 100
 
-# Run forecast
 if st.button(labels[language]["run"]):
     with st.spinner(labels[language]["loading"]):
         try:
-            df, figures, used_years = main_forecast_logic(housing_type, region, future_years, final_market_share)
+            df, figures, used_years, total_profit = main_forecast_logic(
+                housing_type, region, future_years, final_market_share
+            )
 
             if language == "English":
                 df = df.rename(columns={
@@ -141,17 +134,16 @@ if st.button(labels[language]["run"]):
                 st.dataframe(df.set_index(index_col).style.format("{:.2f}"))
 
                 st.subheader(labels[language]["distribution"])
-                for i, fig in enumerate(figures):
-                    if i < len(figures) - 1:
-                        col = st.columns(3)[i % 3]
-                        with col:
-                            st.pyplot(fig)
-                    else:
-                        st.subheader(labels[language]["profit_distribution"])
+                cols = st.columns(len(figures))
+                for col, fig in zip(cols, figures):
+                    with col:
                         st.pyplot(fig)
 
+                st.subheader(labels[language]["profit"])
+                st.metric(label=labels[language]["profit"], value=f"{total_profit:,.0f} kr.")
+
             with tabs[1]:
-                csv = df.to_csv(index=False).encode("utf-8")
+                csv = df.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
                 st.download_button(
                     label=labels[language]["download_button"],
                     data=csv,
@@ -161,6 +153,7 @@ if st.button(labels[language]["run"]):
 
         except Exception as e:
             st.error(f"{labels[language]['error']}: {e}")
+
 
 
 
