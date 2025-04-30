@@ -2,16 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import io
-from verkx_code import (
-    main_forecast_logic,
-    monte_carlo_simulation,
-    calculate_total_profit,
-    load_excel,
-    filter_data,
-    linear_forecast,
-    PAST_FILE,
-    FUTURE_FILE
-)
+from verkx_code import main_forecast_logic
 
 st.set_page_config(
     page_title="Cubit Spá",
