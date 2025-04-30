@@ -147,27 +147,29 @@ if st.button(labels[language]["run"]):
                         st.pyplot(fig)
 
             with tabs[1]:
-            # Þýða dálkheiti ef tungumál er enska
+    # Tryggjum rétt dálkheiti fyrir niðurhal
                 if language == "English":
                     df_to_export = df.rename(columns={
-                    "Ár": "Year",
-                    "Fortíðargögn spá": "Historical Forecast",
-                    "Framtíðarspá": "Future Forecast",
-                    "Meðaltal": "Average",
-                    "Spá útfrá fortíðargögnum": "Forecast from historical data"
+                        "Ár": "Year",
+                        "Fortíðargögn spá": "Historical Forecast",
+                        "Framtíðarspá": "Future Forecast",
+                        "Meðaltal": "Average",
+                        "Spá útfrá fortíðargögnum": "Forecast from historical data"
                     })
                 else:
                     df_to_export = df.copy()
 
-    # Vista með utf-8-sig (fyrir Windows/Excel)
-                csv = df_to_export.to_csv(index=False, encoding="utf-8-sig")
-    
+    # Búum til CSV með utf-8-sig (mikilvægt fyrir Windows Excel)
+                csv_bytes = df_to_export.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
+
+    # Download hnappur
                 st.download_button(
                     label=labels[language]["download_button"],
-                    data=csv,
+                    data=csv_bytes,
                     file_name=labels[language]["download_name"],
                     mime="text/csv"
-                )
+                 )
+
 
         except Exception as e:
             st.error(f"{labels[language]['error']}: {e}")
