@@ -43,9 +43,9 @@ if st.button("Keyra spá"):
             st.subheader("Fjárhagslegt mat")
 
             # Forsendur
-            price_per_unit = 375000 * 6.5
-            cost_per_unit = 360000* 6.5
-            fixed_cost = 3000000* 6.5
+            price_per_unit = 375000 
+            cost_per_unit = 360000
+            fixed_cost = 3000000
             contribution_per_unit = price_per_unit - cost_per_unit
             discount_rate = 0.10
 
