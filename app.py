@@ -4,17 +4,16 @@ import numpy as np
 import io
 from verkx_code import main_forecast_logic
 
-# Þarf að koma fyrst
+# Þarf að vera fyrst
 st.set_page_config(page_title="Cubit Spá", page_icon="assets/logo.png", layout="wide")
-# Efri línan með tungumálaval í hægra horninu
-top_left, top_right = st.columns([6, 1])  # 6:1 hlutfall
 
+# Tungumálaval efst í hægra horni
+top_left, top_right = st.columns([6, 1])
 with top_right:
+    st.markdown("<div style='font-weight:500;'>Language</div>", unsafe_allow_html=True)
     language = st.selectbox("", ["Íslenska", "English"])
 
-
-
-# --- Texti eftir tungumáli
+# Texti eftir tungumáli
 labels = {
     "Íslenska": {
         "title": "Cubit Spá",
@@ -50,7 +49,7 @@ labels = {
     }
 }
 
-# --- Dökkblár titill
+# Titill
 st.markdown(f"""
     <style>
     h1 {{
@@ -60,21 +59,28 @@ st.markdown(f"""
     </style>
     <h1>{labels[language]["title"]}</h1>
 """, unsafe_allow_html=True)
-
 st.markdown("---")
 
-# --- Valmöguleikar
+# Húsnæðistegundir á báðum tungumálum
+housing_options_map = {
+    "Íslenska": ["Íbúðir", "Leikskólar", "Gistirými", "Elliheimili", "Atvinnuhús"],
+    "English":  ["Apartments", "Preschools", "Accommodation", "Nursing Homes", "Commercial Buildings"]
+}
+
+# Svæðin eru þau sömu
+region_options = [
+    "Höfuðborgarsvæðið", "Suðurnes", "Vesturland", "Vestfirðir",
+    "Norðurland vestra", "Norðurland eystra", "Austurland", "Suðurland"
+]
+
+# Valform
 col1, col2 = st.columns(2)
 
 with col1:
-    housing_options = ["Íbúðir", "Leikskólar", "Gistirými", "Elliheimili", "Atvinnuhús"]
-    housing_type = st.selectbox(labels[language]["housing"], housing_options)
+    display_housing_options = housing_options_map[language]
+    housing_selection = st.selectbox(labels[language]["housing"], display_housing_options)
 
 with col2:
-    region_options = [
-        "Höfuðborgarsvæðið", "Suðurnes", "Vesturland", "Vestfirðir",
-        "Norðurland vestra", "Norðurland eystra", "Austurland", "Suðurland"
-    ]
     region = st.selectbox(labels[language]["region"], region_options)
 
 col3, col4 = st.columns(2)
@@ -86,7 +92,11 @@ with col4:
     market_share_percent = st.slider(labels[language]["market_share"], min_value=0, max_value=100, value=50)
     final_market_share = market_share_percent / 100
 
-# --- Keyra spá
+# Breyta yfir í íslenskt nafn fyrir Excel-sheet
+reverse_map = dict(zip(housing_options_map[language], housing_options_map["Íslenska"]))
+housing_type = reverse_map[housing_selection]
+
+# Keyra spá
 if st.button(labels[language]["run"]):
     with st.spinner(labels[language]["loading"]):
         try:
@@ -95,7 +105,6 @@ if st.button(labels[language]["run"]):
             if used_years < future_years:
                 st.warning(labels[language]["years_warning"].format(used=used_years))
 
-            # Flipar
             tabs = st.tabs([labels[language]["results"], labels[language]["download"]])
 
             with tabs[0]:
@@ -118,7 +127,8 @@ if st.button(labels[language]["run"]):
                 )
 
         except Exception as e:
-            st.error(f"{labels[language]['error']}: {e}")
+            st.error(f"{labels[language]['error']]}: {e}")
+
 
 
 
