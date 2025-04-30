@@ -145,6 +145,18 @@ if st.button(labels[language]["run"]):
                 for col, fig in zip(img_cols, figures):
                     with col:
                         st.pyplot(fig)
+                from verkx_code import calculate_financials  # ef ekki nú þegar importað
+
+# Reikna fjárhagslegar niðurstöður fyrir sim_avg
+                financials = calculate_financials(sim_avg)
+
+# Sýna niðurstöður í þrem dálkum
+                st.subheader("📈 Fjárhagsleg úttekt")
+                col_fin1, col_fin2, col_fin3 = st.columns(3)
+                col_fin1.metric("Heildar framlegð", f"{financials['Heildar framlegð']:,.0f} kr.")
+                col_fin2.metric("Hagnaður", f"{financials['Hagnaður']:,.0f} kr.")
+                col_fin3.metric("NPV", f"{financials['NPV']:,.0f} kr.")
+
 
             with tabs[1]:
     # Tryggjum rétt dálkheiti fyrir niðurhal
