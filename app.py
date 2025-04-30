@@ -4,14 +4,14 @@ import numpy as np
 import io
 from verkx_code import main_forecast_logic
 
-# Page config – þetta verður að vera fyrst
+# Page config – verður að vera fyrst
 st.set_page_config(
     page_title="Cubit Spá",
     page_icon="assets/logo.png",
     layout="wide"
 )
 
-# CSS stíll til að færa tungumálaboxið efst hægra megin
+# CSS fyrir hægra megin language box
 st.markdown("""
     <style>
     div.language-dropdown {
@@ -27,7 +27,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Tungumálaval – innan CSS box
+# Tungumálaval efst hægra megin
 st.markdown('<div class="language-dropdown">', unsafe_allow_html=True)
 language = st.selectbox("", ["Íslenska", "English"], key="lang_box")
 st.markdown('</div>', unsafe_allow_html=True)
@@ -73,22 +73,36 @@ labels = {
 # Titill
 st.markdown(f"<h1>{labels[language]['title']}</h1><hr>", unsafe_allow_html=True)
 
-# Valmöguleikar
-housing_opts = {
+# Housing mappings
+housing_map = {
     "Íslenska": ["Íbúðir", "Leikskólar", "Gistirými", "Elliheimili", "Atvinnuhús"],
     "English": ["Apartments", "Preschools", "Guesthouses", "Nursing homes", "Commercial"]
 }
+housing_reverse = dict(zip(housing_map["English"], housing_map["Íslenska"]))
 
-regions = [
-    "Höfuðborgarsvæðið", "Suðurnes", "Vesturland", "Vestfirðir",
-    "Norðurland vestra", "Norðurland eystra", "Austurland", "Suðurland"
-]
+# Region mappings
+region_map = {
+    "Íslenska": [
+        "Höfuðborgarsvæðið", "Suðurnes", "Vesturland", "Vestfirðir",
+        "Norðurland vestra", "Norðurland eystra", "Austurland", "Suðurland"
+    ],
+    "English": [
+        "Capital Region", "Southern Peninsula", "West Iceland", "Westfjords",
+        "Northwest Iceland", "Northeast Iceland", "East Iceland", "South Iceland"
+    ]
+}
+region_reverse = dict(zip(region_map["English"], region_map["Íslenska"]))
 
+# Input form
 col1, col2 = st.columns(2)
 with col1:
-    housing_type = st.selectbox(labels[language]["housing"], housing_opts[language])
+    housing_display = st.selectbox(labels[language]["housing"], housing_map[language])
+    # Reverse to íslenska
+    housing_type = housing_reverse[housing_display] if language == "English" else housing_display
+
 with col2:
-    region = st.selectbox(labels[language]["region"], regions)
+    region_display = st.selectbox(labels[language]["region"], region_map[language])
+    region = region_reverse[region_display] if language == "English" else region_display
 
 col3, col4 = st.columns(2)
 with col3:
@@ -97,7 +111,7 @@ with col4:
     market_share_percent = st.slider(labels[language]["market"], min_value=0, max_value=100, value=50)
     final_market_share = market_share_percent / 100
 
-# Takki
+# Keyra spá
 if st.button(labels[language]["run"]):
     with st.spinner(labels[language]["loading"]):
         try:
