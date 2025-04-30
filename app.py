@@ -27,7 +27,7 @@ if st.button("Keyra spá"):
     with st.spinner("Vinsamlegast bíðið..."):
         try:
             df, figures, used_years, financials = main_forecast_logic(housing_type, region, future_years, final_market_share)
-
+            
             # Tölur
             st.subheader("📊 Spá niðurstöður")
             st.dataframe(df.set_index(df.columns[0]).style.format("{:.2f}"))
@@ -39,10 +39,15 @@ if st.button("Keyra spá"):
                 with col:
                     st.pyplot(fig)
 
-            # Fjárhagur
-            st.subheader("📈 Fjárhagslegt mat")
-            for label, value in financials.items():
-                st.write(f"**{label}:** {value:,.0f} kr.")
+            
+
+            st.subheader("💰 Fjárhagslegar niðurstöður")
+            st.metric("Heildareiningar", f"{financials['Total Units']:.0f}")
+            st.metric("Tekjur", f"{financials['Revenue']:,.0f} kr.")
+            st.metric("Heildarkostnaður", f"{financials['Total Cost']:,.0f} kr.")
+            st.metric("Framlegð", f"{financials['Contribution Margin']:,.0f} kr.")
+            st.metric("Hagnaður", f"{financials['Profit']:,.0f} kr.")
+            st.metric("NPV", f"{financials['NPV']:,.0f} kr.")
 
             # CSV niðurhal
             csv = df.to_csv(index=False).encode("utf-8")
@@ -51,11 +56,3 @@ if st.button("Keyra spá"):
         except Exception as e:
             st.error(f"Villa kom upp: {e}")
 
-
-st.subheader("💰 Fjárhagslegar niðurstöður")
-st.metric("Heildareiningar", f"{financials['Total Units']:.0f}")
-st.metric("Tekjur", f"{financials['Revenue']:,.0f} kr.")
-st.metric("Heildarkostnaður", f"{financials['Total Cost']:,.0f} kr.")
-st.metric("Framlegð", f"{financials['Contribution Margin']:,.0f} kr.")
-st.metric("Hagnaður", f"{financials['Profit']:,.0f} kr.")
-st.metric("NPV", f"{financials['NPV']:,.0f} kr.")
