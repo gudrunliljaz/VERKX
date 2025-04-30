@@ -6,6 +6,11 @@ from verkx_code import main_forecast_logic
 
 # Þarf að koma fyrst
 st.set_page_config(page_title="Cubit Spá", page_icon="assets/logo.png", layout="wide")
+# Efri línan með tungumálaval í hægra horninu
+top_left, top_right = st.columns([6, 1])  # 6:1 hlutfall
+
+with top_right:
+    language = st.selectbox("", ["Íslenska", "English"])
 
 # --- Val á tungumáli í hliðarstiku
 language = st.sidebar.selectbox("Language / Tungumál", ["Íslenska", "English"])
