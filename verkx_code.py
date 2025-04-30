@@ -4,7 +4,14 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
 PAST_FILE = "data/GÖGN_VERKX.xlsx"
-FUTURE_FILE = "data/Framtidarspa.xlsx"
+FUTURE_FILE = "data/Framtíðarspá.xlsx"
+
+# Kostnaðarforsendur
+PRICE_PER_SQM = 467_308
+COST_PER_SQM = 452_308
+TRANSPORT_COST_PER_SQM = 92_308
+UNIT_SIZE_SQM = 6.5
+FIXED_COST = 37_200_000
 
 def load_excel(file_path, sheet_name):
     df = pd.read_excel(file_path, sheet_name=sheet_name, engine="openpyxl")
@@ -41,32 +48,14 @@ def monte_carlo_simulation(values, market_shares, simulations=10000, volatility=
     return np.array(results)
 
 def plot_distribution(sim_data, title):
-    fig, ax = plt.subplots(figsize=(5, 3))
+    fig, ax = plt.subplots(figsize=(6, 4))
     totals = np.sum(sim_data, axis=1)
     ax.hist(totals, bins=40, alpha=0.7, edgecolor='black')
-    ax.set_title(title, fontsize=14, color='#003366')
+    ax.set_title(title)
     ax.set_xlabel("Heildar spáð þörf")
     ax.set_ylabel("Tíðni")
     plt.tight_layout()
     return fig
-
-def calculate_financials(sim_data, fixed_cost_per_year=3_000_000, margin_per_unit=15_000, discount_rate=0.05):
-    total_demand = np.sum(sim_data, axis=1)
-    yearly_demand = np.mean(sim_data, axis=0)
-    yearly_cashflow = yearly_demand * margin_per_unit - fixed_cost_per_year
-    total_contribution_margin = total_demand * margin_per_unit
-    total_profit = total_contribution_margin - fixed_cost_per_year * sim_data.shape[1]
-
-    npv = 0
-    for i, cf in enumerate(yearly_cashflow):
-        npv += cf / ((1 + discount_rate) ** (i + 1))
-
-    return {
-        "Total Forecasted Demand": int(np.mean(total_demand)),
-        "Total Contribution Margin": int(np.mean(total_contribution_margin)),
-        "Total Profit": int(np.mean(total_profit)),
-        "NPV": int(np.round(npv))
-    }
 
 def main_forecast_logic(housing_type, region, future_years, final_market_share):
     sheet_name = f"{housing_type} eftir landshlutum"
@@ -80,6 +69,7 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
         raise ValueError("Engin fortíðargögn fundust fyrir valinn landshluta.")
 
     initial_share = final_market_share * np.random.uniform(0.05, 0.1)
+    market_shares = np.linspace(initial_share, final_market_share, future_years)
 
     if use_forecast:
         future_df = load_excel(FUTURE_FILE, sheet_name)
@@ -90,34 +80,15 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
         future_data = filter_data(future_df, region, demand_column)
         future_data = future_data[future_data['ar'] > past_data['ar'].max()]
 
-        if len(future_data) < future_years:
-            use_forecast = False
+        available_years = min(len(future_data), future_years)
+        future_vals = future_data['fjoldi eininga'].values[:available_years]
+        future_years_vals = future_data['ar'].values[:available_years]
+        market_shares = np.linspace(initial_share, final_market_share, available_years)
 
-    if not use_forecast:
-        linear_years, linear_pred = linear_forecast(past_data, demand_column, start_year=2025, future_years=future_years)
-        market_shares = np.linspace(initial_share, final_market_share, future_years)
-        past_pred_adj = linear_pred * market_shares
-        sim_past = monte_carlo_simulation(linear_pred, market_shares)
-
-        df = pd.DataFrame({
-            'Ár': linear_years,
-            'Spá útfrá fortíðargögnum': past_pred_adj
-        })
-
-        figures = [plot_distribution(sim_past, "Monte Carlo - Fortíðargögn")]
-        return df, figures, future_years, sim_past
-
-    else:
-        future_vals = future_data['fjoldi eininga'].values[:future_years]
-        future_years_vals = future_data['ar'].values[:future_years]
-        market_shares = np.linspace(initial_share, final_market_share, len(future_vals))
-
-        linear_years, linear_pred = linear_forecast(past_data, demand_column, start_year=2025, future_years=len(future_vals))
-        linear_pred = linear_pred[:len(future_vals)]
+        linear_years, linear_pred = linear_forecast(past_data, demand_column, start_year=2025, future_years=available_years)
+        linear_pred = linear_pred[:available_years]
 
         avg_vals = (linear_pred + future_vals) / 2
-        sim_avg = monte_carlo_simulation(avg_vals, market_shares)
-
         linear_pred_adj = linear_pred * market_shares
         future_vals_adj = future_vals * market_shares
         avg_vals_adj = avg_vals * market_shares
@@ -129,13 +100,45 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
             'Meðaltal': avg_vals_adj
         })
 
-        figures = [
-            plot_distribution(monte_carlo_simulation(linear_pred, market_shares), "Monte Carlo - Fortíðargögn"),
-            plot_distribution(monte_carlo_simulation(future_vals, market_shares), "Monte Carlo - Framtíðarspá"),
-            plot_distribution(sim_avg, "Monte Carlo - Meðaltal"),
-        ]
+        sim_avg = monte_carlo_simulation(avg_vals, market_shares)
+        figures = [plot_distribution(sim_avg, "Monte Carlo - Meðaltal")]
 
-        return df, figures, len(future_vals), sim_avg
+        return df, figures, available_years, sim_avg
+
+    else:
+        linear_years, linear_pred = linear_forecast(past_data, demand_column, start_year=2025, future_years=future_years)
+        past_pred_adj = linear_pred * market_shares
+        df = pd.DataFrame({
+            'Ár': linear_years,
+            'Spá útfrá fortíðargögnum': past_pred_adj
+        })
+        sim_avg = monte_carlo_simulation(linear_pred, market_shares)
+        figures = [plot_distribution(sim_avg, "Monte Carlo - Fortíðargreining")]
+
+        return df, figures, future_years, sim_avg
+
+def calculate_financials(sim_avg, discount_rate=0.08):
+    expected_demand = np.mean(np.sum(sim_avg, axis=1))
+    total_sqm = expected_demand * UNIT_SIZE_SQM
+    total_revenue = total_sqm * PRICE_PER_SQM
+    total_variable_cost = total_sqm * (COST_PER_SQM + TRANSPORT_COST_PER_SQM)
+    total_contribution = total_revenue - total_variable_cost
+    total_profit = total_contribution - FIXED_COST
+
+    years = sim_avg.shape[1]
+    cash_flows = np.full(years, (total_contribution - FIXED_COST) / years)
+    npv = np.sum([cf / (1 + discount_rate)**i for i, cf in enumerate(cash_flows, start=1)])
+
+    return {
+        "expected_demand": expected_demand,
+        "total_sqm": total_sqm,
+        "total_revenue": total_revenue,
+        "total_variable_cost": total_variable_cost,
+        "total_contribution": total_contribution,
+        "total_profit": total_profit,
+        "npv": npv
+    }
+
 
 
 
