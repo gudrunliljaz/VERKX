@@ -41,15 +41,32 @@ def monte_carlo_simulation(values, market_shares, simulations=10000, volatility=
     return np.array(results)
 
 def plot_distribution(sim_data, title):
-    fig, ax = plt.subplots(figsize=(5, 3))  # Minni myndir
+    fig, ax = plt.subplots(figsize=(5, 3))
     totals = np.sum(sim_data, axis=1)
     ax.hist(totals, bins=40, alpha=0.7, edgecolor='black')
-    ax.set_title(title, fontsize=14, color='#003366')  # Dökkblár titill
+    ax.set_title(title, fontsize=14, color='#003366')
     ax.set_xlabel("Heildar spáð þörf")
     ax.set_ylabel("Tíðni")
     plt.tight_layout()
     return fig
 
+def calculate_financials(sim_data, fixed_cost_per_year=3_000_000, margin_per_unit=15_000, discount_rate=0.05):
+    total_demand = np.sum(sim_data, axis=1)
+    yearly_demand = np.mean(sim_data, axis=0)
+    yearly_cashflow = yearly_demand * margin_per_unit - fixed_cost_per_year
+    total_contribution_margin = total_demand * margin_per_unit
+    total_profit = total_contribution_margin - fixed_cost_per_year * sim_data.shape[1]
+
+    npv = 0
+    for i, cf in enumerate(yearly_cashflow):
+        npv += cf / ((1 + discount_rate) ** (i + 1))
+
+    return {
+        "Total Forecasted Demand": int(np.mean(total_demand)),
+        "Total Contribution Margin": int(np.mean(total_contribution_margin)),
+        "Total Profit": int(np.mean(total_profit)),
+        "NPV": int(np.round(npv))
+    }
 
 def main_forecast_logic(housing_type, region, future_years, final_market_share):
     sheet_name = f"{housing_type} eftir landshlutum"
@@ -63,7 +80,6 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
         raise ValueError("Engin fortíðargögn fundust fyrir valinn landshluta.")
 
     initial_share = final_market_share * np.random.uniform(0.05, 0.1)
-    market_shares = np.linspace(initial_share, final_market_share, future_years)
 
     if use_forecast:
         future_df = load_excel(FUTURE_FILE, sheet_name)
@@ -72,20 +88,36 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
 
         future_df['ar'] = pd.to_numeric(future_df['ar'], errors='coerce')
         future_data = filter_data(future_df, region, demand_column)
-
         future_data = future_data[future_data['ar'] > past_data['ar'].max()]
-        future_vals = future_data['fjoldi eininga'].values
-        future_years_vals = future_data['ar'].values
 
-        available_years = min(len(future_vals), future_years)
-        future_vals = future_vals[:available_years]
-        future_years_vals = future_years_vals[:available_years]
-        market_shares = np.linspace(initial_share, final_market_share, available_years)
+        if len(future_data) < future_years:
+            use_forecast = False
 
-        linear_years, linear_pred = linear_forecast(past_data, demand_column, start_year=2025, future_years=available_years)
-        linear_pred = linear_pred[:available_years]
+    if not use_forecast:
+        linear_years, linear_pred = linear_forecast(past_data, demand_column, start_year=2025, future_years=future_years)
+        market_shares = np.linspace(initial_share, final_market_share, future_years)
+        past_pred_adj = linear_pred * market_shares
+        sim_past = monte_carlo_simulation(linear_pred, market_shares)
+
+        df = pd.DataFrame({
+            'Ár': linear_years,
+            'Spá útfrá fortíðargögnum': past_pred_adj
+        })
+
+        figures = [plot_distribution(sim_past, "Monte Carlo - Fortíðargögn")]
+        return df, figures, future_years, sim_past
+
+    else:
+        future_vals = future_data['fjoldi eininga'].values[:future_years]
+        future_years_vals = future_data['ar'].values[:future_years]
+        market_shares = np.linspace(initial_share, final_market_share, len(future_vals))
+
+        linear_years, linear_pred = linear_forecast(past_data, demand_column, start_year=2025, future_years=len(future_vals))
+        linear_pred = linear_pred[:len(future_vals)]
 
         avg_vals = (linear_pred + future_vals) / 2
+        sim_avg = monte_carlo_simulation(avg_vals, market_shares)
+
         linear_pred_adj = linear_pred * market_shares
         future_vals_adj = future_vals * market_shares
         avg_vals_adj = avg_vals * market_shares
@@ -97,61 +129,14 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
             'Meðaltal': avg_vals_adj
         })
 
-        sim_avg = monte_carlo_simulation(avg_vals, market_shares)
-
         figures = [
             plot_distribution(monte_carlo_simulation(linear_pred, market_shares), "Monte Carlo - Fortíðargögn"),
             plot_distribution(monte_carlo_simulation(future_vals, market_shares), "Monte Carlo - Framtíðarspá"),
-            plot_distribution(sim_avg, "Monte Carlo - Meðaltal")
+            plot_distribution(sim_avg, "Monte Carlo - Meðaltal"),
         ]
 
-        return df, figures, available_years, sim_avg
+        return df, figures, len(future_vals), sim_avg
 
-    else:
-        linear_years, linear_pred = linear_forecast(past_data, demand_column, start_year=2025, future_years=future_years)
-        market_shares = np.linspace(initial_share, final_market_share, future_years)
-        past_pred_adj = linear_pred * market_shares
-
-        df = pd.DataFrame({
-            'Ár': linear_years,
-            'Spá útfrá fortíðargögnum': past_pred_adj
-        })
-
-        sim_past = monte_carlo_simulation(linear_pred, market_shares)
-
-        figures = [
-            plot_distribution(sim_past, "Monte Carlo - Fortíðargögn")
-        ]
-
-        return df, figures, future_years, sim_past
-
-
-def calculate_financials(sim_data, margin_per_unit=15000, fixed_cost=3000000, discount_rate=0.07):
-    """
-    Reiknar framlegð, hagnað, cash flow og NPV fyrir Monte Carlo hermun.
-    """
-    # Heildarfjöldi eininga fyrir hverja hermun
-    total_units = np.sum(sim_data, axis=1)
-
-    # Reiknum árlegar framlegðir út frá fjölda eininga og framlegð á einingu
-    annual_margin = sim_data * margin_per_unit  # shape: (sim, years)
-    annual_cashflow = annual_margin - fixed_cost  # dregur fastan kostnað frá á hverju ári
-
-    # NPV útreikningur fyrir hverja hermun
-    years = np.arange(1, sim_data.shape[1] + 1)
-    discount_factors = 1 / (1 + discount_rate) ** years
-    npvs = np.sum(annual_cashflow * discount_factors, axis=1)
-
-    # Meðaltalsútkomur fyrir appið
-    avg_total_margin = np.mean(np.sum(annual_margin, axis=1))
-    avg_profit = np.mean(np.sum(annual_cashflow, axis=1))
-    avg_npv = np.mean(npvs)
-
-    return {
-        "Heildar framlegð": avg_total_margin,
-        "Hagnaður": avg_profit,
-        "NPV": avg_npv
-    }
 
 
 
