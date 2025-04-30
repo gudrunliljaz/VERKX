@@ -50,6 +50,26 @@ def plot_distribution(sim_data, title):
     plt.tight_layout()
     return fig
 
+def calculate_financials(sim_data, fixed_cost_per_year=3_000_000, contribution_per_unit=15_000, discount_rate=0.07):
+    yearly_totals = np.mean(sim_data, axis=0)  # Meðaltal yfir simulations fyrir hvert ár
+    years = len(yearly_totals)
+
+    revenue_per_year = yearly_totals * contribution_per_unit
+    cash_flow_per_year = revenue_per_year - fixed_cost_per_year
+    total_contribution = np.sum(revenue_per_year)
+    total_profit = np.sum(cash_flow_per_year)
+
+    npv = np.sum([
+        cf / (1 + discount_rate) ** t
+        for t, cf in enumerate(cash_flow_per_year, start=1)
+    ])
+
+    return {
+        "Total Contribution": total_contribution,
+        "Total Profit": total_profit,
+        "NPV": npv,
+        "Annual Cash Flows": cash_flow_per_year
+    }
 
 def main_forecast_logic(housing_type, region, future_years, final_market_share):
     sheet_name = f"{housing_type} eftir landshlutum"
