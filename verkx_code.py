@@ -4,7 +4,13 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
 PAST_FILE = "data/GÖGN_VERKX.xlsx"
-FUTURE_FILE = "data/Framtidarspa.xlsx"
+FUTURE_FILE = "data/Framtíðarspá.xlsx"
+
+# Forsendur tekjumódels
+PRICE_PER_M2 = 375_000
+COST_PER_M2 = 360_000
+FIXED_COST_PER_YEAR = 3_000_000
+PROFIT_PER_M2 = PRICE_PER_M2 - COST_PER_M2
 
 def load_excel(file_path, sheet_name):
     df = pd.read_excel(file_path, sheet_name=sheet_name, engine="openpyxl")
@@ -41,15 +47,21 @@ def monte_carlo_simulation(values, market_shares, simulations=10000, volatility=
     return np.array(results)
 
 def plot_distribution(sim_data, title):
-    fig, ax = plt.subplots(figsize=(5, 3))  # Minni myndir
+    fig, ax = plt.subplots(figsize=(6, 4))
     totals = np.sum(sim_data, axis=1)
     ax.hist(totals, bins=40, alpha=0.7, edgecolor='black')
-    ax.set_title(title, fontsize=14, color='#003366')  # Dökkblár titill
+    ax.set_title(title)
     ax.set_xlabel("Heildar spáð þörf")
     ax.set_ylabel("Tíðni")
     plt.tight_layout()
     return fig
 
+def compute_profit(sim_data, profit_per_m2=PROFIT_PER_M2, fixed_cost_per_year=FIXED_COST_PER_YEAR):
+    total_units = np.sum(sim_data, axis=1)
+    variable_profit = total_units * profit_per_m2
+    total_fixed_cost = sim_data.shape[1] * fixed_cost_per_year
+    net_profit = variable_profit - total_fixed_cost
+    return net_profit  # array með hagnaði/tapi per hermun
 
 def main_forecast_logic(housing_type, region, future_years, final_market_share):
     sheet_name = f"{housing_type} eftir landshlutum"
@@ -63,6 +75,7 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
         raise ValueError("Engin fortíðargögn fundust fyrir valinn landshluta.")
 
     initial_share = final_market_share * np.random.uniform(0.05, 0.1)
+    market_shares = np.linspace(initial_share, final_market_share, future_years)
 
     if use_forecast:
         future_df = load_excel(FUTURE_FILE, sheet_name)
@@ -71,35 +84,18 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
 
         future_df['ar'] = pd.to_numeric(future_df['ar'], errors='coerce')
         future_data = filter_data(future_df, region, demand_column)
+
         future_data = future_data[future_data['ar'] > past_data['ar'].max()]
+        future_vals = future_data['fjoldi eininga'].values
+        future_years_vals = future_data['ar'].values
 
-        if len(future_data) < future_years:
-            # Ekki nóg framtíðargögn - notum bara fortíðargreiningu
-            use_forecast = False
+        available_years = min(len(future_vals), future_years)
+        future_vals = future_vals[:available_years]
+        future_years_vals = future_years_vals[:available_years]
+        market_shares = np.linspace(initial_share, final_market_share, available_years)
 
-    if not use_forecast:
-        # Aðeins fortíðargreining
-        linear_years, linear_pred = linear_forecast(past_data, demand_column, start_year=2025, future_years=future_years)
-        market_shares = np.linspace(initial_share, final_market_share, future_years)
-        past_pred_adj = linear_pred * market_shares
-
-        df = pd.DataFrame({
-            'Ár': linear_years,
-            'Spá útfrá fortíðargögnum': past_pred_adj
-        })
-
-        figures = [plot_distribution(monte_carlo_simulation(linear_pred, market_shares), "Monte Carlo - Fortíðargögn")]
-
-        return df, figures, future_years
-
-    else:
-        # Bæði fortíð + framtíð
-        future_vals = future_data['fjoldi eininga'].values[:future_years]
-        future_years_vals = future_data['ar'].values[:future_years]
-        market_shares = np.linspace(initial_share, final_market_share, len(future_vals))
-
-        linear_years, linear_pred = linear_forecast(past_data, demand_column, start_year=2025, future_years=len(future_vals))
-        linear_pred = linear_pred[:len(future_vals)]
+        linear_years, linear_pred = linear_forecast(past_data, demand_column, start_year=2025, future_years=available_years)
+        linear_pred = linear_pred[:available_years]
 
         avg_vals = (linear_pred + future_vals) / 2
 
@@ -114,13 +110,41 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
             'Meðaltal': avg_vals_adj
         })
 
+        sim_past = monte_carlo_simulation(linear_pred, market_shares)
+        sim_future = monte_carlo_simulation(future_vals, market_shares)
+        sim_avg = monte_carlo_simulation(avg_vals, market_shares)
+
+        # Reikna hagnað út frá meðalspá
+        profit_sim = compute_profit(sim_avg)
+
         figures = [
-            plot_distribution(monte_carlo_simulation(linear_pred, market_shares), "Monte Carlo - Fortíðargögn"),
-            plot_distribution(monte_carlo_simulation(future_vals, market_shares), "Monte Carlo - Framtíðarspá"),
-            plot_distribution(monte_carlo_simulation(avg_vals, market_shares), "Monte Carlo - Meðaltal"),
+            plot_distribution(sim_past, "Monte Carlo - Fortíðargögn"),
+            plot_distribution(sim_future, "Monte Carlo - Framtíðarspá"),
+            plot_distribution(sim_avg, "Monte Carlo - Meðaltal"),
+            plot_distribution(profit_sim.reshape(-1, 1), "Monte Carlo - Hagnaður")
         ]
 
-        return df, figures, len(future_vals)
+        return df, figures, available_years
+
+    else:
+        linear_years, linear_pred = linear_forecast(past_data, demand_column, start_year=2025, future_years=future_years)
+        past_pred_adj = linear_pred * market_shares
+
+        df = pd.DataFrame({
+            'Ár': linear_years,
+            'Spá útfrá fortíðargögnum': past_pred_adj
+        })
+
+        sim_past = monte_carlo_simulation(linear_pred, market_shares)
+        profit_sim = compute_profit(sim_past)
+
+        figures = [
+            plot_distribution(sim_past, "Monte Carlo - Fortíðargögn"),
+            plot_distribution(profit_sim.reshape(-1, 1), "Monte Carlo - Hagnaður")
+        ]
+
+        return df, figures, future_years
+
 
 
 
