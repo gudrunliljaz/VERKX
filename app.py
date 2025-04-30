@@ -30,17 +30,17 @@ if st.button("Keyra spá"):
         try:
             df, figures, used_years, sim_avg = main_forecast_logic(housing_type, region, future_years, final_market_share)
 
-            st.subheader("📊 Spá niðurstöður")
+            st.subheader("Einingar")
             st.dataframe(df.set_index(df.columns[0]).style.format("{:.2f}"))
 
-            st.subheader("📉 Monte Carlo dreifing")
+            st.subheader("Dreifing")
             img_cols = st.columns(len(figures))
             for col, fig in zip(img_cols, figures):
                 with col:
                     st.pyplot(fig)
 
-            # 💰 Tekjumódel
-            st.subheader("💰 Fjárhagslegt mat")
+            #Tekjumódel
+            st.subheader("Fjárhagslegt mat")
 
             # Forsendur
             price_per_unit = 375000
