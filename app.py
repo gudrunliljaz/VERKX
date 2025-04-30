@@ -121,6 +121,13 @@ if st.button(labels[language]["run"]):
     with st.spinner(labels[language]["loading"]):
         try:
             df, figures, used_years = main_forecast_logic(housing_type, region, future_years, final_market_share)
+            if language == "English":
+            df = df.rename(columns={
+            "Ár": "Year",
+            "Fortíðargögn spá": "Historical Forecast",
+            "Framtíðarspá": "Future Forecast",
+            "Meðaltal": "Average"
+             })
 
             if used_years < future_years:
                 st.warning(labels[language]["warning"].format(used_years))
