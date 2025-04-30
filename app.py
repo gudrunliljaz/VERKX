@@ -52,4 +52,10 @@ if st.button("Keyra spá"):
             st.error(f"Villa kom upp: {e}")
 
 
-
+st.subheader("💰 Fjárhagslegar niðurstöður")
+st.metric("Heildareiningar", f"{financials['Total Units']:.0f}")
+st.metric("Tekjur", f"{financials['Revenue']:,.0f} kr.")
+st.metric("Heildarkostnaður", f"{financials['Total Cost']:,.0f} kr.")
+st.metric("Framlegð", f"{financials['Contribution Margin']:,.0f} kr.")
+st.metric("Hagnaður", f"{financials['Profit']:,.0f} kr.")
+st.metric("NPV", f"{financials['NPV']:,.0f} kr.")
