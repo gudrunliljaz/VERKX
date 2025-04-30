@@ -11,21 +11,25 @@ st.set_page_config(
     layout="wide"
 )
 
+
 # CSS fyrir hægra megin language box
 st.markdown("""
     <style>
-    div.language-dropdown {
+    .language-dropdown {
         position: absolute;
-        top: 10px;
-        right: 20px;
+        top: 15px;
+        right: 25px;
         z-index: 9999;
+        font-size: 13px;
+        width: 140px;
     }
-    h1 {
-        color: #003366;
-        text-align: center;
+    .language-dropdown select {
+        font-size: 13px !important;
+        padding: 4px !important;
     }
     </style>
 """, unsafe_allow_html=True)
+
 
 # Tungumálaval efst hægra megin
 st.markdown('<div class="language-dropdown">', unsafe_allow_html=True)
@@ -76,7 +80,7 @@ st.markdown(f"<h1>{labels[language]['title']}</h1><hr>", unsafe_allow_html=True)
 # Housing mappings
 housing_map = {
     "Íslenska": ["Íbúðir", "Leikskólar", "Gistirými", "Elliheimili", "Atvinnuhús"],
-    "English": ["Apartments", "Preschools", "Guesthouses", "Nursing homes", "Commercial"]
+    "English": ["Apartments", "Kindergartens", "Accommodation facilities", "Nursing homes", "Commercial buildings"]
 }
 housing_reverse = dict(zip(housing_map["English"], housing_map["Íslenska"]))
 
@@ -87,8 +91,8 @@ region_map = {
         "Norðurland vestra", "Norðurland eystra", "Austurland", "Suðurland"
     ],
     "English": [
-        "Capital Region", "Southern Peninsula", "West Iceland", "Westfjords",
-        "Northwest Iceland", "Northeast Iceland", "East Iceland", "South Iceland"
+        "Capital Region", "Southern Peninsula", "Western Region", "Westfjords",
+        "Northwestern Region", "Northeastern Region", "Eastern Region", "Southern Region"
     ]
 }
 region_reverse = dict(zip(region_map["English"], region_map["Íslenska"]))
