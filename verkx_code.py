@@ -6,12 +6,13 @@ from sklearn.linear_model import LinearRegression
 PAST_FILE = "data/GÖGN_VERKX.xlsx"
 FUTURE_FILE = "data/Framtíðarspá.xlsx"
 
-# Kostnaðarforsendur
+# Forsendur úr kostnaðarskjalinu
 PRICE_PER_SQM = 467_308
 COST_PER_SQM = 452_308
-TRANSPORT_COST_PER_SQM = 92_308
+TRANSPORT_PER_SQM = 92_308
 UNIT_SIZE_SQM = 6.5
 FIXED_COST = 37_200_000
+DISCOUNT_RATE = 0.10
 
 def load_excel(file_path, sheet_name):
     df = pd.read_excel(file_path, sheet_name=sheet_name, engine="openpyxl")
@@ -89,55 +90,53 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
         linear_pred = linear_pred[:available_years]
 
         avg_vals = (linear_pred + future_vals) / 2
-        linear_pred_adj = linear_pred * market_shares
-        future_vals_adj = future_vals * market_shares
         avg_vals_adj = avg_vals * market_shares
 
         df = pd.DataFrame({
             'Ár': future_years_vals,
-            'Fortíðargögn spá': linear_pred_adj,
-            'Framtíðarspá': future_vals_adj,
+            'Fortíðargögn spá': linear_pred * market_shares,
+            'Framtíðarspá': future_vals * market_shares,
             'Meðaltal': avg_vals_adj
         })
 
         sim_avg = monte_carlo_simulation(avg_vals, market_shares)
         figures = [plot_distribution(sim_avg, "Monte Carlo - Meðaltal")]
 
-        return df, figures, available_years, sim_avg
-
     else:
         linear_years, linear_pred = linear_forecast(past_data, demand_column, start_year=2025, future_years=future_years)
-        past_pred_adj = linear_pred * market_shares
+        avg_vals_adj = linear_pred * market_shares
         df = pd.DataFrame({
             'Ár': linear_years,
-            'Spá útfrá fortíðargögnum': past_pred_adj
+            'Spá útfrá fortíðargögnum': avg_vals_adj
         })
         sim_avg = monte_carlo_simulation(linear_pred, market_shares)
         figures = [plot_distribution(sim_avg, "Monte Carlo - Fortíðargreining")]
 
-        return df, figures, future_years, sim_avg
+    # Fjárhagslegt mat
+    mean_total_demand = np.mean(np.sum(sim_avg, axis=1))
+    total_sqm = mean_total_demand * UNIT_SIZE_SQM
+    revenue = total_sqm * PRICE_PER_SQM
+    variable_cost = total_sqm * (COST_PER_SQM + TRANSPORT_PER_SQM)
+    contribution = revenue - variable_cost
+    profit = contribution - FIXED_COST
 
-def calculate_financials(sim_avg, discount_rate=0.08):
-    expected_demand = np.mean(np.sum(sim_avg, axis=1))
-    total_sqm = expected_demand * UNIT_SIZE_SQM
-    total_revenue = total_sqm * PRICE_PER_SQM
-    total_variable_cost = total_sqm * (COST_PER_SQM + TRANSPORT_COST_PER_SQM)
-    total_contribution = total_revenue - total_variable_cost
-    total_profit = total_contribution - FIXED_COST
-
+    # NPV
     years = sim_avg.shape[1]
-    cash_flows = np.full(years, (total_contribution - FIXED_COST) / years)
-    npv = np.sum([cf / (1 + discount_rate)**i for i, cf in enumerate(cash_flows, start=1)])
+    annual_cashflow = contribution / years
+    npv = sum([annual_cashflow / (1 + DISCOUNT_RATE)**t for t in range(1, years + 1)]) - FIXED_COST
 
-    return {
-        "expected_demand": expected_demand,
-        "total_sqm": total_sqm,
-        "total_revenue": total_revenue,
-        "total_variable_cost": total_variable_cost,
-        "total_contribution": total_contribution,
-        "total_profit": total_profit,
-        "npv": npv
+    financials = {
+        "Heildarspáð einingaþörf": round(mean_total_demand),
+        "Heildar fermetrar": round(total_sqm),
+        "Heildartekjur": round(revenue),
+        "Heildarkostnaður": round(variable_cost + FIXED_COST),
+        "Framlegð": round(contribution),
+        "Hagnaður": round(profit),
+        "NPV": round(npv)
     }
+
+    return df, figures, years, financials
+
 
 
 
