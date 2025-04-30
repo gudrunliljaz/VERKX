@@ -62,7 +62,7 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
     if past_data.empty:
         raise ValueError("Engin fortíðargögn fundust fyrir valinn landshluta.")
 
-    initial_share = final_market_share * np.random.uniform(0.05, 0.1)
+    initial_share = final_market_share * 0.05
 
     if use_forecast:
         future_df = load_excel(FUTURE_FILE, sheet_name)
