@@ -88,7 +88,7 @@ def calculate_financials(sim_avg):
         total_variable_cost.append(total_cost)
         contribution_margins.append(margin)
         cash_flows.append(profit)
-        cash_flows_wo_fixed_cost.appent(margin)
+        cash_flows_wo_fixed_cost.append(margin)
 
         efficiency *= EFFICIENCY_FACTOR
 
