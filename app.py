@@ -96,7 +96,7 @@ financial_labels = {
         "Heildarkostnaður án fasta  kostnaðarins": "Total cost without the fixed cost",
         "Framlegð": "Contribution margin",
         "Hagnaður": "Profit",
-        "Hagnaður án fasta kostnaðarins", "Profit without the fixed cost",
+        "Hagnaður án fasta kostnaðarins": "Profit without the fixed cost",
         "NPV": "Net Present Value (NPV)",
         "NPV án fasta kostnaðarins": "NPV without the fixed cost"
     }
