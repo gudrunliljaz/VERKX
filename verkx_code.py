@@ -1,19 +1,20 @@
-dimport pandas as pd
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
+# Skrár
 PAST_FILE = "data/GÖGN_VERKX.xlsx"
 FUTURE_FILE = "data/Framtidarspa.xlsx"
 
-# Fastar fyrir tekjumódel
+# Fastar
 PRICE_PER_SQM = 467_308
 BASE_COST_PER_SQM = 360_000
 TRANSPORT_COST_PER_SQM = 92_308
 UNIT_SIZE_SQM = 6.5
 FIXED_COST_PER_YEAR = 37_200_000
-DISCOUNT_RATE = 0.08  # 8%
-EFFICIENCY_FACTOR = 0.98  # árleg lækkun á breytilegum kostnaði
+DISCOUNT_RATE = 0.08
+EFFICIENCY_FACTOR = 0.98
 
 def load_excel(file_path, sheet_name):
     df = pd.read_excel(file_path, sheet_name=sheet_name, engine="openpyxl")
@@ -87,7 +88,7 @@ def calculate_financials(sim_avg):
         contribution_margins.append(margin)
         cash_flows.append(profit)
 
-        efficiency *= EFFICIENCY_FACTOR  # lækkun fyrir næsta ár
+        efficiency *= EFFICIENCY_FACTOR
 
     npv = sum(cf / ((1 + DISCOUNT_RATE) ** (i + 1)) for i, cf in enumerate(cash_flows))
 
@@ -116,7 +117,6 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
         future_df = load_excel(FUTURE_FILE, sheet_name)
         if 'sviðsmynd' in future_df.columns:
             future_df = future_df[future_df['sviðsmynd'].str.lower() == 'miðspá']
-
         future_df['ar'] = pd.to_numeric(future_df['ar'], errors='coerce')
         future_data = filter_data(future_df, region, demand_column)
         future_data = future_data[future_data['ar'] > past_data['ar'].max()]
@@ -130,14 +130,8 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
         past_pred_adj = linear_pred * market_shares
 
         sim_past = monte_carlo_simulation(linear_pred, market_shares)
-
-        df = pd.DataFrame({
-            'Ár': linear_years,
-            'Spá útfrá fortíðargögnum': past_pred_adj
-        })
-
+        df = pd.DataFrame({'Ár': linear_years, 'Spá útfrá fortíðargögnum': past_pred_adj})
         figures = [plot_distribution(sim_past, "Monte Carlo - Fortíðargögn")]
-
         financials = calculate_financials(sim_past)
 
         return df, figures, future_years, financials
@@ -149,14 +143,13 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
 
         linear_years, linear_pred = linear_forecast(past_data, demand_column, 2025, len(future_vals))
         linear_pred = linear_pred[:len(future_vals)]
-
         avg_vals = (linear_pred + future_vals) / 2
+
         linear_pred_adj = linear_pred * market_shares
         future_vals_adj = future_vals * market_shares
         avg_vals_adj = avg_vals * market_shares
 
         sim_avg = monte_carlo_simulation(avg_vals, market_shares)
-
         df = pd.DataFrame({
             'Ár': future_years_vals,
             'Fortíðargögn spá': linear_pred_adj,
@@ -173,29 +166,6 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
         financials = calculate_financials(sim_avg)
 
         return df, figures, len(future_vals), financials
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
