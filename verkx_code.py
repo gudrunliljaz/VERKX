@@ -70,11 +70,17 @@ def calculate_financials(sim_avg):
     cash_flows = []
     cash_flows_wo_fixed_cost = []
 
-    efficiency = 1.0
-
     for year in range(years):
         units = avg_units_per_year[year]
         sqm_total = units * UNIT_SIZE_SQM
+
+        # ÁR 1: engin breyting — ár 2: 10% lækkun — svo 2% árlega
+        if year == 0:
+            efficiency = 1.0
+        elif year == 1:
+            efficiency = 0.90  # 10% lækkun
+        else:
+            efficiency *= 0.98  # 2% lækkun frá fyrra ári
 
         variable_cost_per_sqm = (BASE_COST_PER_SQM * efficiency) + TRANSPORT_COST_PER_SQM
         total_cost = variable_cost_per_sqm * sqm_total
@@ -87,11 +93,10 @@ def calculate_financials(sim_avg):
         total_variable_cost.append(total_cost)
         contribution_margins.append(margin)
         cash_flows.append(profit)
-
-        efficiency *= EFFICIENCY_FACTOR
+        cash_flows_wo_fixed_cost.append(margin)
 
     npv = sum(cf / ((1 + DISCOUNT_RATE) ** (i + 1)) for i, cf in enumerate(cash_flows))
-    npv_wo_fixed_cost = sum(cf / ((1 + DISCOUNT_RATE) ** (i + 1)) for i, cf in enumerate(contribution_margins))
+    npv_wo_fixed_cost = sum(cf / ((1 + DISCOUNT_RATE) ** (i + 1)) for i, cf in enumerate(cash_flows_wo_fixed_cost))
 
     return {
         "Tekjur": sum(total_revenue),
