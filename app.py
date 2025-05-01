@@ -83,8 +83,7 @@ financial_labels = {
         "Heildarkostnaður með fasta kostnaðinum": "Heildarkostnaður með fasta kostnaðinum",
         "Heildarkostnaður án fasta  kostnaðarins": "Heildarkostnaður án fasta  kostnaðarins",
         "Framlegð": "Framlegð",
-        "Hagnaður": "Hagnaður",
-        "Hagnaður án fasta kostnaðarins": "Hagnaður án fasta kostnaðarins",
+        "Hagnaður með fasta kostnaðinum": "Hagnaður",
         "NPV": "Núvirt virði (NPV)",
         "NPV án fasta kostnaðarins": "NPV án fasta kostnaðarins"
     },
@@ -95,8 +94,7 @@ financial_labels = {
         "Heildarkostnaður með fasta kostnaðinum": "Total cost with the fixed cost",
         "Heildarkostnaður án fasta  kostnaðarins": "Total cost without the fixed cost",
         "Framlegð": "Contribution margin",
-        "Hagnaður": "Profit",
-        "Hagnaður án fasta kostnaðarins": "Profit without the fixed cost",
+        "Hagnaður með fasta kostnaðinum": "Profit with the fixed cost",
         "NPV": "Net Present Value (NPV)",
         "NPV án fasta kostnaðarins": "NPV without the fixed cost"
     }
