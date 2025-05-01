@@ -12,7 +12,7 @@ COST_PER_SQM = 452_308
 TRANSPORT_PER_SQM = 92_308
 UNIT_SIZE_SQM = 6.5
 FIXED_COST = 37_200_000
-DISCOUNT_RATE = 0.10
+DISCOUNT_RATE = 0.08
 
 def load_excel(file_path, sheet_name):
     df = pd.read_excel(file_path, sheet_name=sheet_name, engine="openpyxl")
