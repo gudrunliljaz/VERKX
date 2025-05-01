@@ -87,17 +87,21 @@ def calculate_financials(sim_avg):
         total_variable_cost.append(total_cost)
         contribution_margins.append(margin)
         cash_flows.append(profit)
+        cash_flows_wo_fixed_cost.appent(margin)
 
         efficiency *= EFFICIENCY_FACTOR
 
     npv = sum(cf / ((1 + DISCOUNT_RATE) ** (i + 1)) for i, cf in enumerate(cash_flows))
-
+    npv_wo_fixed_cost = sum(cf / ((1 + DISCOUNT_RATE) ** (i + 1)) for i, cf in enumerate(margin))
+    
     return {
         "Tekjur": sum(total_revenue),
-        "Heildarkostnaður": sum(total_variable_cost) + FIXED_COST_PER_YEAR * years,
+        "Heildarkostnaður með fasta kostnaðinum": sum(total_variable_cost) + FIXED_COST_PER_YEAR * years,
+        "Heildarkostnaður án fasta kostnaðarins": sum(total_variable_cost),
         "Framlegð": sum(contribution_margins),
         "Hagnaður": sum(cash_flows),
-        "NPV": npv
+        "NPV": npv,
+        "NPV án fasta kostnaðarins": npv_wo_fixed_cost
     }
 
 def main_forecast_logic(housing_type, region, future_years, final_market_share):
