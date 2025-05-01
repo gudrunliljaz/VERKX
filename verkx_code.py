@@ -1,4 +1,4 @@
-import pandas as pd
+dimport pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
@@ -92,11 +92,11 @@ def calculate_financials(sim_avg):
     npv = sum(cf / ((1 + DISCOUNT_RATE) ** (i + 1)) for i, cf in enumerate(cash_flows))
 
     return {
-        "total_revenue": sum(total_revenue),
-        "total_cost": sum(total_variable_cost) + FIXED_COST_PER_YEAR * years,
-        "total_margin": sum(contribution_margins),
-        "total_profit": sum(cash_flows),
-        "npv": npv
+        "Heildar tekjur": sum(total_revenue),
+        "Heildar kostnaður": sum(total_variable_cost) + FIXED_COST_PER_YEAR * years,
+        "Heildar framlegð": sum(contribution_margins),
+        "Heildar hagnaður": sum(cash_flows),
+        "NPV": npv
     }
 
 def main_forecast_logic(housing_type, region, future_years, final_market_share):
