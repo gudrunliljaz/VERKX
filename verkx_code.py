@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
 PAST_FILE = "data/GÖGN_VERKX.xlsx"
-FUTURE_FILE = "data/Framtíðarspá.xlsx"
+FUTURE_FILE = "data/Framtidarspa.xlsx"
 
 # Kostnaðar- og tekjuforsendur
 PRICE_PER_SQM = 467_308
