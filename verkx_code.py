@@ -53,10 +53,10 @@ def plot_distribution(sim_data, title):
 def calculate_financials(sim_data, years):
     DISCOUNT_RATE = 0.08
     UNIT_SIZE = 6.5
-    PRICE_PER_SQM = 467_308
-    COST_PER_SQM = 452_308
-    TRANSPORT_PER_SQM = 92_308
-    FIXED_COST = 37_200_000
+    PRICE_PER_SQM = 467308
+    COST_PER_SQM = 360000
+    TRANSPORT_PER_SQM = 92308
+    FIXED_COST = 37200000
 
     total_units = np.mean(np.sum(sim_data, axis=1))
     total_sqm = total_units * UNIT_SIZE
