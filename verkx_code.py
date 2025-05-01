@@ -54,14 +54,24 @@ def calculate_financials(sim_data, years):
     DISCOUNT_RATE = 0.08
     UNIT_SIZE = 6.5
     PRICE_PER_SQM = 467308
-    COST_PER_SQM = 360000
     TRANSPORT_PER_SQM = 92308
     FIXED_COST = 37200000
+    efficiency_start = 0.9  # upphafsnýting
+    efficiency_growth = 0.98  # 2% árleg lækkun á kostnaði
+    base_variable_cost = 360_000
+    variable_costs_per_year = []
+
+    efficiency = efficiency_start
+    for year in range(future_years):
+        cost = (base_variable_cost * efficiency) + transport_cost
+        variable_costs_per_year.append(cost)
+        efficiency *= efficiency_growth  # næsta ár verður 2% betra
+
 
     total_units = np.mean(np.sum(sim_data, axis=1))
     total_sqm = total_units * UNIT_SIZE
     revenue = total_sqm * PRICE_PER_SQM
-    variable_cost = total_sqm * (COST_PER_SQM + TRANSPORT_PER_SQM)
+    variable_cost = total_sqm * variable_costs_per_year[year_idx]
     total_cost = variable_cost + FIXED_COST
     contribution_margin = revenue - variable_cost
     profit = revenue - total_cost
