@@ -80,19 +80,23 @@ financial_labels = {
         "Einingar": "Einingar",
         "Fermetrar": "Fermetrar",
         "Tekjur": "Tekjur",
-        "Heildarkostnaður": "Heildarkostnaður",
+        "Heildarkostnaður með fasta kostnaðinum": "Heildarkostnaður með fasta kostnaðinum",
+        "Heildarkostnaður án fasta  kostnaðarins": "Heildarkostnaður án fasta  kostnaðarins",
         "Framlegð": "Framlegð",
         "Hagnaður": "Hagnaður",
-        "NPV": "Núvirt virði (NPV)"
+        "NPV": "Núvirt virði (NPV)",
+        "NPV án fasta kostnaðarins": "NPV án fasta kostnaðarins"
     },
     "English": {
         "Einingar": "Units",
         "Fermetrar": "Square meters",
         "Tekjur": "Revenue",
-        "Heildarkostnaður": "Total cost",
+        "Heildarkostnaður með fasta kostnaðinum": "Total cost with the fixed cost",
+        "Heildarkostnaður án fasta  kostnaðarins": "Total cost without the fixed cost",
         "Framlegð": "Contribution margin",
         "Hagnaður": "Profit",
-        "NPV": "Net Present Value (NPV)"
+        "NPV": "Net Present Value (NPV)",
+        "NPV án fasta kostnaðarins": "NPV without the fixed cost"
     }
 }
 
