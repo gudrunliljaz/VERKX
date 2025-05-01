@@ -68,6 +68,7 @@ def calculate_financials(sim_avg):
     total_variable_cost = []
     contribution_margins = []
     cash_flows = []
+    cash_flows_wo_the_fixed_cost = []
 
     base_cost = BASE_COST_PER_SQM
     efficiency = 1.0
