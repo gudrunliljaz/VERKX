@@ -11,7 +11,7 @@ st.set_page_config(
     layout="wide"
 )
 
-
+# Tungumálaval í efra hægra horni
 st.markdown("""
     <style>
     div[data-testid="stSidebar"] div.language-dropdown {
@@ -29,12 +29,10 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
 with st.container():
     st.markdown('<div class="language-dropdown">', unsafe_allow_html=True)
     language = st.selectbox("Language", ["Íslenska", "English"], label_visibility="collapsed", index=0)
     st.markdown('</div>', unsafe_allow_html=True)
-
 
 # Þýðingar
 labels = {
@@ -50,6 +48,7 @@ labels = {
         "download_tab": "Vista niðurstöður",
         "table_title": "Cubit einingar",
         "distribution": "Dreifing",
+        "financials": "Fjárhagsleg niðurstaða",
         "download_button": "Hlaða niður CSV skrá",
         "download_name": "spa_nidurstodur.csv",
         "warning": "Aðeins {} ár fundust í framtíðarspá — notum bara þau ár.",
@@ -67,10 +66,33 @@ labels = {
         "download_tab": "Download",
         "table_title": "Cubit units",
         "distribution": "Distribution",
+        "financials": "Financial Results",
         "download_button": "Download CSV file",
         "download_name": "forecast_results.csv",
         "warning": "Only {} years found in future data — using only those.",
         "error": "An error occurred"
+    }
+}
+
+# Fjárhagsniðurstöður – þýðingar
+financial_labels = {
+    "Íslenska": {
+        "Einingar": "Einingar",
+        "Fermetrar": "Fermetrar",
+        "Tekjur": "Tekjur",
+        "Heildarkostnaður": "Heildarkostnaður",
+        "Framlegð": "Framlegð",
+        "Hagnaður": "Hagnaður",
+        "NPV": "Núvirt virði (NPV)"
+    },
+    "English": {
+        "Einingar": "Units",
+        "Fermetrar": "Square meters",
+        "Tekjur": "Revenue",
+        "Heildarkostnaður": "Total cost",
+        "Framlegð": "Contribution margin",
+        "Hagnaður": "Profit",
+        "NPV": "Net Present Value (NPV)"
     }
 }
 
@@ -97,13 +119,11 @@ region_map = {
 }
 region_reverse = dict(zip(region_map["English"], region_map["Íslenska"]))
 
-# Input form
+# Inputs
 col1, col2 = st.columns(2)
 with col1:
     housing_display = st.selectbox(labels[language]["housing"], housing_map[language])
-    # Reverse to íslenska
     housing_type = housing_reverse[housing_display] if language == "English" else housing_display
-
 with col2:
     region_display = st.selectbox(labels[language]["region"], region_map[language])
     region = region_reverse[region_display] if language == "English" else region_display
@@ -115,11 +135,15 @@ with col4:
     market_share_percent = st.slider(labels[language]["market"], min_value=0, max_value=100, value=50)
     final_market_share = market_share_percent / 100
 
-# Keyra spá
+# Keyra
 if st.button(labels[language]["run"]):
     with st.spinner(labels[language]["loading"]):
         try:
-            df, figures, used_years = main_forecast_logic(housing_type, region, future_years, final_market_share)
+            df, figures, used_years, financials = main_forecast_logic(housing_type, region, future_years, final_market_share)
+
+            if used_years < future_years:
+                st.warning(labels[language]["warning"].format(used_years))
+
             if language == "English":
                 df = df.rename(columns={
                     "Ár": "Year",
@@ -129,9 +153,6 @@ if st.button(labels[language]["run"]):
                     "Spá útfrá fortíðargögnum": "Forecast from historical data"
                 })
 
-            if used_years < future_years:
-                st.warning(labels[language]["warning"].format(used_years))
-
             tabs = st.tabs([labels[language]["result_tab"], labels[language]["download_tab"]])
 
             with tabs[0]:
@@ -139,39 +160,28 @@ if st.button(labels[language]["run"]):
                 index_col = "Ár" if language == "Íslenska" else "Year"
                 st.dataframe(df.set_index(index_col).style.format("{:.2f}"))
 
-
                 st.subheader(labels[language]["distribution"])
                 img_cols = st.columns(len(figures))
                 for col, fig in zip(img_cols, figures):
                     with col:
                         st.pyplot(fig)
 
+                st.subheader(labels[language]["financials"])
+                for key, value in financials.items():
+                    label = financial_labels[language].get(key, key)
+                    st.write(f"**{label}:** {value:,.0f} kr.")
+
             with tabs[1]:
-    # Tryggjum rétt dálkheiti fyrir niðurhal
-                if language == "English":
-                    df_to_export = df.rename(columns={
-                        "Ár": "Year",
-                        "Fortíðargögn spá": "Historical Forecast",
-                        "Framtíðarspá": "Future Forecast",
-                        "Meðaltal": "Average",
-                        "Spá útfrá fortíðargögnum": "Forecast from historical data"
-                    })
-                else:
-                    df_to_export = df.copy()
-
-    # Búum til CSV með utf-8-sig (mikilvægt fyrir Windows Excel)
-                csv_bytes = df_to_export.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
-
-    # Download hnappur
+                csv = df.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
                 st.download_button(
                     label=labels[language]["download_button"],
-                    data=csv_bytes,
+                    data=csv,
                     file_name=labels[language]["download_name"],
                     mime="text/csv"
-                 )
-
+                )
 
         except Exception as e:
             st.error(f"{labels[language]['error']}: {e}")
+
 
 
