@@ -101,6 +101,7 @@ def calculate_financials(sim_avg):
         "Heildarkostnaður án fasta kostnaðarins": sum(total_variable_cost),
         "Framlegð": sum(contribution_margins),
         "Hagnaður": sum(cash_flows),
+        "Hagnaður án fasta kostnaðarins": sum(cash_flows_wo_fixed_cost),
         "NPV": npv,
         "NPV án fasta kostnaðarins": npv_wo_fixed_cost
     }
