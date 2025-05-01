@@ -92,10 +92,10 @@ def calculate_financials(sim_avg):
     npv = sum(cf / ((1 + DISCOUNT_RATE) ** (i + 1)) for i, cf in enumerate(cash_flows))
 
     return {
-        "Heildar tekjur": sum(total_revenue),
-        "Heildar kostnaður": sum(total_variable_cost) + FIXED_COST_PER_YEAR * years,
-        "Heildar framlegð": sum(contribution_margins),
-        "Heildar hagnaður": sum(cash_flows),
+        "Tekjur": sum(total_revenue),
+        "Heildarkostnaður": sum(total_variable_cost) + FIXED_COST_PER_YEAR * years,
+        "Framlegð": sum(contribution_margins),
+        "Hagnaður": sum(cash_flows),
         "NPV": npv
     }
 
