@@ -92,7 +92,7 @@ financial_labels = {
         "Fermetrar": "Square meters",
         "Tekjur": "Revenue",
         "Heildarkostnaður með fasta kostnaðinum": "Total cost with the fixed cost",
-        "Heildarkostnaður án fasta  kostnaðarins": "Total cost without the fixed cost",
+        "Heildarkostnaður án fasta kostnaðarins": "Total cost without the fixed cost",
         "Framlegð": "Contribution margin",
         "Hagnaður með fasta kostnaðinum": "Profit with the fixed cost",
         "NPV": "Net Present Value (NPV)",
