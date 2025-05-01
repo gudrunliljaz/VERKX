@@ -93,7 +93,7 @@ def calculate_financials(sim_avg):
         efficiency *= EFFICIENCY_FACTOR
 
     npv = sum(cf / ((1 + DISCOUNT_RATE) ** (i + 1)) for i, cf in enumerate(cash_flows))
-    npv_wo_fixed_cost = sum(cf / ((1 + DISCOUNT_RATE) ** (i + 1)) for i, cf in enumerate(margin))
+    npv_wo_fixed_cost = sum(cf / ((1 + DISCOUNT_RATE) ** (i + 1)) for i, cf in enumerate(cash_flows_wo_fixed_cost))
     
     return {
         "Tekjur": sum(total_revenue),
