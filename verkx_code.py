@@ -99,7 +99,7 @@ def calculate_financials(sim_avg):
     return {
         "Tekjur": sum(total_revenue),
         "Heildarkostnaður": sum(total_variable_cost),
-        "Hagnaður": sum(contribution_margins),
+        "Hagnaður": sum(profit),
         "NPV": npv
     }
 
