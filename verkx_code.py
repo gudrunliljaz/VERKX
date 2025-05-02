@@ -100,7 +100,7 @@ def calculate_financials(sim_avg):
         "Tekjur": sum(total_revenue),
         "Heildarkostnaður": sum(total_variable_cost),
         "Hagnaður": sum(contribution_margins),
-        "NPV": npv,
+        "NPV": npv
     }
 
 def main_forecast_logic(housing_type, region, future_years, final_market_share):
