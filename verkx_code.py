@@ -68,7 +68,7 @@ def calculate_financials(sim_avg):
     total_variable_cost = []
     contribution_margins = []
     cash_flows = []
-    cash_flows_wo_fixed_cost = []
+
 
     for year in range(years):
         units = avg_units_per_year[year]
@@ -86,26 +86,21 @@ def calculate_financials(sim_avg):
         total_cost = variable_cost_per_sqm * sqm_total
         revenue = PRICE_PER_SQM * sqm_total
 
-        margin = revenue - total_cost
-        profit = margin - FIXED_COST_PER_YEAR
+        profit = revenue - total_cost
+
 
         total_revenue.append(revenue)
         total_variable_cost.append(total_cost)
-        contribution_margins.append(margin)
         cash_flows.append(profit)
-        cash_flows_wo_fixed_cost.append(margin)
 
     npv = sum(cf / ((1 + DISCOUNT_RATE) ** (i + 1)) for i, cf in enumerate(cash_flows))
-    npv_wo_fixed_cost = sum(cf / ((1 + DISCOUNT_RATE) ** (i + 1)) for i, cf in enumerate(cash_flows_wo_fixed_cost))
+
 
     return {
         "Tekjur": sum(total_revenue),
-        "Heildarkostnaður með fasta kostnaðinum": sum(total_variable_cost) + FIXED_COST_PER_YEAR * years,
-        "Heildarkostnaður án fasta kostnaðarins": sum(total_variable_cost),
-        "Framlegð": sum(contribution_margins),
-        "Hagnaður með fasta kostnaðinum": sum(cash_flows),
+        "Heildarkostnaður": sum(total_variable_cost),
+        "Hagnaður": sum(contribution_margins),
         "NPV": npv,
-        "NPV án fasta kostnaðarins": npv_wo_fixed_cost
     }
 
 def main_forecast_logic(housing_type, region, future_years, final_market_share):
@@ -165,10 +160,4 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
         ]
         financials = calculate_financials(sim_avg)
         return df, figures, len(future_vals), financials
-
-
-
-
-
-
 
