@@ -28,7 +28,7 @@ st.markdown("""
 with st.sidebar:
     st.markdown('<div class="language-dropdown">', unsafe_allow_html=True)
     language = st.selectbox("Language", ["Íslenska", "English"], index=0)
-    page = st.radio("Sýn", ["Spálíkan", "Tilboðsreiknivél"] if language == "Íslenska" else ["Forecast Model", "Quotation Calculator"])
+    page = st.radio("Veldu síðu/Choose page", ["Spálíkan", "Tilboðsreiknivél"] if language == "Íslenska" else ["Forecast Model", "Quotation Calculator"])
     st.markdown('</div>', unsafe_allow_html=True)
 
 # --- Þýðingar ---
