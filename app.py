@@ -185,7 +185,7 @@ if st.button(labels[language]["run"]):
 
 
 st.markdown("---")
-st.subheader("🧾 Tilboðsreiknivél")
+st.subheader("Tilboðsreiknivél")
 
 with st.form("tilbod_form"):
     st.markdown("### Gögn um einingar")
@@ -233,7 +233,7 @@ if submitted:
         alagsstudull = 1 + (uthlutadur_fastur_kostnadur / samtals_breytilegur)
         tilbod = samtals_breytilegur * alagsstudull * 1.15
 
-        st.markdown("### 📊 Niðurstöður")
+        st.markdown("### Niðurstöður")
         st.write(f"**Dagsetning:** {datetime.date.today()}")
         st.write(f"**Verkkaupi:** {verkkaupi}")
         st.write(f"**Afhendingarstaður:** {stadsetning}")
