@@ -225,13 +225,13 @@ elif ("Tilboðsreiknivél" in page or "Quotation" in page):
         st.markdown(f"### {q['form_title']}")
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            modul3 = st.number_input("3 Modules", min_value=0, value=0)
+            modul3 = st.number_input(q["3 Modules"], min_value=0, value=0)
         with col2:
-            modul2 = st.number_input("2 Modules", min_value=0, value=0)
+            modul2 = st.number_input(q["2 Modules"], min_value=0, value=0)
         with col3:
-            modul1 = st.number_input("1 Module", min_value=0, value=0)
+            modul1 = st.number_input(q["1 Module"], min_value=0, value=0)
         with col4:
-            modul_half = st.number_input("0.5 Module", min_value=0, value=0)
+            modul_half = st.number_input(q["0.5 Module"], min_value=0, value=0)
 
         st.markdown(f"### {q['input_section']}")
         col5, col6, col7 = st.columns(3)
@@ -280,6 +280,7 @@ elif ("Tilboðsreiknivél" in page or "Quotation" in page):
             st.write(f"**{q['offer_price']}:** {tilbod:,.0f} kr.")
         else:
             st.warning("Sláðu inn gildi til að reikna tilboð.")
+
 
 
 
