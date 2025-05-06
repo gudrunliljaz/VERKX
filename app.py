@@ -7,14 +7,31 @@ from verkx_code import main_forecast_logic
 # Page config
 st.set_page_config(page_title="Cubit", page_icon="assets/logo.png", layout="wide")
 
-# Sidebar – Flipaval
-page = st.sidebar.radio("Veldu síðu / Select page", ["📈 Spálíkan", "📄 Tilboðsreiknivél"])
+# --- Tungumálaval efst ---
+st.markdown("""
+    <style>
+    div[data-testid="stSidebar"] div.language-dropdown {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        z-index: 9999;
+    }
+    div.language-dropdown select {
+        font-size: 13px !important;
+        padding: 2px 6px !important;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-# Tungumálaval
-st.sidebar.markdown("---")
-language = st.sidebar.selectbox("Tungumál / Language", ["Íslenska", "English"], index=0)
+with st.sidebar:
+    st.markdown('<div class="language-dropdown">', unsafe_allow_html=True)
+    language = st.selectbox("Language", ["Íslenska", "English"], index=0)
+    page = st.radio("Sýn", ["Spálíkan", "Tilboðsreiknivél"] if language == "Íslenska" else ["Forecast Model", "Quotation Calculator"])
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# Þýðingar
+# --- Þýðingar ---
 labels = {
     "Íslenska": {
         "title": "Cubit Spá",
@@ -23,15 +40,15 @@ labels = {
         "years": "Fjöldi ára fram í tímann",
         "market": "Markaðshlutdeild (%)",
         "run": "Keyra spá",
-        "loading": "Reikna spá...",
+        "loading": "Reikna spá, vinsamlegast bíðið...",
         "result_tab": "Niðurstöður",
-        "download_tab": "Sækja CSV",
+        "download_tab": "Vista niðurstöður",
         "table_title": "Cubit einingar",
         "distribution": "Dreifing",
         "financials": "Tekjumódel",
-        "download_button": "Hlaða niður",
+        "download_button": "Hlaða niður CSV skrá",
         "download_name": "spa_nidurstodur.csv",
-        "warning": "Aðeins {} ár fundust — notum bara þau.",
+        "warning": "Aðeins {} ár fundust í framtíðarspá — notum bara þau ár.",
         "error": "Villa kom upp"
     },
     "English": {
@@ -41,15 +58,15 @@ labels = {
         "years": "Years into the future",
         "market": "Market share (%)",
         "run": "Run forecast",
-        "loading": "Running forecast...",
+        "loading": "Running forecast, please wait...",
         "result_tab": "Results",
-        "download_tab": "Download CSV",
+        "download_tab": "Download",
         "table_title": "Cubit units",
         "distribution": "Distribution",
         "financials": "Revenue model",
-        "download_button": "Download",
+        "download_button": "Download CSV file",
         "download_name": "forecast_results.csv",
-        "warning": "Only {} years found — using only those.",
+        "warning": "Only {} years found in future data — using only those.",
         "error": "An error occurred"
     }
 }
@@ -69,14 +86,52 @@ financial_labels = {
     }
 }
 
-# ----- FLIPI 1: SPÁLÍKAN -----
-if page == "📈 Spálíkan":
-    st.title(labels[language]["title"])
+quotation_labels = {
+    "Íslenska": {
+        "title": "Tilboðsreiknivél",
+        "form_title": "Gögn um einingar",
+        "input_section": "Aðrar upplýsingar",
+        "calculate": "Reikna tilboð",
+        "result_title": "Niðurstöður",
+        "client": "Verkkaupi",
+        "location": "Staðsetning afhendingar",
+        "distance": "Km frá Þorlákshöfn",
+        "area": "Heildarfermetrar",
+        "weight": "Heildarþyngd",
+        "shipping_is": "Flutningur til Íslands",
+        "delivery": "Sendingarkostnaður innanlands",
+        "variable_cost": "Samtals breytilegur kostnaður",
+        "allocated_fixed": "Úthlutaður fastur kostnaður",
+        "markup": "Álagsstuðull",
+        "offer_price": "Tilboðsverð (með 15% ásemiskröfu)"
+    },
+    "English": {
+        "title": "Quotation Calculator",
+        "form_title": "Unit data",
+        "input_section": "Other information",
+        "calculate": "Calculate offer",
+        "result_title": "Results",
+        "client": "Client",
+        "location": "Delivery location",
+        "distance": "Km from Þorlákshöfn",
+        "area": "Total square meters",
+        "weight": "Total weight",
+        "shipping_is": "Shipping to Iceland",
+        "delivery": "Domestic delivery cost",
+        "variable_cost": "Total variable cost",
+        "allocated_fixed": "Allocated fixed cost",
+        "markup": "Markup factor",
+        "offer_price": "Offer price (with 15% markup)"
+    }
+}
 
-    # Valmöguleikar
+# --- Spálíkan ---
+if ("Spálíkan" in page or "Forecast" in page):
+    st.markdown(f"<h1>{labels[language]['title']}</h1><hr>", unsafe_allow_html=True)
+
     housing_map = {
         "Íslenska": ["Íbúðir", "Leikskólar", "Gistirými", "Elliheimili", "Atvinnuhús"],
-        "English": ["Apartments", "Kindergartens", "Accommodation", "Nursing homes", "Commercial buildings"]
+        "English": ["Apartments", "Kindergartens", "Accommodation facilities", "Nursing homes", "Commercial buildings"]
     }
     housing_reverse = dict(zip(housing_map["English"], housing_map["Íslenska"]))
 
@@ -87,7 +142,7 @@ if page == "📈 Spálíkan":
         ],
         "English": [
             "Capital Region", "Southern Peninsula", "Western Region", "Westfjords",
-            "Northwest", "Northeast", "East", "South"
+            "Northwestern Region", "Northeastern Region", "Eastern Region", "Southern Region"
         ]
     }
     region_reverse = dict(zip(region_map["English"], region_map["Íslenska"]))
@@ -102,17 +157,15 @@ if page == "📈 Spálíkan":
 
     col3, col4 = st.columns(2)
     with col3:
-        future_years = st.number_input(labels[language]["years"], 1, 1000, 5)
+        future_years = st.number_input(labels[language]["years"], min_value=1, max_value=1000, value=5)
     with col4:
-        market_share_percent = st.slider(labels[language]["market"], 0, 100, 50)
+        market_share_percent = st.slider(labels[language]["market"], min_value=0, max_value=100, value=50)
         final_market_share = market_share_percent / 100
 
     if st.button(labels[language]["run"]):
         with st.spinner(labels[language]["loading"]):
             try:
-                df, figures, used_years, financials = main_forecast_logic(
-                    housing_type, region, future_years, final_market_share
-                )
+                df, figures, used_years, financials = main_forecast_logic(housing_type, region, future_years, final_market_share)
 
                 if used_years < future_years:
                     st.warning(labels[language]["warning"].format(used_years))
@@ -123,20 +176,20 @@ if page == "📈 Spálíkan":
                         "Fortíðargögn spá": "Historical Forecast",
                         "Framtíðarspá": "Future Forecast",
                         "Meðaltal": "Average",
-                        "Spá útfrá fortíðargögnum": "Forecast from past"
+                        "Spá útfrá fortíðargögnum": "Forecast from historical data"
                     })
 
-                tab1, tab2 = st.tabs([labels[language]["result_tab"], labels[language]["download_tab"]])
+                tabs = st.tabs([labels[language]["result_tab"], labels[language]["download_tab"]])
 
-                with tab1:
+                with tabs[0]:
                     st.subheader(labels[language]["table_title"])
                     index_col = "Ár" if language == "Íslenska" else "Year"
                     st.dataframe(df.set_index(index_col).style.format("{:.2f}"))
 
                     st.subheader(labels[language]["distribution"])
-                    col_figs = st.columns(len(figures))
-                    for c, fig in zip(col_figs, figures):
-                        with c:
+                    img_cols = st.columns(len(figures))
+                    for col, fig in zip(img_cols, figures):
+                        with col:
                             st.pyplot(fig)
 
                     st.subheader(labels[language]["financials"])
@@ -144,8 +197,8 @@ if page == "📈 Spálíkan":
                         label = financial_labels[language].get(key, key)
                         st.write(f"**{label}:** {value:,.0f} kr.")
 
-                with tab2:
-                    csv = df.to_csv(index=False).encode("utf-8-sig")
+                with tabs[1]:
+                    csv = df.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
                     st.download_button(
                         label=labels[language]["download_button"],
                         data=csv,
@@ -155,59 +208,71 @@ if page == "📈 Spálíkan":
             except Exception as e:
                 st.error(f"{labels[language]['error']}: {e}")
 
-# ----- FLIPI 2: TILBOÐ -----
-elif page == "📄 Tilboðsreiknivél":
-    st.title("Tilboðsreiknivél")
+# --- Tilboðsreiknivél ---
+elif ("Tilboðsreiknivél" in page or "Quotation" in page):
+    q = quotation_labels[language]
+    st.markdown(f"<h1>{q['title']}</h1><hr>", unsafe_allow_html=True)
 
     with st.form("tilbod_form"):
-        st.markdown("### Gögn um einingar")
+        st.markdown(f"### {q['form_title']}")
         col1, col2, col3, col4 = st.columns(4)
-        modul3 = col1.number_input("3 Módúla (19,5 fm)", 0, value=0)
-        modul2 = col2.number_input("2 Módúla (13 fm)", 0, value=0)
-        modul1 = col3.number_input("1 Módúl (6,5 fm)", 0, value=0)
-        modul_half = col4.number_input("0,5 Módúl (3,25 fm)", 0, value=0)
+        with col1:
+            modul3 = st.number_input("3M", min_value=0, value=0)
+        with col2:
+            modul2 = st.number_input("2M", min_value=0, value=0)
+        with col3:
+            modul1 = st.number_input("1M", min_value=0, value=0)
+        with col4:
+            modul_half = st.number_input("0.5M", min_value=0, value=0)
 
-        st.markdown("### Aðrar upplýsingar")
+        st.markdown(f"### {q['input_section']}")
         col5, col6, col7 = st.columns(3)
-        verkkaupi = col5.text_input("Verkkaupi")
-        stadsetning = col6.text_input("Staðsetning afhendingar")
-        km = col7.number_input("Km frá Þorlákshöfn", 0.0, value=0.0)
+        with col5:
+            verkkaupi = st.text_input(q["client"])
+        with col6:
+            stadsetning = st.text_input(q["location"])
+        with col7:
+            km_fra_thorlakshofn = st.number_input(q["distance"], min_value=0.0, value=0.0)
 
-        submitted = st.form_submit_button("Reikna tilboð")
+        submitted = st.form_submit_button(q["calculate"])
 
     if submitted:
         einingar = {
             "3m": {"fjoldi": modul3, "fm": 19.5, "verd": 269700, "kg": 9750},
-            "2m": {"fjoldi": modul2, "fm": 13.0, "verd": 290000, "kg": 6500},
+            "2m": {"fjoldi": modul2, "fm": 13, "verd": 290000, "kg": 6500},
             "1m": {"fjoldi": modul1, "fm": 6.5, "verd": 304500, "kg": 3250},
-            "0.5m": {"fjoldi": modul_half, "fm": 3.25, "verd": 330000, "kg": 1625}
+            "0.5m": {"fjoldi": modul_half, "fm": 3.25, "verd": 330000, "kg": 1625},
         }
 
         heildarfm = sum(e["fjoldi"] * e["fm"] for e in einingar.values())
-        heildarkostnadur = sum(e["fjoldi"] * e["verd"] for e in einingar.values())
-        flutningur = heildarfm * 74000
-        sending = heildarfm * km * 8
-        breytilegur = heildarkostnadur + flutningur + sending
         heildarthyngd = sum(e["fjoldi"] * e["kg"] for e in einingar.values())
+        heildarkostnadur_einingar = sum(e["fjoldi"] * e["verd"] for e in einingar.values())
+        kostnadur_per_fm = heildarkostnadur_einingar / heildarfm if heildarfm else 0
+        flutningur_til_islands = heildarfm * 74000
+        sendingarkostnadur = heildarfm * km_fra_thorlakshofn * 8
+        samtals_breytilegur = heildarkostnadur_einingar + flutningur_til_islands + sendingarkostnadur
 
-        fastur = 34_800_000
-        u_fm = 2400
-        uthlutun = (heildarfm / u_fm) * fastur if heildarfm else 0
-        alag = 1 + (uthlutun / breytilegur) if breytilegur else 0
-        tilbod = breytilegur * alag * 1.15 if breytilegur else 0
+        if samtals_breytilegur > 0:
+            fastur_kostnadur = 34800000
+            heildarfm_arsins = 2400
+            uthlutadur_fastur_kostnadur = (heildarfm / heildarfm_arsins) * fastur_kostnadur
+            alagsstudull = 1 + (uthlutadur_fastur_kostnadur / samtals_breytilegur)
+            tilbod = samtals_breytilegur * alagsstudull * 1.15
 
-        st.markdown("### Niðurstöður")
-        st.write(f"**Dagsetning:** {datetime.date.today()}")
-        st.write(f"**Verkkaupi:** {verkkaupi}")
-        st.write(f"**Staðsetning:** {stadsetning}")
-        st.write(f"**Heildarfermetrar:** {heildarfm:.2f} fm")
-        st.write(f"**Heildarþyngd:** {heildarthyngd:,.0f} kg")
-        st.write(f"**Flutningskostnaður til Íslands:** {flutningur:,.0f} kr.")
-        st.write(f"**Sendingarkostnaður innanlands:** {sending:,.0f} kr.")
-        st.write(f"**Samtals breytilegur kostnaður:** {breytilegur:,.0f} kr.")
-        st.write(f"**Úthlutaður fastur kostnaður:** {uthlutun:,.0f} kr.")
-        st.write(f"**Álagsstuðull:** {alag:.2f}")
-        st.write(f"**Tilboðsverð (með 15% ásemiskröfu):** {tilbod:,.0f} kr.")
+            st.markdown(f"### {q['result_title']}")
+            st.write(f"**{q['client']}:** {verkkaupi}")
+            st.write(f"**{q['location']}:** {stadsetning}")
+            st.write(f"**{q['area']}:** {heildarfm:.2f} fm")
+            st.write(f"**{q['weight']}:** {heildarthyngd:,.0f} kg")
+            st.write(f"**{q['shipping_is']}:** {flutningur_til_islands:,.0f} kr.")
+            st.write(f"**{q['delivery']}:** {sendingarkostnadur:,.0f} kr.")
+            st.write(f"**{q['variable_cost']}:** {samtals_breytilegur:,.0f} kr.")
+            st.write(f"**{q['allocated_fixed']}:** {uthlutadur_fastur_kostnadur:,.0f} kr.")
+            st.write(f"**{q['markup']}:** {alagsstudull:.2f}")
+            st.write(f"**{q['offer_price']}:** {tilbod:,.0f} kr.")
+        else:
+            st.warning("Sláðu inn gildi til að reikna tilboð.")
+
 
 
 
