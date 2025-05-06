@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import io
+import datetime
 from verkx_code import main_forecast_logic
 
 # Page config – verður að vera fyrst
@@ -181,5 +182,71 @@ if st.button(labels[language]["run"]):
         except Exception as e:
             st.error(f"{labels[language]['error']}: {e}")
 
+
+
+st.markdown("---")
+st.subheader("🧾 Tilboðsreiknivél")
+
+with st.form("tilbod_form"):
+    st.markdown("### Gögn um einingar")
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        modul3 = st.number_input("Fjöldi 3 módúla", min_value=0, value=0)
+    with col2:
+        modul2 = st.number_input("Fjöldi 2 módúla", min_value=0, value=0)
+    with col3:
+        modul1 = st.number_input("Fjöldi 1 módúla", min_value=0, value=0)
+    with col4:
+        modul_half = st.number_input("Fjöldi 1/2 módúla", min_value=0, value=0)
+
+    st.markdown("### Aðrar upplýsingar")
+    col5, col6, col7 = st.columns(3)
+    with col5:
+        verkkaupi = st.text_input("Verkkaupi")
+    with col6:
+        stadsetning = st.text_input("Staðsetning afhendingar")
+    with col7:
+        km_fra_thorlakshofn = st.number_input("Km frá Þorlákshöfn", min_value=0.0, value=0.0)
+
+    submitted = st.form_submit_button("Reikna tilboð")
+
+if submitted:
+    einingar = {
+        "3m": {"fjoldi": modul3, "fm": 19.5, "verd": 269700, "kg": 9750},
+        "2m": {"fjoldi": modul2, "fm": 13, "verd": 290000, "kg": 6500},
+        "1m": {"fjoldi": modul1, "fm": 6.5, "verd": 304500, "kg": 3250},
+        "0.5m": {"fjoldi": modul_half, "fm": 3.25, "verd": 330000, "kg": 1625},
+    }
+
+    heildarfm = sum(e["fjoldi"] * e["fm"] for e in einingar.values())
+    heildarthyngd = sum(e["fjoldi"] * e["kg"] for e in einingar.values())
+    heildarkostnadur_einingar = sum(e["fjoldi"] * e["verd"] for e in einingar.values())
+    kostnadur_per_fm = heildarkostnadur_einingar / heildarfm if heildarfm else 0
+    flutningur_til_islands = heildarfm * 74000
+    sendingarkostnadur = heildarfm * km_fra_thorlakshofn * 8
+    samtals_breytilegur = heildarkostnadur_einingar + flutningur_til_islands + sendingarkostnadur
+
+    if samtals_breytilegur > 0:
+        fastur_kostnadur = 34800000
+        heildarfm_arsins = 2400
+        uthlutadur_fastur_kostnadur = (heildarfm / heildarfm_arsins) * fastur_kostnadur
+        alagsstudull = 1 + (uthlutadur_fastur_kostnadur / samtals_breytilegur)
+        tilbod = samtals_breytilegur * alagsstudull * 1.15
+
+        st.markdown("### 📊 Niðurstöður")
+        st.write(f"**Dagsetning:** {datetime.date.today()}")
+        st.write(f"**Verkkaupi:** {verkkaupi}")
+        st.write(f"**Afhendingarstaður:** {stadsetning}")
+        st.write(f"**Heildarfermetrar:** {heildarfm:.2f} fm")
+        st.write(f"**Heildarþyngd:** {heildarthyngd:,.0f} kg")
+        st.write(f"**Kostnaðarverð á fermetra:** {kostnadur_per_fm:,.0f} kr.")
+        st.write(f"**Flutningur til Íslands:** {flutningur_til_islands:,.0f} kr.")
+        st.write(f"**Sendingarkostnaður:** {sendingarkostnadur:,.0f} kr.")
+        st.write(f"**Samtals breytilegur kostnaður:** {samtals_breytilegur:,.0f} kr.")
+        st.write(f"**Úthlutaður fastur kostnaður:** {uthlutadur_fastur_kostnadur:,.0f} kr.")
+        st.write(f"**Álagsstuðull:** {alagsstudull:.2f}")
+        st.write(f"**Tilboðsverð (með 15% ásemiskröfu):** {tilbod:,.0f} kr.")
+    else:
+        st.warning("Vinsamlegast sláðu inn gildi fyrir einingar til að reikna tilboð.")
 
 
