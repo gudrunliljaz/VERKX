@@ -217,13 +217,13 @@ elif ("Tilboðsreiknivél" in page or "Quotation" in page):
         st.markdown(f"### {q['form_title']}")
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            modul3 = st.number_input("3M", min_value=0, value=0)
+            modul3 = st.number_input("3 Modules", min_value=0, value=0)
         with col2:
-            modul2 = st.number_input("2M", min_value=0, value=0)
+            modul2 = st.number_input("2 Modules", min_value=0, value=0)
         with col3:
-            modul1 = st.number_input("1M", min_value=0, value=0)
+            modul1 = st.number_input("1 Module", min_value=0, value=0)
         with col4:
-            modul_half = st.number_input("0.5M", min_value=0, value=0)
+            modul_half = st.number_input("0.5 Module", min_value=0, value=0)
 
         st.markdown(f"### {q['input_section']}")
         col5, col6, col7 = st.columns(3)
@@ -238,10 +238,10 @@ elif ("Tilboðsreiknivél" in page or "Quotation" in page):
 
     if submitted:
         einingar = {
-            "3m": {"fjoldi": modul3, "fm": 19.5, "verd": 269700, "kg": 9750},
-            "2m": {"fjoldi": modul2, "fm": 13, "verd": 290000, "kg": 6500},
-            "1m": {"fjoldi": modul1, "fm": 6.5, "verd": 304500, "kg": 3250},
-            "0.5m": {"fjoldi": modul_half, "fm": 3.25, "verd": 330000, "kg": 1625},
+            "3 Modules": {"fjoldi": modul3, "fm": 19.5, "verd": 269700, "kg": 9750},
+            "2 Modules": {"fjoldi": modul2, "fm": 13, "verd": 290000, "kg": 6500},
+            "1 Module": {"fjoldi": modul1, "fm": 6.5, "verd": 304500, "kg": 3250},
+            "0.5 Module": {"fjoldi": modul_half, "fm": 3.25, "verd": 330000, "kg": 1625},
         }
 
         heildarfm = sum(e["fjoldi"] * e["fm"] for e in einingar.values())
