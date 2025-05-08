@@ -9,7 +9,7 @@ from io import BytesIO
 from fpdf import FPDF
 
 # Page config
-st.set_page_config(page_title="Cubit", page_icon="assets/logo.png", layout="wide")
+st.set_page_config(page_title="Cubit", page_icon="andreim.png", layout="wide")
 
 # --- Tungumálaval efst ---
 st.markdown("""
