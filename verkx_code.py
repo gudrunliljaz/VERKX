@@ -97,8 +97,7 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
         sim_past = monte_carlo_simulation(linear_pred, market_shares)
         df = pd.DataFrame({'Ár': linear_years, 'Spá útfrá fortíðargögnum': past_pred_adj})
         figures = [plot_distribution(sim_past, "Monte Carlo - Fortíðargögn")]
-        financials = calculate_financials(sim_past)
-        return df, figures, future_years, financials
+        return df, figures, future_years
     else:
         future_vals = future_data['fjoldi eininga'].values[:future_years]
         future_years_vals = future_data['ar'].values[:future_years]
@@ -121,8 +120,8 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
             plot_distribution(monte_carlo_simulation(future_vals, market_shares), "Monte Carlo - Framtíðarspá"),
             plot_distribution(sim_avg, "Monte Carlo - Meðaltal")
         ]
-        financials = calculate_financials(sim_avg)
-        return df, figures, len(future_vals), financials
+
+        return df, figures, len(future_vals)
 
 
 def load_combined_share_file(filepath):
