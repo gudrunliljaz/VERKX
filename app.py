@@ -102,46 +102,64 @@ quotation_labels = {
     }
 }
 
-# =====================
-# 1. Forecast Model
-# =====================
+# --- Forecast Model ---
 if "Spálíkan" in page or "Forecast" in page:
-    st.header(labels[language]["title"])
+    st.header(labels[language]['title'])
 
     housing_map = {
         "Íslenska": ["Íbúðir", "Leikskólar", "Gistirými", "Elliheimili", "Atvinnuhús"],
-        "English": ["Apartments", "Kindergartens", "Accommodation", "Nursing homes", "Commercial buildings"]
+        "English": ["Apartments", "Kindergartens", "Accommodation facilities", "Nursing homes", "Commercial buildings"]
     }
-    region_map = {
-        "Íslenska": ["Höfuðborgarsvæðið", "Suðurnes", "Vesturland", "Vestfirðir", "Norðurland vestra",
-                     "Norðurland eystra", "Austurland", "Suðurland"],
-        "English": ["Capital Region", "Southern Peninsula", "Western", "Westfjords", "Northwest",
-                    "Northeast", "East", "South"]
-    }
+    housing_reverse = dict(zip(housing_map["English"], housing_map["Íslenska"]))
 
-    housing = st.selectbox(labels[language]["housing"], housing_map[language])
-    region = st.selectbox(labels[language]["region"], region_map[language])
-    years = st.number_input(labels[language]["years"], 1, 20, 5)
-    share = st.slider(labels[language]["market"], 0, 100, 50) / 100
+    region_map = {
+        "Íslenska": [
+            "Höfuðborgarsvæðið", "Suðurnes", "Vesturland", "Vestfirðir",
+            "Norðurland vestra", "Norðurland eystra", "Austurland", "Suðurland"
+        ],
+        "English": [
+            "Capital Region", "Southern Peninsula", "Western Region", "Westfjords",
+            "Northwestern Region", "Northeastern Region", "Eastern Region", "Southern Region"
+        ]
+    }
+    region_reverse = dict(zip(region_map["English"], region_map["Íslenska"]))
+
+    col1, col2 = st.columns(2)
+    with col1:
+        housing_display = st.selectbox(labels[language]["housing"], housing_map[language])
+        housing_type = housing_reverse[housing_display] if language == "English" else housing_display
+    with col2:
+        region_display = st.selectbox(labels[language]["region"], region_map[language])
+        region = region_reverse[region_display] if language == "English" else region_display
+
+    col3, col4 = st.columns(2)
+    with col3:
+        future_years = st.number_input(labels[language]["years"], min_value=1, value=5)
+    with col4:
+        market_share = st.slider(labels[language]["market"], 0, 100, 50) / 100
 
     if st.button(labels[language]["run"]):
         with st.spinner(labels[language]["loading"]):
             try:
-                df, figs, used = main_forecast_logic(housing, region, years, share)
-                if used < years:
-                    st.warning(labels[language]["warning"].format(used))
+                df, figures, used_years = main_forecast_logic(housing_type, region, future_years, market_share)
+
+                if used_years < future_years:
+                    st.warning(labels[language]["warning"].format(used_years))
+
                 tabs = st.tabs([labels[language]["result_tab"], labels[language]["download_tab"]])
+
                 with tabs[0]:
                     st.subheader(labels[language]["table_title"])
                     st.dataframe(df.set_index(df.columns[0]))
+
                     st.subheader(labels[language]["distribution"])
-                    for f in figs:
-                        st.pyplot(f)
+                    for fig in figures:
+                        st.pyplot(fig)
+
                 with tabs[1]:
-                    st.download_button(labels[language]["download_button"],
-                                       df.to_csv(index=False).encode("utf-8-sig"),
-                                       labels[language]["download_name"],
-                                       "text/csv")
+                    csv = df.to_csv(index=False).encode("utf-8-sig")
+                    st.download_button(labels[language]["download_button"], csv, labels[language]["download_name"], "text/csv")
+
             except Exception as e:
                 st.error(f"{labels[language]['error']}: {e}")
 
