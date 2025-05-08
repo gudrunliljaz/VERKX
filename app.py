@@ -222,6 +222,11 @@ if ("Spálíkan" in page or "Forecast" in page):
                     )
             except Exception as e:
                 st.error(f"{labels[language]['error']}: {e}")
+from datetime import date
+import requests
+from io import BytesIO
+from fpdf import FPDF
+import streamlit as st
 
 # --- Tilboðsreiknivél ---
 elif ("Tilboðsreiknivél" in page or "Quotation" in page):
@@ -307,20 +312,19 @@ elif ("Tilboðsreiknivél" in page or "Quotation" in page):
             st.write(f"**{q['markup']}:** {alagsstudull:.2f}")
             st.write(f"**{q['offer_price']}:** {tilbod:,.0f} kr. / €{tilbod_eur:,.2f}")
 
-            # --- PDF útgáfa --- með Latin-1 öruggum texta ---
+            # --- PDF útgáfa --- með Latin-1 öruggum texta og logo ---
             def to_latin1(s):
                 return s.encode("latin-1", errors="replace").decode("latin-1")
 
             pdf = FPDF()
-pdf.add_page()
-try:
-    pdf.image("assets/logo.png", x=10, y=8, w=40)
-except:
-    pass
-pdf.set_font("Arial", size=12)
-pdf.ln(30)
             pdf.add_page()
+            try:
+                pdf.image("assets/logo.png", x=10, y=8, w=40)
+            except:
+                pass
             pdf.set_font("Arial", size=12)
+            pdf.ln(30)
+
             pdf.cell(200, 10, txt=to_latin1(f"Tilboð - {verkkaupi}"), ln=True, align='L')
             pdf.cell(200, 10, txt=f"Dags: {date.today()}", ln=True, align='L')
             pdf.ln(5)
@@ -352,6 +356,7 @@ pdf.ln(30)
 
         else:
             st.warning("Sláðu inn gildi til að reikna tilboð.")
+
 
 # --- Heildarspá fyrir 40 markaði ---
 elif ("Heildarspá" in page or "All Markets Forecast" in page):
