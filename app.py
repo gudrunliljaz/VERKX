@@ -52,7 +52,6 @@ labels = {
         "download_tab": "Vista niðurstöður",
         "table_title": "Cubit einingar",
         "distribution": "Dreifing",
-        "financials": "Tekjumódel",
         "download_button": "Hlaða niður CSV skrá",
         "download_name": "spa_nidurstodur.csv",
         "warning": "Aðeins {} ár fundust í framtíðarspá — notum bara þau ár.",
@@ -70,7 +69,6 @@ labels = {
         "download_tab": "Download",
         "table_title": "Cubit units",
         "distribution": "Distribution",
-        "financials": "Revenue model",
         "download_button": "Download CSV file",
         "download_name": "forecast_results.csv",
         "warning": "Only {} years found in future data — using only those.",
@@ -78,20 +76,7 @@ labels = {
     }
 }
 
-financial_labels = {
-    "Íslenska": {
-        "Tekjur": "Tekjur",
-        "Heildarkostnaður": "Heildarkostnaður",
-        "Hagnaður": "Hagnaður",
-        "NPV": "Núvirt virði (NPV)"
-    },
-    "English": {
-        "Tekjur": "Revenue",
-        "Heildarkostnaður": "Total cost",
-        "Hagnaður": "Profit",
-        "NPV": "Net Present Value (NPV)"
-    }
-}
+
 
 quotation_labels = {
     "Íslenska": {
@@ -180,7 +165,7 @@ if ("Spálíkan" in page or "Forecast" in page):
     if st.button(labels[language]["run"]):
         with st.spinner(labels[language]["loading"]):
             try:
-                df, figures, used_years, financials = main_forecast_logic(housing_type, region, future_years, final_market_share)
+                df, figures, used_years = main_forecast_logic(housing_type, region, future_years, final_market_share)
 
                 if used_years < future_years:
                     st.warning(labels[language]["warning"].format(used_years))
@@ -207,10 +192,7 @@ if ("Spálíkan" in page or "Forecast" in page):
                         with col:
                             st.pyplot(fig)
 
-                    st.subheader(labels[language]["financials"])
-                    for key, value in financials.items():
-                        label = financial_labels[language].get(key, key)
-                        st.write(f"**{label}:** {value:,.0f} kr.")
+                    
 
                 with tabs[1]:
                     csv = df.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
