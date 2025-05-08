@@ -163,91 +163,159 @@ if "Spálíkan" in page or "Forecast" in page:
             except Exception as e:
                 st.error(f"{labels[language]['error']}: {e}")
 
-# 2. --- tilboðsmódel----
-
-elif "Tilboðsreiknivél" in page or "Quotation" in page:
+# 2.--- Tilboðsreiknivél ---
+if ("Tilboðsreiknivél" in page or "Quotation" in page):
     q = quotation_labels[language]
-    st.header(q["title"])
+    st.markdown(f"<h1>{q['title']}</h1><hr>", unsafe_allow_html=True)
 
     with st.form("tilbod_form"):
-        st.subheader(q["form_title"])
+        st.markdown(f"### {q['form_title']}")
         col1, col2, col3, col4 = st.columns(4)
-        with col1: m3 = st.number_input(q["3 Modules"], 0, value=0)
-        with col2: m2 = st.number_input(q["2 Modules"], 0, value=0)
-        with col3: m1 = st.number_input(q["1 Module"], 0, value=0)
-        with col4: m05 = st.number_input(q["0.5 Module"], 0, value=0)
+        with col1:
+            modul3 = st.number_input(q["3 Modules"], min_value=0, value=0)
+        with col2:
+            modul2 = st.number_input(q["2 Modules"], min_value=0, value=0)
+        with col3:
+            modul1 = st.number_input(q["1 Module"], min_value=0, value=0)
+        with col4:
+            modul_half = st.number_input(q["0.5 Module"], min_value=0, value=0)
 
-        st.subheader(q["input_section"])
-        col5, col6 = st.columns(2)
-        with col5: client = st.text_input(q["client"])
+        st.markdown(f"### {q['input_section']}")
+        col5, col6, col7 = st.columns(3)
+        with col5:
+            verkkaupi = st.text_input(q["client"])
+        with col6:
+            stadsetning = st.text_input(q["location"])
 
-        loc_options = {
+        afhendingarstaedir = {
             "Höfuðborgarsvæðið": 60, "Selfoss": 30, "Hveragerði": 40, "Akranes": 100,
             "Borgarnes": 150, "Stykkishólmur": 260, "Ísafjörður": 570, "Akureyri": 490,
             "Húsavík": 520, "Sauðárkrókur": 450, "Egilsstaðir": 650, "Seyðisfjörður": 670,
-            "Neskaupsstaður": 700, "Eskifjörður": 690, "Fáskrúðsfjörður": 680,
-            "Höfn": 450, "Vestmannaeyjar": 90, "Keflavík": 90, "Annað": None
+            "Neskaupsstaður": 700, "Eskifjörður": 690, "Fáskrúðsfjörður": 680, "Höfn": 450,
+            "Vestmannaeyjar": 90, "Keflavík": 90, "Annað": None
         }
 
-        with col6:
-            loc_sel = st.selectbox("Afhendingarstaður", loc_options.keys())
-            if loc_sel == "Annað":
-                location = st.text_input("Nafn staðar")
-                km = st.number_input("Fjarlægð frá Þorlákshöfn (km)", 0.0, value=0.0)
+        with col7:
+            stadsetning_val = st.selectbox("Afhendingarstaður", list(afhendingarstaedir.keys()))
+            if stadsetning_val == "Annað":
+                stadsetning = st.text_input("Skrifaðu nafnið á afhendingarstað")
+                km_fra_thorlakshofn = st.number_input(f"Hversu margir km eru í {stadsetning} frá Þorlákshöfn?", min_value=0.0, value=0.0)
             else:
-                location = loc_sel
-                km = loc_options[loc_sel]
+                stadsetning = stadsetning_val
+                km_fra_thorlakshofn = afhendingarstaedir[stadsetning]
 
         submitted = st.form_submit_button(q["calculate"])
 
-    # === Skilyrði: ekkert valið
-    if submitted and (m3 + m2 + m1 + m05 == 0):
-        st.warning("Vinsamlegast veldu fjölda eininga til að reikna tilboð.")
-
-    # === Skilyrði: ekki reikna ef valið er 'Annað' og km er 0
-    elif submitted and (loc_sel == "Annað" and km == 0):
-        st.warning("Vinsamlegast sláðu inn km fjarlægð ef þú valdir 'Annað'.")
-
-    elif submitted:
+    if submitted:
         try:
-            fx = requests.get("https://api.frankfurter.app/latest?from=EUR&to=ISK", timeout=5).json()
-            eur = fx["rates"]["ISK"]
+            response = requests.get("https://api.frankfurter.app/latest?from=EUR&to=ISK", timeout=5)
+            eur_to_isk = response.json()['rates']['ISK']
         except:
-            eur = 146
+            eur_to_isk = 146.0
 
-        mods = {
-            "3m": {"n": m3, "fm": 19.5, "verð": 1800, "kg": 9750},
-            "2m": {"n": m2, "fm": 13.0, "verð": 1950, "kg": 6500},
-            "1m": {"n": m1, "fm": 6.5, "verð": 2050, "kg": 3250},
-            "0.5m": {"n": m05, "fm": 3.25, "verð": 2175, "kg": 1625},
+        einingar = {
+            "3m": {"fjoldi": modul3, "fm": 19.5, "verd_eur": 1800, "kg": 9750},
+            "2m": {"fjoldi": modul2, "fm": 13, "verd_eur": 1950, "kg": 6500},
+            "1m": {"fjoldi": modul1, "fm": 6.5, "verd_eur": 2050, "kg": 3250},
+            "0.5m": {"fjoldi": modul_half, "fm": 3.25, "verd_eur": 2175, "kg": 1625},
         }
 
-        fm = sum(m["n"] * m["fm"] for m in mods.values())
-        kg = sum(m["n"] * m["kg"] for m in mods.values())
-        afsl = 0.10 if fm >= 650 else 0
-        if fm >= 1300:
-            afsl = min(0.15 + ((fm - 1300) // 325) * 0.01, 0.18)
+        heildarfm = sum(e["fjoldi"] * e["fm"] for e in einingar.values())
+        heildarthyngd = sum(e["fjoldi"] * e["kg"] for e in einingar.values())
 
-        einingakostn = sum(m["n"] * m["fm"] * m["verð"] * eur * (1 - afsl) for m in mods.values())
-        flutn = fm * 74000
-        sending = fm * km * 8
-        breytilegur = einingakostn + flutn + sending
-        fastur = (fm / 2400) * 34800000
-        markup = 1 + (fastur / breytilegur)
-        verð = breytilegur * markup * 1.15
-        verð_eur = verð / eur
+        afslattur = 0
+        if heildarfm >= 650:
+            afslattur = 0.10
+        if heildarfm >= 1300:
+            afslattur = 0.15 + ((heildarfm - 1300) // 325) * 0.01
+            afslattur = min(afslattur, 0.18)
 
-        st.success(f"Tilboð fyrir {client}")
-        st.write(f"**{q['location']}:** {location}")
-        st.write(f"**{q['area']}:** {fm:.2f} fm")
-        st.write(f"**{q['weight']}:** {kg:,.0f} kg")
-        st.write(f"**Afsláttur:** {int(afsl * 100)}%")
-        st.write(f"**{q['shipping_is']}:** {flutn:,.0f} kr")
-        st.write(f"**{q['delivery']}:** {sending:,.0f} kr")
-        st.write(f"**{q['variable_cost']}:** {breytilegur:,.0f} kr")
-        st.write(f"**{q['allocated_fixed']}:** {fastur:,.0f} kr")
-        st.write(f"**{q['markup']}:** {markup:.2f}")
-        st.write(f"**{q['offer_price']}:** {verð:,.0f} kr / €{verð_eur:,.2f}")
+        heildarkostnadur_einingar = sum(
+            e["fjoldi"] * e["fm"] * e["verd_eur"] * eur_to_isk * (1 - afslattur)
+            for e in einingar.values()
+        )
+        kostnadur_per_fm = heildarkostnadur_einingar / heildarfm if heildarfm else 0
+
+        flutningur_til_islands = heildarfm * 74000
+        sendingarkostnadur = heildarfm * km_fra_thorlakshofn * 8
+        samtals_breytilegur = heildarkostnadur_einingar + flutningur_til_islands + sendingarkostnadur
+
+        fastur_kostnadur = 34800000
+        heildarfm_arsins = 2400
+        uthlutadur_fastur_kostnadur = (heildarfm / heildarfm_arsins) * fastur_kostnadur
+        alagsstudull = 1 + (uthlutadur_fastur_kostnadur / samtals_breytilegur)
+        asemiskrafa = 0.15
+        tilbod = samtals_breytilegur * alagsstudull * (1 + asemiskrafa)
+        tilbod_eur = tilbod / eur_to_isk
+
+        st.markdown(f"### {q['result_title']}")
+        st.write(f"**{q['client']}:** {verkkaupi}")
+        st.write(f"**{q['location']}:** {stadsetning}")
+        st.write(f"**{q['area']}:** {heildarfm:.2f} fm")
+        st.write(f"**{q['weight']}:** {heildarthyngd:,.0f} kg")
+        st.write(f"**Magnafsláttur:** {int(afslattur * 100)}%")
+        st.write(f"**Kaupverð eininga:** {heildarkostnadur_einingar:,.0f} kr.")
+        st.write(f"**Kostnaðarverð á fermetra:** {kostnadur_per_fm:,.0f} kr.")
+        st.write(f"**{q['shipping_is']}:** {flutningur_til_islands:,.0f} kr.")
+        st.write(f"**{q['delivery']}:** {sendingarkostnadur:,.0f} kr.")
+        st.write(f"**{q['variable_cost']}:** {samtals_breytilegur:,.0f} kr.")
+        st.write(f"**{q['allocated_fixed']}:** {uthlutadur_fastur_kostnadur:,.0f} kr.")
+        st.write(f"**{q['markup']}:** {alagsstudull:.2f}")
+        st.write(f"**Arðsemiskrafa:** {asemiskrafa*100:.0f}%")
+        st.write(f"**{q['offer_price']}:** {tilbod:,.0f} kr. / €{tilbod_eur:,.2f}")
+
+        # PDF útgáfa
+        def to_latin1(s):
+            return s.encode("latin-1", errors="replace").decode("latin-1")
+
+        pdf = FPDF()
+        pdf.add_page()
+        try:
+            pdf.image("assets/logo.png", x=10, y=8, w=40)
+        except:
+            pass
+
+        pdf.set_font("Arial", "B", 16)
+        pdf.ln(15)
+        pdf.cell(200, 10, txt=to_latin1("Tilboð frá Cubit"), ln=True, align='C')
+
+        pdf.set_font("Arial", size=12)
+        pdf.ln(10)
+        pdf.cell(200, 10, txt=to_latin1(f"Verkkaupi: {verkkaupi}"), ln=True)
+        pdf.cell(200, 10, txt=to_latin1(f"Afhendingarstaður: {stadsetning}"), ln=True)
+        pdf.cell(200, 10, txt=f"Dags: {date.today()}", ln=True)
+
+        pdf.ln(10)
+        data = [
+            ("Heildarfermetrar", f"{heildarfm:.2f} fm"),
+            ("Heildarþyngd", f"{heildarthyngd:,.0f} kg"),
+            ("Kaupverð eininga", f"{heildarkostnadur_einingar:,.0f} kr"),
+            ("Kostnaðarverð á fm", f"{kostnadur_per_fm:,.0f} kr"),
+            ("Magnafsláttur", f"{int(afslattur * 100)}%"),
+            ("Flutningur til Íslands", f"{flutningur_til_islands:,.0f} kr"),
+            ("Sendingarkostnaður innanlands", f"{sendingarkostnadur:,.0f} kr"),
+            ("Samtals breytilegur kostnaður", f"{samtals_breytilegur:,.0f} kr"),
+            ("Úthlutaður fastur kostnaður", f"{uthlutadur_fastur_kostnadur:,.0f} kr"),
+            ("Álagsstuðull", f"{alagsstudull:.2f}"),
+            ("Arðsemiskrafa", f"{int(asemiskrafa * 100)}%"),
+            ("Tilboðsverð (ISK)", f"{tilbod:,.0f} kr"),
+            ("Tilboðsverð (EUR)", f"€{tilbod_eur:,.2f}")
+        ]
+
+        for label, value in data:
+            pdf.cell(200, 10, txt=to_latin1(f"{label}: {value}"), ln=True)
+
+        buffer = BytesIO()
+        pdf.output(dest='S').encode('latin-1')
+        buffer.write(pdf.output(dest='S').encode('latin-1'))
+
+        st.download_button(
+            label="📄 Sækja PDF tilboð",
+            data=buffer.getvalue(),
+            file_name=f"tilbod_{verkkaupi}.pdf",
+            mime="application/pdf"
+        )
+
 
 
 # 3. All Markets Forecast
