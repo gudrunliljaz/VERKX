@@ -203,7 +203,7 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
         submitted = st.form_submit_button(q["calculate"])
 
     # === Skilyrði: ekki reikna ef valið er 'Annað' og km er 0
-    if submitted and (location != "Annað" or km > 0):
+    if submitted and (loc_sel != "Annað" or km > 0):
         try:
             fx = requests.get("https://api.frankfurter.app/latest?from=EUR&to=ISK", timeout=5).json()
             eur = fx["rates"]["ISK"]
