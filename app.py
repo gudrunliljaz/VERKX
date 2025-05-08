@@ -228,8 +228,37 @@ if ("Tilboðsreiknivél" in page or "Quotation" in page):
             verkkaupi = st.text_input(q["client"])
         with col6:
             stadsetning = st.text_input(q["location"])
-        with col7:
-            km_fra_thorlakshofn = st.number_input(q["distance"], min_value=0.0, value=0.0)
+# --- Afhendingarstaðir og km frá Þorlákshöfn ---
+afhendingarstaedir = {
+    "Höfuðborgarsvæðið": 60,
+    "Selfoss": 30,
+    "Hveragerði": 40,
+    "Akranes": 100,
+    "Borgarnes": 150,
+    "Stykkishólmur": 260,
+    "Ísafjörður": 570,
+    "Akureyri": 490,
+    "Húsavík": 520,
+    "Sauðárkrókur": 450,
+    "Egilsstaðir": 650,
+    "Seyðisfjörður": 670,
+    "Neskaupsstaður": 700,
+    "Eskifjörður": 690,
+    "Fáskrúðsfjörður": 680,
+    "Höfn": 450,
+    "Vestmannaeyjar": 90,
+    "Keflavík": 90,
+    "Annað": None
+}
+
+with col7:
+    stadsetning_val = st.selectbox("Afhendingarstaður", list(afhendingarstaedir.keys()))
+    if stadsetning_val == "Annað":
+        stadsetning = st.text_input("Skrifaðu nafnið á afhendingarstað")
+        km_fra_thorlakshofn = st.number_input(f"Hversu margir km eru í {stadsetning} frá Þorlákshöfn?", min_value=0.0, value=0.0)
+    else:
+        stadsetning = stadsetning_val
+        km_fra_thorlakshofn = afhendingarstaedir[stadsetning]
 
         submitted = st.form_submit_button(q["calculate"])
 
