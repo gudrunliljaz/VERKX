@@ -112,6 +112,15 @@ if "Spálíkan" in page or "Forecast" in page:
         "Íslenska": ["Íbúðir", "Leikskólar", "Gistirými", "Elliheimili", "Atvinnuhús"],
         "English": ["Apartments", "Kindergartens", "Accommodation", "Nursing homes", "Commercial buildings"]
     }
+    
+    fhousing_reverse = {
+    "Apartments": "Íbúðir",
+    "Kindergartens": "Leikskólar",
+    "Accommodation": "Gistirými",
+    "Nursing homes": "Elliheimili",
+    "Commercial buildings": "Atvinnuhús"
+    }
+
     region_map = {
         "Íslenska": ["Höfuðborgarsvæðið", "Suðurnes", "Vesturland", "Vestfirðir", "Norðurland vestra",
                      "Norðurland eystra", "Austurland", "Suðurland"],
@@ -127,7 +136,9 @@ if "Spálíkan" in page or "Forecast" in page:
     if st.button(labels[language]["run"]):
         with st.spinner(labels[language]["loading"]):
             try:
-                df, figs, used = main_forecast_logic(housing, region, years, share)
+                housing_sheet = housing_reverse[housing] if language == "English" else housing
+                df, figs, used = main_forecast_logic(housing_sheet, region, years, share)
+
                 if used < years:
                     st.warning(labels[language]["warning"].format(used))
                 tabs = st.tabs([labels[language]["result_tab"], labels[language]["download_tab"]])
