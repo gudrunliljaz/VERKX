@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
+import unicodedata
 
 # Skrár
 PAST_FILE = "data/GÖGN_VERKX.xlsx"
@@ -160,4 +161,85 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
         ]
         financials = calculate_financials(sim_avg)
         return df, figures, len(future_vals), financials
+
+
+def normalize(text):
+    nfkd = unicodedata.normalize('NFKD', str(text))
+    return ''.join(c for c in nfkd if not unicodedata.combining(c)).lower().strip()
+
+def filter_data(df, region, col):
+    df.columns = [normalize(c) for c in df.columns]
+    df = df[df['landshluti'].map(normalize) == normalize(region)]
+    df['ar'] = pd.to_numeric(df['ar'], errors='coerce')
+    df = df.dropna(subset=['ar', col])
+    return df[['ar', col]].sort_values('ar')
+
+def linear_forecast(df, col, start_year, n_years):
+    X = df[['ar']]
+    y = df[col]
+    model = LinearRegression().fit(X, y)
+    years = np.arange(start_year, start_year + n_years)
+    preds = model.predict(years.reshape(-1, 1))
+    return years, preds
+
+def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_margin=0.15):
+    # Hleður markaðsdeildum
+    share_df = pd.read_excel(share_file, engine="openpyxl")
+    share_df.columns = [normalize(c) for c in share_df.columns]
+    markets = share_df.to_dict("records")
+
+    # Byrjum að safna spáum saman
+    all_forecasts = []
+
+    for market in markets:
+        housing = normalize(market["tegund"])
+        region = normalize(market["landshluti"])
+        share = market["markaðshlutdeild"]
+        sheet_name = f"{housing} eftir landshlutum"
+
+        try:
+            past = pd.read_excel(past_file, sheet_name=sheet_name, engine="openpyxl")
+            past_filtered = filter_data(past, region, 'fjöldi eininga')
+            if past_filtered.empty:
+                continue
+        except Exception:
+            continue
+
+        years, pred = linear_forecast(past_filtered, 'fjöldi eininga', 2025, 5)
+        adj_pred = pred * share
+        df = pd.DataFrame({'ár': years, 'meðaltal': adj_pred})
+        all_forecasts.append(df)
+
+    # Taka saman eftir árum
+    if not all_forecasts:
+        return None
+
+    full = pd.concat(all_forecasts)
+    summary = full.groupby("ár")["meðaltal"].sum().reset_index()
+    summary['einingar'] = summary['meðaltal'].round(0).astype(int)
+    summary['fermetrar'] = summary['einingar'] * 6.5
+
+    # Kostnaður: hlutföll einingagerða
+    m1 = 0.19 * 269_700
+    m2 = 0.80 * 290_000
+    m3 = 0.01 * 304_500
+    m4 = 0.001 * 330_000
+    einingakostnaður = m1 + m2 + m3 + m4
+    summary['kostnaðarverð eininga'] = summary['fermetrar'] * einingakostnaður
+
+    # Flutningskostnaður
+    summary['Flutningskostnaður'] = summary['fermetrar'] * 74000
+    summary['Afhending innanlands'] = summary['fermetrar'] * 80 * 8
+    summary['Fastur kostnaður'] = 34_800_000
+
+    # Allur kostnaður
+    summary['Heildarkostnaður'] = summary[['kostnaðarverð eininga', 'Flutningskostnaður', 'Afhending innanlands', 'Fastur kostnaður']].sum(axis=1)
+
+    # Tekjur = allur kostnaður * (1 + arðsemiskrafa)
+    summary['Tekjur'] = summary['Heildarkostnaður'] * (1 + profit_margin)
+
+    # Hagnaður
+    summary['Hagnaður'] = summary['Tekjur'] - summary['Heildarkostnaður']
+
+    return summary
 
