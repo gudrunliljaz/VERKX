@@ -320,7 +320,7 @@ if ("Tilboðsreiknivél" in page or "Quotation" in page):
 
 
 
-elif "Rekstrarspáspá" in page or "All Markets Forecast" in page:
+elif "Rekstrarspá" in page or "All Markets Forecast" in page:
     st.title("Rekstrarspá allra markaða")
     
     st.markdown("Þessi spá notar meðaltöl fortíðar- og framtíðarspáa með aðlögun fyrir markaðshlutdeild og sviðsmynd.")
