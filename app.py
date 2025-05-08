@@ -181,11 +181,9 @@ if ("Tilboðsreiknivél" in page or "Quotation" in page):
             modul_half = st.number_input(q["0.5 Module"], min_value=0, value=0)
 
         st.markdown(f"### {q['input_section']}")
-        col5, col6, col7 = st.columns(3)
+        col5, col6 = st.columns(2)
         with col5:
             verkkaupi = st.text_input(q["client"])
-        with col6:
-            stadsetning = st.text_input(q["location"])
 
         afhendingarstaedir = {
             "Höfuðborgarsvæðið": 60, "Selfoss": 30, "Hveragerði": 40, "Akranes": 100,
@@ -195,7 +193,7 @@ if ("Tilboðsreiknivél" in page or "Quotation" in page):
             "Vestmannaeyjar": 90, "Keflavík": 90, "Annað": None
         }
 
-        with col7:
+        with col6:
             stadsetning_val = st.selectbox("Afhendingarstaður", list(afhendingarstaedir.keys()))
             if stadsetning_val == "Annað":
                 stadsetning = st.text_input("Skrifaðu nafnið á afhendingarstað")
