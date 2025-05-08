@@ -28,7 +28,10 @@ st.markdown("""
 with st.sidebar:
     st.markdown('<div class="language-dropdown">', unsafe_allow_html=True)
     language = st.selectbox("Language", ["Íslenska", "English"], index=0)
-    page = st.radio("Veldu síðu/Choose page", ["Spálíkan", "Tilboðsreiknivél"] if language == "Íslenska" else ["Forecast Model", "Quotation Calculator"])
+    page = st.radio("Veldu síðu/Choose page", 
+    ["Spálíkan", "Tilboðsreiknivél", "Heildarspá"] if language == "Íslenska" 
+    else ["Forecast Model", "Quotation Calculator", "All Markets Forecast"])
+
     st.markdown('</div>', unsafe_allow_html=True)
 
 # --- Þýðingar ---
@@ -280,6 +283,42 @@ elif ("Tilboðsreiknivél" in page or "Quotation" in page):
             st.write(f"**{q['offer_price']}:** {tilbod:,.0f} kr.")
         else:
             st.warning("Sláðu inn gildi til að reikna tilboð.")
+
+# --- Heildarspá fyrir 40 markaði ---
+elif ("Heildarspá" in page or "All Markets Forecast" in page):
+    st.title("📊 Heildarspá allra markaða")
+
+    uploaded_file = st.file_uploader("Hlaða inn markaðshlutdeildarskrá (Excel)", type=["xlsx"])
+    profit_margin_percent = st.slider("Arðsemiskrafa (%)", min_value=0, max_value=100, value=15)
+    profit_margin = profit_margin_percent / 100
+
+    if uploaded_file and st.button("Keyra heildarspá"):
+        with st.spinner("Reikna spá fyrir alla markaði..."):
+            try:
+                from verkx_code import main_forecast_logic_from_excel
+                summary_df = main_forecast_logic_from_excel(
+                    past_file="data/GÖGN_VERKX.xlsx",
+                    future_file="data/Framtidarspa.xlsx",
+                    share_file=uploaded_file,
+                    profit_margin=profit_margin
+                )
+                if summary_df is not None:
+                    st.success("Heildarspá kláruð!")
+                    st.subheader("Niðurstöður")
+                    st.dataframe(summary_df.set_index("ár").style.format("{:,.0f}"))
+
+                    csv = summary_df.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
+                    st.download_button(
+                        label="📥 Hlaða niður niðurstöðum (CSV)",
+                        data=csv,
+                        file_name="heildarspa.csv",
+                        mime="text/csv"
+                    )
+                else:
+                    st.warning("Engin marktæk gögn fundust fyrir neinn markað.")
+            except Exception as e:
+                st.error(f"Villa við keyrslu: {e}")
+
 
 
 
