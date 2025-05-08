@@ -9,14 +9,7 @@ PAST_FILE = "data/GÖGN_VERKX.xlsx"
 FUTURE_FILE = "data/Framtidarspa.xlsx"
 SHARE_FILE = "data/markadshlutdeild.xlsx"
 
-# Fastar
-PRICE_PER_SQM = 467_308
-BASE_COST_PER_SQM = 360_000
-TRANSPORT_COST_PER_SQM = 92_308
-UNIT_SIZE_SQM = 6.5
-FIXED_COST_PER_YEAR = 37_200_000
-DISCOUNT_RATE = 0.08
-EFFICIENCY_FACTOR = 0.98
+
 
 
 def normalize(text):
@@ -111,7 +104,7 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
     use_forecast = housing_type.lower() in ["íbúðir", "leikskólar"]
 
     past_df = load_excel(PAST_FILE, sheet_name)
-    demand_column = 'fjöldi eininga'
+    demand_column = 'fjoldi eininga'
     past_data = filter_data(past_df, region, demand_column)
     if past_data.empty:
         raise ValueError("Engin fortíðargögn fundust fyrir valinn landshluta.")
@@ -138,7 +131,7 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
         financials = calculate_financials(sim_past)
         return df, figures, future_years, financials
     else:
-        future_vals = future_data['fjöldi eininga'].values[:future_years]
+        future_vals = future_data['fjoldi eininga'].values[:future_years]
         future_years_vals = future_data['ar'].values[:future_years]
         market_shares = np.linspace(initial_share, final_market_share, len(future_vals))
         linear_years, linear_pred = linear_forecast(past_data, demand_column, 2025, len(future_vals))
@@ -194,13 +187,13 @@ def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_ma
 
         try:
             past = pd.read_excel(past_file, sheet_name=sheet_name, engine="openpyxl")
-            past_filtered = filter_data(past, region, 'fjöldi eininga')
+            past_filtered = filter_data(past, region, 'fjoldi eininga')
             if past_filtered.empty:
                 continue
         except Exception:
             continue
 
-        years, pred = linear_forecast(past_filtered, 'fjöldi eininga', 2025, 5)
+        years, pred = linear_forecast(past_filtered, 'fjoldi eininga', 2025, 5)
         adj_pred = pred * share
         df = pd.DataFrame({'ár': years, 'meðaltal': adj_pred})
         all_forecasts.append(df)
