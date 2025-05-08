@@ -289,18 +289,16 @@ elif ("Tilboðsreiknivél" in page or "Quotation" in page):
 elif ("Heildarspá" in page or "All Markets Forecast" in page):
     st.title("📊 Heildarspá allra markaða")
 
-    uploaded_file = st.file_uploader("Hlaða inn markaðshlutdeildarskrá (Excel)", type=["xlsx"])
     profit_margin_percent = st.slider("Arðsemiskrafa (%)", min_value=0, max_value=100, value=15)
     profit_margin = profit_margin_percent / 100
 
-    if uploaded_file and st.button("Keyra heildarspá"):
+    if st.button("Keyra heildarspá"):
         with st.spinner("Reikna spá fyrir alla markaði..."):
             try:
-                from verkx_code import main_forecast_logic_from_excel
                 summary_df = main_forecast_logic_from_excel(
                     past_file="data/GÖGN_VERKX.xlsx",
                     future_file="data/Framtidarspa.xlsx",
-                    share_file=uploaded_file,
+                    share_file="data/markadshlutdeild.xlsx",
                     profit_margin=profit_margin
                 )
                 if summary_df is not None:
@@ -319,6 +317,7 @@ elif ("Heildarspá" in page or "All Markets Forecast" in page):
                     st.warning("Engin marktæk gögn fundust fyrir neinn markað.")
             except Exception as e:
                 st.error(f"Villa við keyrslu: {e}")
+
 
 
 
