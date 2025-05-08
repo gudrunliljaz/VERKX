@@ -192,7 +192,6 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
         }
 
         with col7:
-            loc_sel = st.selectbox("Afhendingarstaður", loc_options.keys())
             if loc_sel == "Annað":
                 location = st.text_input("Nafn staðar")
                 km = st.number_input("Fjarlægð frá Þorlákshöfn (km)", 0.0, value=0.0)
