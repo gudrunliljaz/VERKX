@@ -318,28 +318,35 @@ if ("Tilboðsreiknivél" in page or "Quotation" in page):
 
 # 3. All Markets Forecast
 # =====================
-elif "Heildarspá" in page or "All Markets Forecast" in page:
-    st.title("📊 Heildarspá")
-    margin = st.slider("Álag / profit margin (%)", 0, 100, 15) / 100
+# 3. All Markets Forecast
+elif "Rekstrarspáspá" in page or "All Markets Forecast" in page:
+    st.title("Rekstrarspá allra markaða")
+    
+    margin = st.slider("Arðsemiskrafa / Profit margin (%)", 0, 100, 15) / 100
+
     if st.button("Keyra heildarspá"):
         with st.spinner("Reikna..."):
             try:
                 df = main_forecast_logic_from_excel(
-                    "data/GÖGN_VERKX.xlsx",
-                    "data/Framtidarspa.xlsx",
-                    "data/markadshlutdeild.xlsx",
+                    past_file="data/GÖGN_VERKX.xlsx",
+                    future_file="data/Framtidarspa.xlsx",
+                    share_file="data/markadshlutdeild.xlsx",
                     profit_margin=margin
                 )
                 if df is not None:
-                    st.success("Lokið!")
+                    st.success("Heildarspá lokið.")
                     st.dataframe(df.set_index("ár"))
-                    st.download_button("Sækja CSV", df.to_csv(index=False).encode("utf-8-sig"),
-                                       "heildarspa.csv", "text/csv")
+                    csv = df.to_csv(index=False).encode("utf-8-sig")
+                    st.download_button(
+                        "Sækja CSV",
+                        data=csv,
+                        file_name="heildarspa.csv",
+                        mime="text/csv"
+                    )
                 else:
-                    st.warning("Engin gögn fundust.")
+                    st.warning("Engin gögn fundust til að spá.")
             except Exception as e:
-                st.error(f"Villa: {e}")
-
+                st.error(f"Villa við útreikning: {e}")
 
 
 
