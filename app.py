@@ -202,7 +202,8 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
 
         submitted = st.form_submit_button(q["calculate"])
 
-    if submitted and not (location == "Annað" and km == 0):
+    # === Skilyrði: ekki reikna ef valið er 'Annað' og km er 0
+    if submitted and (location != "Annað" or km > 0):
         try:
             fx = requests.get("https://api.frankfurter.app/latest?from=EUR&to=ISK", timeout=5).json()
             eur = fx["rates"]["ISK"]
@@ -219,7 +220,9 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
         fm = sum(m["n"] * m["fm"] for m in mods.values())
         kg = sum(m["n"] * m["kg"] for m in mods.values())
         afsl = 0.10 if fm >= 650 else 0
-        if fm >= 1300: afsl = min(0.15 + ((fm - 1300) // 325) * 0.01, 0.18)
+        if fm >= 1300:
+            afsl = min(0.15 + ((fm - 1300) // 325) * 0.01, 0.18)
+
         einingakostn = sum(m["n"] * m["fm"] * m["verð"] * eur * (1 - afsl) for m in mods.values())
         flutn = fm * 74000
         sending = fm * km * 8
@@ -240,11 +243,10 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
         st.write(f"**{q['allocated_fixed']}:** {fastur:,.0f} kr")
         st.write(f"**{q['markup']}:** {markup:.2f}")
         st.write(f"**{q['offer_price']}:** {verð:,.0f} kr / €{verð_eur:,.2f}")
-
+    
     elif submitted:
-        st.warning("Settu inn km fjarlægð ef þú valdir 'Annað'.")
+        st.warning("Vinsamlegast sláðu inn km fjarlægð ef þú valdir 'Annað'.")
 
-# =====================
 # 3. All Markets Forecast
 # =====================
 elif "Heildarspá" in page or "All Markets Forecast" in page:
