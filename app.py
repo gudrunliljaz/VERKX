@@ -382,3 +382,4 @@ elif ("Heildarspá" in page or "All Markets Forecast" in page):
 
 
 
+
