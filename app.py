@@ -179,9 +179,9 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
         with col4: m05 = st.number_input(q["0.5 Module"], 0, value=0)
 
         st.subheader(q["input_section"])
-        col5, col6, col7 = st.columns(3)
+        col5, col6 = st.columns(2)
         with col5: client = st.text_input(q["client"])
-        with col6: location_input = st.text_input(q["location"])
+
 
         loc_options = {
             "Höfuðborgarsvæðið": 60, "Selfoss": 30, "Hveragerði": 40, "Akranes": 100,
@@ -191,7 +191,7 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
             "Höfn": 450, "Vestmannaeyjar": 90, "Keflavík": 90, "Annað": None
         }
 
-        with col7:
+        with col6:
             loc_sel = st.selectbox("Afhendingarstaður", loc_options.keys())
             if loc_sel == "Annað":
                 location = st.text_input("Nafn staðar")
