@@ -18,17 +18,20 @@ FIXED_COST_PER_YEAR = 37_200_000
 DISCOUNT_RATE = 0.08
 EFFICIENCY_FACTOR = 0.98
 
+
 def normalize(text):
     nfkd = unicodedata.normalize('NFKD', str(text))
     return ''.join(c for c in nfkd if not unicodedata.combining(c)).lower().strip()
+
 
 def load_excel(file_path, sheet_name):
     df = pd.read_excel(file_path, sheet_name=sheet_name, engine="openpyxl")
     df.columns = [col.strip().lower() for col in df.columns]
     return df
 
+
 def filter_data(df, region, demand_column):
-    df = df[df['landshluti'].str.strip().str.lower() == region.strip().lower()].copy()
+    df = df[df['landshluti'].str.strip() == region.strip()].copy()
     df.columns = [col.strip().lower() for col in df.columns]
     demand_column = demand_column.lower()
     if demand_column not in df.columns:
@@ -38,6 +41,7 @@ def filter_data(df, region, demand_column):
     df = df.sort_values('ar')
     return df[['ar', demand_column]]
 
+
 def linear_forecast(df, demand_column, start_year, future_years):
     X = df[['ar']].values
     y = df[demand_column].values
@@ -45,6 +49,7 @@ def linear_forecast(df, demand_column, start_year, future_years):
     future_years_range = np.array(range(start_year, start_year + future_years))
     predictions = model.predict(future_years_range.reshape(-1, 1))
     return future_years_range, predictions
+
 
 def monte_carlo_simulation(values, market_shares, simulations=10000, volatility=0.1):
     mean_val = np.mean(values)
@@ -56,6 +61,7 @@ def monte_carlo_simulation(values, market_shares, simulations=10000, volatility=
         results.append(simulated)
     return np.array(results)
 
+
 def plot_distribution(sim_data, title):
     fig, ax = plt.subplots(figsize=(5, 3))
     totals = np.sum(sim_data, axis=1)
@@ -65,6 +71,7 @@ def plot_distribution(sim_data, title):
     ax.set_ylabel("Tíðni")
     plt.tight_layout()
     return fig
+
 
 def calculate_financials(sim_avg):
     avg_units_per_year = np.mean(sim_avg, axis=0)
@@ -98,9 +105,11 @@ def calculate_financials(sim_avg):
         "NPV": npv
     }
 
+
 def main_forecast_logic(housing_type, region, future_years, final_market_share):
     sheet_name = f"{housing_type} eftir landshlutum"
     use_forecast = housing_type.lower() in ["íbúðir", "leikskólar"]
+
     past_df = load_excel(PAST_FILE, sheet_name)
     demand_column = 'fjöldi eininga'
     past_data = filter_data(past_df, region, demand_column)
@@ -153,24 +162,33 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
         financials = calculate_financials(sim_avg)
         return df, figures, len(future_vals), financials
 
-def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_margin=0.15):
-    # Finna rétta flipann í markaðshlutdeildarskránni
-    xl = pd.ExcelFile(share_file, engine="openpyxl")
+
+def load_combined_share_file(filepath):
+    xl = pd.ExcelFile(filepath, engine="openpyxl")
+    all_dfs = []
     for sheet in xl.sheet_names:
         df = xl.parse(sheet)
-        df.columns = [normalize(c) for c in df.columns]
-        if {"tegund", "landshluti", "markaðshlutdeild"}.issubset(df.columns):
-            share_df = df
-            break
-    else:
-        raise ValueError("Fann engan flip með dálkunum 'tegund', 'landshluti', 'markaðshlutdeild'")
+        df['tegund'] = sheet.strip()
+        all_dfs.append(df)
+    combined = pd.concat(all_dfs, ignore_index=True)
+    combined.columns = [normalize(c) for c in combined.columns]
+    combined['tegund'] = combined['tegund'].map(normalize)
+    combined['landshluti'] = combined['landshluti'].map(normalize)
+    return combined
+
+
+def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_margin=0.15):
+    share_df = load_combined_share_file(share_file)
+    required_cols = {"tegund", "landshluti", "markaðshlutdeild"}
+    if not required_cols.issubset(set(share_df.columns)):
+        raise ValueError("Excel-skráin verður að innihalda dálkana: 'tegund', 'landshluti', 'markaðshlutdeild'")
 
     markets = share_df.to_dict("records")
     all_forecasts = []
 
     for market in markets:
-        housing = normalize(market["tegund"])
-        region = normalize(market["landshluti"])
+        housing = market["tegund"]
+        region = market["landshluti"]
         share = market["markaðshlutdeild"]
         sheet_name = f"{housing} eftir landshlutum"
 
@@ -195,7 +213,7 @@ def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_ma
     summary['einingar'] = summary['meðaltal'].round(0).astype(int)
     summary['fermetrar'] = summary['einingar'] * UNIT_SIZE_SQM
 
-    # Hlutföll módúla og kostnaður
+    # Hlutföll módúla
     m1 = 0.19 * 269_700
     m2 = 0.80 * 290_000
     m3 = 0.01 * 304_500
@@ -212,5 +230,6 @@ def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_ma
     summary['Hagnaður'] = summary['Tekjur'] - summary['Heildarkostnaður']
 
     return summary
+
 
 
