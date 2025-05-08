@@ -182,8 +182,25 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
         with col6: location_input = st.text_input(q["location"])
 
         delivery_options = {
-            "Höfuðborgarsvæðið": 60, "Akureyri": 490, "Selfoss": 30,
-            "Egilsstaðir": 650, "Keflavík": 90, "Annað": None
+            "Höfuðborgarsvæðið": 60,
+            "Selfoss": 30,
+            "Hveragerði": 40,
+            "Akranes": 100,
+            "Borgarnes": 150,
+            "Stykkishólmur": 260,
+            "Ísafjörður": 570,
+            "Akureyri": 490,
+            "Húsavík": 520,
+            "Sauðárkrókur": 450,
+            "Egilsstaðir": 650,
+            "Seyðisfjörður": 670,
+            "Neskaupsstaður": 700,
+            "Eskifjörður": 690,
+            "Fáskrúðsfjörður": 680,
+            "Höfn": 450,
+            "Vestmannaeyjar": 90,
+            "Keflavík": 90,
+            "Annað": None
         }
 
         with col7:
@@ -197,7 +214,10 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
 
         submitted = st.form_submit_button(q["calculate"])
 
-    if submitted:
+if submitted:
+    if location == "Annað" and km == 0:
+        st.warning("Vinsamlegast sláðu inn fjarlægð í km áður en þú heldur áfram.")
+    else:
         modules = {
             "3m": {"count": m3, "sqm": 19.5, "eur": 1800, "kg": 9750},
             "2m": {"count": m2, "sqm": 13.0, "eur": 1950, "kg": 6500},
