@@ -163,9 +163,6 @@ if "Spálíkan" in page or "Forecast" in page:
             except Exception as e:
                 st.error(f"{labels[language]['error']}: {e}")
 
-# =====================
-# 2. Quotation Calculator
-# =====================
 elif "Tilboðsreiknivél" in page or "Quotation" in page:
     q = quotation_labels[language]
     st.header(q["title"])
@@ -181,7 +178,6 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
         st.subheader(q["input_section"])
         col5, col6 = st.columns(2)
         with col5: client = st.text_input(q["client"])
-
 
         loc_options = {
             "Höfuðborgarsvæðið": 60, "Selfoss": 30, "Hveragerði": 40, "Akranes": 100,
@@ -202,8 +198,15 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
 
         submitted = st.form_submit_button(q["calculate"])
 
+    # === Skilyrði: ekkert valið
+    if submitted and (m3 + m2 + m1 + m05 == 0):
+        st.warning("Vinsamlegast veldu fjölda eininga til að reikna tilboð.")
+
     # === Skilyrði: ekki reikna ef valið er 'Annað' og km er 0
-    if submitted and (loc_sel != "Annað" or km > 0):
+    elif submitted and (loc_sel == "Annað" and km == 0):
+        st.warning("Vinsamlegast sláðu inn km fjarlægð ef þú valdir 'Annað'.")
+
+    elif submitted:
         try:
             fx = requests.get("https://api.frankfurter.app/latest?from=EUR&to=ISK", timeout=5).json()
             eur = fx["rates"]["ISK"]
@@ -243,9 +246,7 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
         st.write(f"**{q['allocated_fixed']}:** {fastur:,.0f} kr")
         st.write(f"**{q['markup']}:** {markup:.2f}")
         st.write(f"**{q['offer_price']}:** {verð:,.0f} kr / €{verð_eur:,.2f}")
-    
-    elif submitted:
-        st.warning("Vinsamlegast sláðu inn km fjarlægð ef þú valdir 'Annað'.")
+
 
 # 3. All Markets Forecast
 # =====================
