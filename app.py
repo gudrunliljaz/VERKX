@@ -307,11 +307,21 @@ elif ("Tilboðsreiknivél" in page or "Quotation" in page):
             st.write(f"**{q['markup']}:** {alagsstudull:.2f}")
             st.write(f"**{q['offer_price']}:** {tilbod:,.0f} kr. / €{tilbod_eur:,.2f}")
 
-            # --- PDF útgáfa ---
+            # --- PDF útgáfa --- með Latin-1 öruggum texta ---
+            def to_latin1(s):
+                return s.encode("latin-1", errors="replace").decode("latin-1")
+
             pdf = FPDF()
+pdf.add_page()
+try:
+    pdf.image("assets/logo.png", x=10, y=8, w=40)
+except:
+    pass
+pdf.set_font("Arial", size=12)
+pdf.ln(30)
             pdf.add_page()
             pdf.set_font("Arial", size=12)
-            pdf.cell(200, 10, txt=f"Tilboð - {verkkaupi}", ln=True, align='L')
+            pdf.cell(200, 10, txt=to_latin1(f"Tilboð - {verkkaupi}"), ln=True, align='L')
             pdf.cell(200, 10, txt=f"Dags: {date.today()}", ln=True, align='L')
             pdf.ln(5)
 
@@ -329,7 +339,7 @@ elif ("Tilboðsreiknivél" in page or "Quotation" in page):
             ]
 
             for label, value in pdf_data:
-                pdf.cell(200, 10, txt=f"{label}: {value}", ln=True, align='L')
+                pdf.cell(200, 10, txt=to_latin1(f"{label}: {value}"), ln=True, align='L')
 
             buffer = BytesIO()
             pdf.output(buffer)
