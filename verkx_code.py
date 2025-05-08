@@ -154,13 +154,16 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
         return df, figures, len(future_vals), financials
 
 def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_margin=0.15):
-    share_df = pd.read_excel(share_file, engine="openpyxl")
-    share_df.columns = [normalize(c) for c in share_df.columns]
-    share_df = share_df.dropna(subset=["tegund", "landshluti", "markaðshlutdeild"])
-
-    required_cols = {"tegund", "landshluti", "markaðshlutdeild"}
-    if not required_cols.issubset(set(share_df.columns)):
-        raise ValueError("Excel-skráin verður að innihalda dálkana: 'tegund', 'landshluti', 'markaðshlutdeild'")
+    # Finna rétta flipann í markaðshlutdeildarskránni
+    xl = pd.ExcelFile(share_file, engine="openpyxl")
+    for sheet in xl.sheet_names:
+        df = xl.parse(sheet)
+        df.columns = [normalize(c) for c in df.columns]
+        if {"tegund", "landshluti", "markaðshlutdeild"}.issubset(df.columns):
+            share_df = df
+            break
+    else:
+        raise ValueError("Fann engan flip með dálkunum 'tegund', 'landshluti', 'markaðshlutdeild'")
 
     markets = share_df.to_dict("records")
     all_forecasts = []
@@ -192,7 +195,7 @@ def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_ma
     summary['einingar'] = summary['meðaltal'].round(0).astype(int)
     summary['fermetrar'] = summary['einingar'] * UNIT_SIZE_SQM
 
-    # Hlutföll módúla
+    # Hlutföll módúla og kostnaður
     m1 = 0.19 * 269_700
     m2 = 0.80 * 290_000
     m3 = 0.01 * 304_500
@@ -209,4 +212,5 @@ def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_ma
     summary['Hagnaður'] = summary['Tekjur'] - summary['Heildarkostnaður']
 
     return summary
+
 
