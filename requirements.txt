@@ -1,3 +1,9 @@
 streamlit
 requests
 fpdf==1.7.2
+pandas
+numpy
+scikit-learn
+matplotlib
+openpyxl
+
