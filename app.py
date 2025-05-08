@@ -223,9 +223,8 @@ if ("Spálíkan" in page or "Forecast" in page):
             except Exception as e:
                 st.error(f"{labels[language]['error']}: {e}")
 
-
 # --- Tilboðsreiknivél ---
-elif ("Tilboðsreiknivél" in page or "Quotation" in page):
+if ("Tilboðsreiknivél" in page or "Quotation" in page):
     q = quotation_labels[language]
     st.markdown(f"<h1>{q['title']}</h1><hr>", unsafe_allow_html=True)
 
@@ -308,7 +307,6 @@ elif ("Tilboðsreiknivél" in page or "Quotation" in page):
             st.write(f"**{q['markup']}:** {alagsstudull:.2f}")
             st.write(f"**{q['offer_price']}:** {tilbod:,.0f} kr. / €{tilbod_eur:,.2f}")
 
-            # --- PDF útgáfa --- með Latin-1 öruggum texta og logo ---
             def to_latin1(s):
                 return s.encode("latin-1", errors="replace").decode("latin-1")
 
@@ -320,7 +318,6 @@ elif ("Tilboðsreiknivél" in page or "Quotation" in page):
                 pass
             pdf.set_font("Arial", size=12)
             pdf.ln(30)
-
             pdf.cell(200, 10, txt=to_latin1(f"Tilboð - {verkkaupi}"), ln=True, align='L')
             pdf.cell(200, 10, txt=f"Dags: {date.today()}", ln=True, align='L')
             pdf.ln(5)
@@ -342,7 +339,8 @@ elif ("Tilboðsreiknivél" in page or "Quotation" in page):
                 pdf.cell(200, 10, txt=to_latin1(f"{label}: {value}"), ln=True, align='L')
 
             buffer = BytesIO()
-            pdf.output(buffer)
+            pdf.output(dest='S').encode('latin-1')
+            buffer.write(pdf.output(dest='S').encode('latin-1'))
             st.download_button(
                 label="Sækja PDF tilboð",
                 data=buffer.getvalue(),
