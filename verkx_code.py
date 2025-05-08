@@ -9,7 +9,9 @@ PAST_FILE = "data/GÖGN_VERKX.xlsx"
 FUTURE_FILE = "data/Framtidarspa.xlsx"
 SHARE_FILE = "data/markadshlutdeild.xlsx"
 
-
+# Fastar
+UNIT_SIZE_SQM = 6.5
+FIXED_COST_PER_YEAR = 37_200_000
 
 
 def normalize(text):
@@ -66,8 +68,6 @@ def plot_distribution(sim_data, title):
     return fig
 
 
-
-
 def main_forecast_logic(housing_type, region, future_years, final_market_share):
     sheet_name = f"{housing_type} eftir landshlutum"
     use_forecast = housing_type.lower() in ["íbúðir", "leikskólar"]
@@ -120,7 +120,6 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
             plot_distribution(monte_carlo_simulation(future_vals, market_shares), "Monte Carlo - Framtíðarspá"),
             plot_distribution(sim_avg, "Monte Carlo - Meðaltal")
         ]
-
         return df, figures, len(future_vals)
 
 
@@ -191,6 +190,7 @@ def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_ma
     summary['Hagnaður'] = summary['Tekjur'] - summary['Heildarkostnaður']
 
     return summary
+
 
 
 
