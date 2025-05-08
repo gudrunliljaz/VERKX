@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import datetime
-from verkx_code import main_forecast_logic
+from verkx_code import main_forecast_logic, main_forecast_logic_from_excel
+
 
 # Page config
 st.set_page_config(page_title="Cubit", page_icon="assets/logo.png", layout="wide")
