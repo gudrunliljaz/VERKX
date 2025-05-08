@@ -130,7 +130,7 @@ if ("Spálíkan" in page or "Forecast" in page):
                         mime="text/csv"
                     )
             except Exception as e:
-                st.error(f"{labels[language]['error']]}: {e}")
+                st.error(f"{labels[language]['error']}: {e}")
 
 # All Markets Forecast
 elif ("Heildarspá" in page or "All Markets Forecast" in page):
