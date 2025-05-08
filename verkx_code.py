@@ -129,54 +129,53 @@ def load_combined_share_file(filepath):
     return combined
 
 def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_margin=0.15):
-    share_df = load_combined_share_file(share_file)
-    required_cols = {"tegund", "landshluti", "markaðshlutdeild"}
-    if not required_cols.issubset(set(share_df.columns)):
-        raise ValueError("Excel-skráin verður að innihalda dálkana: 'tegund', 'landshluti', 'markaðshlutdeild'")
+    # Sameina markaðshlutdeild úr öllum flipum í skránni
+    xl = pd.ExcelFile(share_file, engine="openpyxl")
+    all_dfs = []
+    for sheet in xl.sheet_names:
+        df = xl.parse(sheet)
+        df['tegund'] = sheet.strip()
+        all_dfs.append(df)
+
+    share_df = pd.concat(all_dfs, ignore_index=True)
+    share_df.columns = [normalize(c) for c in share_df.columns]
+    share_df['tegund'] = share_df['tegund'].map(normalize)
+    share_df['landshluti'] = share_df['landshluti'].map(normalize)
 
     markets = share_df.to_dict("records")
-    all_forecasts = []
+    all_rows = []
 
-    for market in markets:
-        housing = market["tegund"]
-        region = market["landshluti"]
-        share = market["markaðshlutdeild"]
-        sheet_name = f"{housing} eftir landshlutum"
+    for row in markets:
+        tegund = row["tegund"]
+        landshluti = row["landshluti"]
+        markadshlutdeild = row["markaðshlutdeild"]
+        sheet_name = f"{tegund} eftir landshlutum"
 
         try:
-            past = pd.read_excel(past_file, sheet_name=sheet_name, engine="openpyxl")
-            past_filtered = filter_data(past, region, 'fjoldi eininga')
-            if past_filtered.empty:
+            df_past = pd.read_excel(past_file, sheet_name=sheet_name, engine="openpyxl")
+            df_past.columns = [normalize(c) for c in df_past.columns]
+            past = filter_data(df_past, landshluti, "fjoldi eininga")
+            if past.empty:
                 continue
+            years, pred = linear_forecast(past, "fjoldi eininga", 2025, 5)
+            adj_pred = pred * markadshlutdeild
+            df_adj = pd.DataFrame({"ár": years, "meðaltal": adj_pred})
+            all_rows.append(df_adj)
         except Exception:
             continue
 
-        years, pred = linear_forecast(past_filtered, 'fjoldi eininga', 2025, 5)
-        adj_pred = pred * share
-        df = pd.DataFrame({'ár': years, 'meðaltal': adj_pred})
-        all_forecasts.append(df)
-
-    if not all_forecasts:
+    if not all_rows:
         return None
 
-    full = pd.concat(all_forecasts)
-    summary = full.groupby("ár")["meðaltal"].sum().reset_index()
-    summary['einingar'] = summary['meðaltal'].round(0).astype(int)
-    summary['fermetrar'] = summary['einingar'] * UNIT_SIZE_SQM
-
-    m1 = 0.19 * 269_700
-    m2 = 0.80 * 290_000
-    m3 = 0.01 * 304_500
-    m4 = 0.001 * 330_000
-    einingakostnaður = m1 + m2 + m3 + m4
-    summary['kostnaðarverð eininga'] = summary['fermetrar'] * einingakostnaður
-
-    summary['Flutningskostnaður'] = summary['fermetrar'] * 74000
-    summary['Afhending innanlands'] = summary['fermetrar'] * 80 * 8
-    summary['Fastur kostnaður'] = FIXED_COST_PER_YEAR
-
-    summary['Heildarkostnaður'] = summary[['kostnaðarverð eininga', 'Flutningskostnaður', 'Afhending innanlands', 'Fastur kostnaður']].sum(axis=1)
-    summary['Tekjur'] = summary['Heildarkostnaður'] * (1 + profit_margin)
-    summary['Hagnaður'] = summary['Tekjur'] - summary['Heildarkostnaður']
-
+    df_all = pd.concat(all_rows)
+    summary = df_all.groupby("ár")["meðaltal"].sum().reset_index()
+    summary["fermetrar"] = summary["meðaltal"].round(0).astype(int) * UNIT_SIZE_SQM
+    summary["kostnaðarverð eininga"] = summary["fermetrar"] * (0.19*269700 + 0.80*290000 + 0.01*304500 + 0.001*330000)
+    summary["Flutningskostnaður"] = summary["fermetrar"] * 74000
+    summary["Afhending innanlands"] = summary["fermetrar"] * 80 * 8
+    summary["Fastur kostnaður"] = FIXED_COST_PER_YEAR
+    summary["Heildarkostnaður"] = summary[["kostnaðarverð eininga", "Flutningskostnaður", "Afhending innanlands", "Fastur kostnaður"]].sum(axis=1)
+    summary["Tekjur"] = summary["Heildarkostnaður"] * (1 + profit_margin)
+    summary["Hagnaður"] = summary["Tekjur"] - summary["Heildarkostnaður"]
     return summary
+
