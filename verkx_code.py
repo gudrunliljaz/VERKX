@@ -66,37 +66,6 @@ def plot_distribution(sim_data, title):
     return fig
 
 
-def calculate_financials(sim_avg):
-    avg_units_per_year = np.mean(sim_avg, axis=0)
-    years = len(avg_units_per_year)
-    total_revenue = []
-    total_variable_cost = []
-    cash_flows = []
-    efficiency = 1.0
-
-    for year in range(years):
-        units = avg_units_per_year[year]
-        sqm_total = units * UNIT_SIZE_SQM
-        if year == 1:
-            efficiency = 0.90
-        elif year > 1:
-            efficiency *= EFFICIENCY_FACTOR
-        variable_cost_per_sqm = (BASE_COST_PER_SQM * efficiency) + TRANSPORT_COST_PER_SQM
-        total_cost = variable_cost_per_sqm * sqm_total
-        revenue = PRICE_PER_SQM * sqm_total
-        profit = revenue - total_cost
-        total_revenue.append(revenue)
-        total_variable_cost.append(total_cost)
-        cash_flows.append(profit)
-
-    npv = sum(cf / ((1 + DISCOUNT_RATE) ** (i + 1)) for i, cf in enumerate(cash_flows))
-
-    return {
-        "Tekjur": sum(total_revenue),
-        "Heildarkostnaður": sum(total_variable_cost),
-        "Hagnaður": sum(cash_flows),
-        "NPV": npv
-    }
 
 
 def main_forecast_logic(housing_type, region, future_years, final_market_share):
