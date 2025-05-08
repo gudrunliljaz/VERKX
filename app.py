@@ -163,6 +163,8 @@ if "Spálíkan" in page or "Forecast" in page:
             except Exception as e:
                 st.error(f"{labels[language]['error']}: {e}")
 
+# 2. --- tilboðsmódel----
+
 elif "Tilboðsreiknivél" in page or "Quotation" in page:
     q = quotation_labels[language]
     st.header(q["title"])
