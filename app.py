@@ -222,11 +222,7 @@ if ("Spálíkan" in page or "Forecast" in page):
                     )
             except Exception as e:
                 st.error(f"{labels[language]['error']}: {e}")
-from datetime import date
-import requests
-from io import BytesIO
-from fpdf import FPDF
-import streamlit as st
+
 
 # --- Tilboðsreiknivél ---
 elif ("Tilboðsreiknivél" in page or "Quotation" in page):
