@@ -315,14 +315,18 @@ if ("Tilboðsreiknivél" in page or "Quotation" in page):
         )
 
 
-
 # 3. All Markets Forecast
 # =====================
-# 3. All Markets Forecast
+
+
+
 elif "Rekstrarspáspá" in page or "All Markets Forecast" in page:
     st.title("Rekstrarspá allra markaða")
     
-    margin = st.slider("Arðsemiskrafa / Profit margin (%)", 0, 100, 15) / 100
+    st.markdown("Þessi spá notar meðaltöl fortíðar- og framtíðarspáa með aðlögun fyrir markaðshlutdeild og sviðsmynd.")
+
+    margin = st.slider("Arðsemiskrafa (%)", 0, 100, 15)
+    margin_decimal = margin / 100
 
     if st.button("Keyra heildarspá"):
         with st.spinner("Reikna..."):
@@ -331,20 +335,20 @@ elif "Rekstrarspáspá" in page or "All Markets Forecast" in page:
                     past_file="data/GÖGN_VERKX.xlsx",
                     future_file="data/Framtidarspa.xlsx",
                     share_file="data/markadshlutdeild.xlsx",
-                    profit_margin=margin
+                    profit_margin=margin_decimal
                 )
-                if df is not None:
-                    st.success("Heildarspá lokið.")
-                    st.dataframe(df.set_index("ár"))
-                    csv = df.to_csv(index=False).encode("utf-8-sig")
+                if df is not None and not df.empty:
+                    st.success("Lokið! Hér að neðan eru spár fyrir alla markaði.")
+                    st.dataframe(df)
+
                     st.download_button(
                         "Sækja CSV",
-                        data=csv,
+                        data=df.to_csv(index=False).encode("utf-8-sig"),
                         file_name="heildarspa.csv",
                         mime="text/csv"
                     )
                 else:
-                    st.warning("Engin gögn fundust til að spá.")
+                    st.warning("Engin gögn fundust eða ekkert sniðug spá tiltæk.")
             except Exception as e:
                 st.error(f"Villa við útreikning: {e}")
 
