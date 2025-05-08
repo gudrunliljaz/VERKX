@@ -129,40 +129,35 @@ def load_combined_share_file(filepath):
     return combined
 
 def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_margin=0.15):
-    # Sameina markaðshlutdeild úr öllum flipum í skránni
-    xl = pd.ExcelFile(share_file, engine="openpyxl")
-    all_dfs = []
-    for sheet in xl.sheet_names:
-        df = xl.parse(sheet)
-        df['tegund'] = sheet.strip()
-        all_dfs.append(df)
-
-    share_df = pd.concat(all_dfs, ignore_index=True)
-    share_df.columns = [normalize(c) for c in share_df.columns]
-    share_df['tegund'] = share_df['tegund'].map(normalize)
-    share_df['landshluti'] = share_df['landshluti'].map(normalize)
-
-    markets = share_df.to_dict("records")
     all_rows = []
 
-    for row in markets:
-        tegund = row["tegund"]
-        landshluti = row["landshluti"]
-        markadshlutdeild = row["markaðshlutdeild"]
-        sheet_name = f"{tegund} eftir landshlutum"
+    xls = pd.ExcelFile(share_file, engine="openpyxl")
+    for sheet_name in xls.sheet_names:
+        df_sheet = pd.read_excel(share_file, sheet_name=sheet_name, engine="openpyxl")
+        df_sheet.columns = [normalize(c) for c in df_sheet.columns]
 
-        try:
-            df_past = pd.read_excel(past_file, sheet_name=sheet_name, engine="openpyxl")
-            df_past.columns = [normalize(c) for c in df_past.columns]
-            past = filter_data(df_past, landshluti, "fjoldi eininga")
-            if past.empty:
+        # Bætum við dálkinum 'tegund' sem kemur frá flipanafninu
+        df_sheet['tegund'] = normalize(sheet_name)
+
+        for _, row in df_sheet.iterrows():
+            tegund = row["tegund"]
+            landshluti = normalize(row["landshluti"])
+            markadshlutdeild = row["markaðshlutdeild"]
+
+            sheet_data_name = f"{sheet_name} eftir landshlutum"
+
+            try:
+                df_past = pd.read_excel(past_file, sheet_name=sheet_data_name, engine="openpyxl")
+                df_past.columns = [normalize(c) for c in df_past.columns]
+                past = filter_data(df_past, landshluti, "fjoldi eininga")
+                if past.empty:
+                    continue
+                years, pred = linear_forecast(past, "fjoldi eininga", 2025, 5)
+                adj_pred = pred * markadshlutdeild
+                df_adj = pd.DataFrame({"ár": years, "meðaltal": adj_pred})
+                all_rows.append(df_adj)
+            except Exception:
                 continue
-            years, pred = linear_forecast(past, "fjoldi eininga", 2025, 5)
-            adj_pred = pred * markadshlutdeild
-            df_adj = pd.DataFrame({"ár": years, "meðaltal": adj_pred})
-            all_rows.append(df_adj)
-        except Exception:
-            continue
 
     if not all_rows:
         return None
@@ -178,4 +173,5 @@ def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_ma
     summary["Tekjur"] = summary["Heildarkostnaður"] * (1 + profit_margin)
     summary["Hagnaður"] = summary["Tekjur"] - summary["Heildarkostnaður"]
     return summary
+
 
