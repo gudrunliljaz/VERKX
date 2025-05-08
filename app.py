@@ -3,7 +3,10 @@ import pandas as pd
 import numpy as np
 import datetime
 from verkx_code import main_forecast_logic, main_forecast_logic_from_excel
-
+from datetime import date
+import requests
+from io import BytesIO
+from fpdf import FPDF
 
 # Page config
 st.set_page_config(page_title="Cubit", page_icon="assets/logo.png", layout="wide")
@@ -249,17 +252,35 @@ elif ("Tilboðsreiknivél" in page or "Quotation" in page):
         submitted = st.form_submit_button(q["calculate"])
 
     if submitted:
+        try:
+            response = requests.get("https://api.frankfurter.app/latest?from=EUR&to=ISK", timeout=5)
+            eur_to_isk = response.json()['rates']['ISK']
+        except:
+            eur_to_isk = 146.0
+
         einingar = {
-            "3 Modules": {"fjoldi": modul3, "fm": 19.5, "verd": 269700, "kg": 9750},
-            "2 Modules": {"fjoldi": modul2, "fm": 13, "verd": 290000, "kg": 6500},
-            "1 Module": {"fjoldi": modul1, "fm": 6.5, "verd": 304500, "kg": 3250},
-            "0.5 Module": {"fjoldi": modul_half, "fm": 3.25, "verd": 330000, "kg": 1625},
+            "3m": {"fjoldi": modul3, "fm": 19.5, "verd_eur": 1800, "kg": 9750},
+            "2m": {"fjoldi": modul2, "fm": 13, "verd_eur": 1950, "kg": 6500},
+            "1m": {"fjoldi": modul1, "fm": 6.5, "verd_eur": 2050, "kg": 3250},
+            "0.5m": {"fjoldi": modul_half, "fm": 3.25, "verd_eur": 2175, "kg": 1625},
         }
 
         heildarfm = sum(e["fjoldi"] * e["fm"] for e in einingar.values())
         heildarthyngd = sum(e["fjoldi"] * e["kg"] for e in einingar.values())
-        heildarkostnadur_einingar = sum(e["fjoldi"] * e["verd"] for e in einingar.values())
+
+        afslattur = 0
+        if heildarfm >= 650:
+            afslattur = 0.10
+        if heildarfm >= 1300:
+            afslattur = 0.15 + ((heildarfm - 1300) // 325) * 0.01
+            afslattur = min(afslattur, 0.18)
+
+        heildarkostnadur_einingar = sum(
+            e["fjoldi"] * e["fm"] * e["verd_eur"] * eur_to_isk * (1 - afslattur)
+            for e in einingar.values()
+        )
         kostnadur_per_fm = heildarkostnadur_einingar / heildarfm if heildarfm else 0
+
         flutningur_til_islands = heildarfm * 74000
         sendingarkostnadur = heildarfm * km_fra_thorlakshofn * 8
         samtals_breytilegur = heildarkostnadur_einingar + flutningur_til_islands + sendingarkostnadur
@@ -269,19 +290,56 @@ elif ("Tilboðsreiknivél" in page or "Quotation" in page):
             heildarfm_arsins = 2400
             uthlutadur_fastur_kostnadur = (heildarfm / heildarfm_arsins) * fastur_kostnadur
             alagsstudull = 1 + (uthlutadur_fastur_kostnadur / samtals_breytilegur)
-            tilbod = samtals_breytilegur * alagsstudull * 1.15
+            asemiskrafa = 0.15
+            tilbod = samtals_breytilegur * alagsstudull * (1 + asemiskrafa)
+            tilbod_eur = tilbod / eur_to_isk
 
             st.markdown(f"### {q['result_title']}")
             st.write(f"**{q['client']}:** {verkkaupi}")
             st.write(f"**{q['location']}:** {stadsetning}")
             st.write(f"**{q['area']}:** {heildarfm:.2f} fm")
             st.write(f"**{q['weight']}:** {heildarthyngd:,.0f} kg")
+            st.write(f"**Magnafsláttur:** {int(afslattur * 100)}%")
             st.write(f"**{q['shipping_is']}:** {flutningur_til_islands:,.0f} kr.")
             st.write(f"**{q['delivery']}:** {sendingarkostnadur:,.0f} kr.")
             st.write(f"**{q['variable_cost']}:** {samtals_breytilegur:,.0f} kr.")
             st.write(f"**{q['allocated_fixed']}:** {uthlutadur_fastur_kostnadur:,.0f} kr.")
             st.write(f"**{q['markup']}:** {alagsstudull:.2f}")
-            st.write(f"**{q['offer_price']}:** {tilbod:,.0f} kr.")
+            st.write(f"**{q['offer_price']}:** {tilbod:,.0f} kr. / €{tilbod_eur:,.2f}")
+
+            # --- PDF útgáfa ---
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial", size=12)
+            pdf.cell(200, 10, txt=f"Tilboð - {verkkaupi}", ln=True, align='L')
+            pdf.cell(200, 10, txt=f"Dags: {date.today()}", ln=True, align='L')
+            pdf.ln(5)
+
+            pdf_data = [
+                (q['location'], stadsetning),
+                (q['area'], f"{heildarfm:.2f} fm"),
+                (q['weight'], f"{heildarthyngd:,.0f} kg"),
+                ("Magnafsláttur", f"{int(afslattur * 100)}%"),
+                (q['shipping_is'], f"{flutningur_til_islands:,.0f} kr"),
+                (q['delivery'], f"{sendingarkostnadur:,.0f} kr"),
+                (q['variable_cost'], f"{samtals_breytilegur:,.0f} kr"),
+                (q['allocated_fixed'], f"{uthlutadur_fastur_kostnadur:,.0f} kr"),
+                (q['markup'], f"{alagsstudull:.2f}"),
+                (q['offer_price'], f"{tilbod:,.0f} kr / €{tilbod_eur:,.2f}"),
+            ]
+
+            for label, value in pdf_data:
+                pdf.cell(200, 10, txt=f"{label}: {value}", ln=True, align='L')
+
+            buffer = BytesIO()
+            pdf.output(buffer)
+            st.download_button(
+                label="Sækja PDF tilboð",
+                data=buffer.getvalue(),
+                file_name=f"tilbod_{verkkaupi}.pdf",
+                mime="application/pdf"
+            )
+
         else:
             st.warning("Sláðu inn gildi til að reikna tilboð.")
 
