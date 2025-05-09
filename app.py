@@ -15,7 +15,7 @@ with st.sidebar:
     page = st.radio(
         "Veldu síðu / Choose page",
         ["Eftirspurnarspá", "Tilboðsreiknivél", "Rekstrarspá"] if language == "Íslenska"
-        else ["Forecast Model", "Quotation Calculator", "All Markets Forecast"]
+        else ["Demand Forecast", "Quotation Calculator", "All Markets Forecast"]
     )
 
 # --- Labels dictionary ---
