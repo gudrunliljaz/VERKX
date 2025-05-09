@@ -55,9 +55,19 @@ labels = {
     }
 }
 
+# --- Forecast model ---
+if "Spálíkan" in page or "Forecast" in page:
+    st.header(labels[language]['title'])
+    st.write("(Spálíkan virkni hér — þú getur sett inn forecast kóðann þinn)")
+
+# --- All markets forecast ---
+elif "Rekstrarspá" in page or "All Markets Forecast" in page:
+    st.header("Rekstrarspá allra markaða" if language == "Íslenska" else "All Markets Forecast")
+    st.write("(All Markets virkni hér — þú getur sett inn heildarspá kóðann)")
+
 # --- Quotation calculator ---
 elif "Tilboðsreiknivél" in page or "Quotation" in page:
-    st.title("Tilboðsreiknivél" if language == "Íslenska" else "Quotation Calculator")
+    st.header("Tilboðsreiknivél" if language == "Íslenska" else "Quotation Calculator")
 
     afhendingar_map = {
         "Íslenska": {
@@ -87,7 +97,6 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
         with col4:
             modul_half = st.number_input("0.5 Module", min_value=0, value=0)
 
-        st.markdown("### Afhending")
         afhendingarstaedir = afhendingar_map[language]
         col5, col6 = st.columns(2)
         with col5:
