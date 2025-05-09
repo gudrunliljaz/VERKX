@@ -115,7 +115,7 @@ if "Spálíkan" in page or "Forecast" in page:
                     st.download_button(labels[language]["download_button"], csv, labels[language]["download_name"], "text/csv")
 
             except Exception as e:
-                st.error(f"{labels[language]['error']}: {e}")
+                st.error(f"{error_msg}: {e}")
 
 # --- All markets forecast ---
 elif "Rekstrarspá" in page or "All Markets Forecast" in page:
