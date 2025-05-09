@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 import unicodedata
 from datetime import date
+from fpdf import FPDF
+from io import BytesIO
 
 # File paths
 PAST_FILE = "data/GÖGN_VERKX.xlsx"
@@ -164,6 +166,7 @@ def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_ma
 
 
 
+# Tilboðsgögn fyrir hverja einingategund
 quotation_labels_dict = {
     "3m": {"fm": 19.5, "verd_eur": 1800, "kg": 9750},
     "2m": {"fm": 13,   "verd_eur": 1950, "kg": 6500},
@@ -224,6 +227,47 @@ def calculate_offer(modules, distance_km, eur_to_isk=146, annual_sqm=2400, fixed
         "tilbod_eur": tilbod_eur,
         "dags": date.today()
     }
+
+
+
+def to_latin1(text):
+    return text.encode("latin-1", errors="replace").decode("latin-1")
+
+def generate_offer_pdf(client, location, result):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(200, 10, txt=to_latin1("Tilboð frá Cubit"), ln=True, align="C")
+    pdf.set_font("Arial", size=12)
+    pdf.ln(10)
+
+    pdf.cell(200, 10, txt=to_latin1(f"Verkkaupi: {client}"), ln=True)
+    pdf.cell(200, 10, txt=to_latin1(f"Afhendingarstaður: {location}"), ln=True)
+    pdf.cell(200, 10, txt=f"Dags: {result['dags']}", ln=True)
+    pdf.ln(5)
+
+    labels = [
+        ("Heildarfermetrar", f"{result['heildarfm']:.2f} fm"),
+        ("Heildarþyngd", f"{result['heildarthyngd']:,.0f} kg"),
+        ("Magnafsláttur", f"{int(result['afslattur'] * 100)}%"),
+        ("Kaupverð eininga", f"{result['heildarkostnadur_einingar']:,.0f} kr"),
+        ("Kostnaðarverð á fm", f"{result['kostnadur_per_fm']:,.0f} kr"),
+        ("Flutningur til Íslands", f"{result['flutningur_til_islands']:,.0f} kr"),
+        ("Sendingarkostnaður innanlands", f"{result['sendingarkostnadur']:,.0f} kr"),
+        ("Samtals breytilegur kostnaður", f"{result['samtals_breytilegur']:,.0f} kr"),
+        ("Úthlutaður fastur kostnaður", f"{result['uthlutadur_fastur_kostnadur']:,.0f} kr"),
+        ("Álagsstuðull", f"{result['alagsstudull']:.2f}"),
+        ("Arðsemiskrafa", f"{int(result['asemiskrafa'] * 100)}%"),
+        ("Tilboðsverð (ISK)", f"{result['tilbod']:,.0f} kr"),
+        ("Tilboðsverð (EUR)", f"{result['tilbod_eur']:,.2f}")
+    ]
+
+    for label, value in labels:
+        pdf.cell(200, 10, txt=to_latin1(f"{label}: {value}"), ln=True)
+
+    buffer = BytesIO()
+    pdf.output(buffer)
+    return buffer.getvalue()
 
 
 
