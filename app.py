@@ -7,7 +7,7 @@ from datetime import date
 from io import BytesIO
 
 # Page configuration
-st.set_page_config(page_title="Cubit", page_icon="andreim.png", layout="wide")
+st.set_page_config(page_title="Cubit", page_icon="cubitlogo.png", layout="wide")
 
 # --- Sidebar language selection ---
 with st.sidebar:
