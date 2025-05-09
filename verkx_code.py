@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 import unicodedata
+from datetime import date
 
 # File paths
 PAST_FILE = "data/GÖGN_VERKX.xlsx"
@@ -161,6 +162,68 @@ def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_ma
     summary["Hagnaður"] = summary["Tekjur"] - summary["Heildarkostnaður"]
     return summary
 
+
+
+quotation_labels_dict = {
+    "3m": {"fm": 19.5, "verd_eur": 1800, "kg": 9750},
+    "2m": {"fm": 13,   "verd_eur": 1950, "kg": 6500},
+    "1m": {"fm": 6.5,  "verd_eur": 2050, "kg": 3250},
+    "0.5m": {"fm": 3.25, "verd_eur": 2175, "kg": 1625}
+}
+
+def calculate_offer(modules, distance_km, eur_to_isk=146, annual_sqm=2400, fixed_cost=34800000, markup=0.15):
+    einingar = {
+        key: {
+            "fjoldi": modules.get(key, 0),
+            "fm": quotation_labels_dict[key]["fm"],
+            "verd_eur": quotation_labels_dict[key]["verd_eur"],
+            "kg": quotation_labels_dict[key]["kg"]
+        }
+        for key in quotation_labels_dict
+    }
+
+    heildarfm = sum(e["fjoldi"] * e["fm"] for e in einingar.values())
+    heildarthyngd = sum(e["fjoldi"] * e["kg"] for e in einingar.values())
+
+    afslattur = 0
+    if heildarfm >= 650:
+        afslattur = 0.10
+    if heildarfm >= 1300:
+        afslattur = 0.15 + ((heildarfm - 1300) // 325) * 0.01
+        afslattur = min(afslattur, 0.18)
+
+    heildarkostnadur_einingar = sum(
+        e["fjoldi"] * e["fm"] * e["verd_eur"] * eur_to_isk * (1 - afslattur)
+        for e in einingar.values()
+    )
+    kostnadur_per_fm = heildarkostnadur_einingar / heildarfm if heildarfm else 0
+
+    flutningur_til_islands = heildarfm * 74000
+    sendingarkostnadur = heildarfm * distance_km * 8
+    samtals_breytilegur = heildarkostnadur_einingar + flutningur_til_islands + sendingarkostnadur
+
+    uthlutadur_fastur_kostnadur = (heildarfm / annual_sqm) * fixed_cost if heildarfm else 0
+    alagsstudull = 1 + (uthlutadur_fastur_kostnadur / samtals_breytilegur) if samtals_breytilegur else 0
+
+    tilbod = samtals_breytilegur * alagsstudull * (1 + markup)
+    tilbod_eur = tilbod / eur_to_isk if eur_to_isk else 0
+
+    return {
+        "heildarfm": heildarfm,
+        "heildarthyngd": heildarthyngd,
+        "afslattur": afslattur,
+        "heildarkostnadur_einingar": heildarkostnadur_einingar,
+        "kostnadur_per_fm": kostnadur_per_fm,
+        "flutningur_til_islands": flutningur_til_islands,
+        "sendingarkostnadur": sendingarkostnadur,
+        "samtals_breytilegur": samtals_breytilegur,
+        "uthlutadur_fastur_kostnadur": uthlutadur_fastur_kostnadur,
+        "alagsstudull": alagsstudull,
+        "asemiskrafa": markup,
+        "tilbod": tilbod,
+        "tilbod_eur": tilbod_eur,
+        "dags": date.today()
+    }
 
 
 
