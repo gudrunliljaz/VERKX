@@ -159,7 +159,7 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
                 st.download_button(
                     label="📄 Sækja PDF tilboð" if language == "Íslenska" else "📄 Download offer PDF",
                     data=pdf_bytes,
-                    file_name=f"tilbod_{verkkaupi}.pdf",
+                    file_name=f"tilbod_{hreinsad_nafn}.pdf",
                     mime="application/pdf"
                 )
             except UnicodeEncodeError:
