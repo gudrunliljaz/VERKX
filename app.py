@@ -13,7 +13,7 @@ st.set_page_config(page_title="Cubit", page_icon="andreim.png", layout="wide")
 with st.sidebar:
     language = st.selectbox("Language", ["Íslenska", "English"], index=0)
     page = st.radio(
-        "Veldu síðu/Choose page",
+        "Veldu síðu / Choose page",
         ["Spálíkan", "Tilboðsreiknivél", "Rekstrarspá"] if language == "Íslenska"
         else ["Forecast Model", "Quotation Calculator", "All Markets Forecast"]
     )
