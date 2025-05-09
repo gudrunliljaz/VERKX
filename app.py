@@ -1,10 +1,9 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from verkx_code import main_forecast_logic, main_forecast_logic_from_excel, calculate_offer
+from verkx_code import main_forecast_logic, main_forecast_logic_from_excel, calculate_offer, generate_offer_pdf  
 import requests
-from io import BytesIO
-from fpdf import FPDF
+
 
 # --- Page config ---
 st.set_page_config(page_title="Cubit", page_icon="andreim.png", layout="wide")
@@ -214,18 +213,51 @@ if ("Tilboðsreiknivél" in page or "Quotation" in page):
         submitted = st.form_submit_button(q["calculate"])
 
     if submitted:
-        total_units = modul3 + modul2 + modul1 + modul_half
-        if total_units == 0:
-            st.warning("⚠️ Vinsamlegast veldu fjölda eininga til að reikna tilboð." if language == "Íslenska"
-                       else "⚠️ Please select unit quantities to calculate the offer.")
-        elif stadsetning_val in ["Annað", "Other"] and km_fra_thorlakshofn == 0:
-            st.warning("⚠️ Vinsamlegast sláðu inn fjölda km frá Þorlákshöfn." if language == "Íslenska"
-                       else "⚠️ Please enter distance from Þorlákshöfn in km.")
+        modules = {
+            "3m": modul3,
+            "2m": modul2,
+            "1m": modul1,
+            "0.5m": modul_half
+        }
+
+        if all(v == 0 for v in modules.values()):
+            st.warning("Vinsamlegast veldu einingargildi svo hægt sé að reikna tilboðið.")
+        elif stadsetning_val == "Annað" and km_fra_thorlakshofn == 0:
+            st.warning("Vinsamlegast sláðu inn km fjarlægð ef þú valdir 'Annað'.")
         else:
-            # Hér kemur restin af útreikningunum (þinn kóði óbreyttur)...
-            # Þú þarft bara að halda áfram frá:
-            # response = requests.get(...)
-            pass  # (Eða settu inn reikninga beint héðan)
+            try:
+                response = requests.get("https://api.frankfurter.app/latest?from=EUR&to=ISK", timeout=5)
+                eur_to_isk = response.json()['rates']['ISK']
+            except:
+                eur_to_isk = 146
+
+            result = calculate_offer(modules, km_fra_thorlakshofn, eur_to_isk)
+
+            st.markdown("### Niðurstöður")
+            st.write(f"**Heildarfermetrar:** {result['heildarfm']:.2f} fm")
+            st.write(f"**Heildarþyngd:** {result['heildarthyngd']:,.0f} kg")
+            st.write(f"**Afsláttur:** {int(result['afslattur'] * 100)}%")
+            st.write(f"**Kaupverð eininga:** {result['heildarkostnadur_einingar']:,.0f} kr.")
+            st.write(f"**Kostnaðarverð á fermetra:** {result['kostnadur_per_fm']:,.0f} kr.")
+            st.write(f"**Flutningur til Íslands:** {result['flutningur_til_islands']:,.0f} kr.")
+            st.write(f"**Sendingarkostnaður innanlands:** {result['sendingarkostnadur']:,.0f} kr.")
+            st.write(f"**Samtals breytilegur kostnaður:** {result['samtals_breytilegur']:,.0f} kr.")
+            st.write(f"**Úthlutaður fastur kostnaður:** {result['uthlutadur_fastur_kostnadur']:,.0f} kr.")
+            st.write(f"**Álagsstuðull:** {result['alagsstudull']:.2f}")
+            st.write(f"**Arðsemiskrafa:** {int(result['asemiskrafa'] * 100)}%")
+            st.write(f"**Tilboðsverð (ISK):** {result['tilbod']:,.0f} kr.")
+            st.write(f"**Tilboðsverð (EUR):** €{result['tilbod_eur']:,.2f}")
+
+
+
+        pdf_bytes = generate_offer_pdf(verkkaupi, stadsetning, result)
+        st.download_button(
+            label="📄 Sækja PDF tilboð",
+            data=pdf_bytes,
+            file_name=f"tilbod_{verkkaupi}.pdf",
+            mime="application/pdf"
+        )
+
 
 
 
