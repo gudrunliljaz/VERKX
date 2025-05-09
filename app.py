@@ -234,7 +234,7 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
         if language == "Íslenska":
             submitted = st.form_submit_button("Reikna tilboð")
         else:
-            submitted = st.form_submit_button("Calculating offer")
+            submitted = st.form_submit_button("Calculate offer")
 
     if submitted:
         modules = {
@@ -286,7 +286,7 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
                 hreinsud_stadsetning = normalize('NFKD', stadsetning).encode('ascii', 'ignore').decode('ascii')
                 pdf_bytes = generate_offer_pdf(hreinsad_nafn, hreinsud_stadsetning, result)
                 st.download_button(
-                    label="📄 Sækja PDF tilboð" if language == "Íslenska" else "📄 Download offer PDF",
+                    label="Sækja PDF tilboð" if language == "Íslenska" else "Download offer PDF",
                     data=pdf_bytes,
                     file_name=f"tilbod_{hreinsad_nafn}.pdf",
                     mime="application/pdf"
