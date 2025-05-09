@@ -317,19 +317,31 @@ if ("Tilboðsreiknivél" in page or "Quotation" in page):
 
 # 3. All Markets Forecast
 # =====================
-
-
-
 elif "Rekstrarspá" in page or "All Markets Forecast" in page:
-    st.title("Rekstrarspá allra markaða")
-    
-    st.markdown("Þessi spá notar meðaltöl fortíðar- og framtíðarspáa með aðlögun fyrir markaðshlutdeild og sviðsmynd.")
+    if language == "Íslenska":
+        st.title("Rekstrarspá allra markaða")
+        st.markdown("Þessi spá notar meðaltöl fortíðar- og framtíðarspáa með aðlögun fyrir markaðshlutdeild og sviðsmynd.")
+        button_label = "Keyra rekstrarspá"
+        download_label = "Sækja CSV"
+        success_msg = "Lokið! Hér að neðan eru spár fyrir alla markaði."
+        warning_msg = "Engin gögn fundust eða ekkert sniðug spá tiltæk."
+        error_msg = "Villa við útreikning"
+        slider_label = "Arðsemiskrafa (%)"
+    else:
+        st.title("All Markets Forecast")
+        st.markdown("This forecast uses adjusted averages of past and future predictions, based on market share and scenario.")
+        button_label = "Run forecast"
+        download_label = "Download CSV"
+        success_msg = "Done! Below are the forecasts for all markets."
+        warning_msg = "No data found or no valid forecast available."
+        error_msg = "Error in calculation"
+        slider_label = "Profit margin (%)"
 
-    margin = st.slider("Arðsemiskrafa (%)", 0, 100, 15)
+    margin = st.slider(slider_label, 0, 100, 15)
     margin_decimal = margin / 100
 
-    if st.button("Keyra rekstrarspá"):
-        with st.spinner("Reikna..."):
+    if st.button(button_label):
+        with st.spinner("Reikna..." if language == "Íslenska" else "Calculating..."):
             try:
                 df = main_forecast_logic_from_excel(
                     past_file="data/GÖGN_VERKX.xlsx",
@@ -338,19 +350,20 @@ elif "Rekstrarspá" in page or "All Markets Forecast" in page:
                     profit_margin=margin_decimal
                 )
                 if df is not None and not df.empty:
-                    st.success("Lokið! Hér að neðan eru spár fyrir alla markaði.")
+                    st.success(success_msg)
                     st.dataframe(df)
 
                     st.download_button(
-                        "Sækja CSV",
+                        download_label,
                         data=df.to_csv(index=False).encode("utf-8-sig"),
                         file_name="heildarspa.csv",
                         mime="text/csv"
                     )
                 else:
-                    st.warning("Engin gögn fundust eða ekkert sniðug spá tiltæk.")
+                    st.warning(warning_msg)
             except Exception as e:
-                st.error(f"Villa við útreikning: {e}")
+                st.error(f"{error_msg}: {e}")
+
 
 
 
