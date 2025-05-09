@@ -142,7 +142,7 @@ def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_ma
                     continue
                 years, pred = linear_forecast(past, "fjoldi eininga", 2025, 5)
                 adj_pred = pred * share
-                df_adj = pd.DataFrame({"ár": years, "meðaltal": adj_pred})
+                df_adj = pd.DataFrame({"Ár": years, "Meðaltal": adj_pred})
                 all_rows.append(df_adj)
             except Exception:
                 continue
@@ -151,8 +151,8 @@ def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_ma
         return None
 
     df_all = pd.concat(all_rows)
-    summary = df_all.groupby("ár")["meðaltal"].sum().reset_index()
-    summary["Fermetrar"] = summary["meðaltal"].round(0).astype(int) * UNIT_SIZE_SQM
+    summary = df_all.groupby("Ár")["Meðaltal"].sum().reset_index()
+    summary["Fermetrar"] = summary["Meðaltal"].round(0).astype(int) * UNIT_SIZE_SQM
     summary["Kostnaðarverð eininga"] = summary["Fermetrar"] * (0.19*269700 + 0.80*290000 + 0.01*304500 + 0.001*330000)
     summary["Flutningskostnaður"] = summary["Fermetrar"] * 43424
     summary["Afhending innanlands"] = summary["Fermetrar"] * 80 * 8
