@@ -27,7 +27,7 @@ def filter_data(df, region, demand_column):
     df.columns = [col.strip().lower() for col in df.columns]
     demand_column = demand_column.lower()
     if demand_column not in df.columns:
-        raise KeyError(f"Dálkur '{demand_column}' fannst ekki.")
+        raise KeyError(f"'{demand_column}' fannst ekki.")
     df['ar'] = pd.to_numeric(df['ar'], errors='coerce')
     df = df.dropna(subset=['ar', demand_column])
     df = df.sort_values('ar')
