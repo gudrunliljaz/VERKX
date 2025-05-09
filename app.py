@@ -57,7 +57,7 @@ labels = {
 }
 
 # --- Forecast model ---
-if "Spálíkan" in page or "Forecast" in page:
+if ("Spálíkan" in page and language == "Íslenska") or ("Forecast Model" in page and language == "English"):
     st.header(labels[language]['title'])
 
     housing_map = {
@@ -115,7 +115,7 @@ if "Spálíkan" in page or "Forecast" in page:
                     st.download_button(labels[language]["download_button"], csv, labels[language]["download_name"], "text/csv")
 
             except Exception as e:
-                st.error(f"{error_msg}: {e}")
+                st.error(f"{labels[language]['error']}: {e}")
 
 # --- All markets forecast ---
 elif "Rekstrarspá" in page or "All Markets Forecast" in page:
@@ -263,5 +263,6 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
                 )
             except UnicodeEncodeError:
                 st.error("Villa við útgáfu PDF skjals – vinsamlegast forðastu séríslensk tákn í nafni eða staðsetningu.")
+
 
 
