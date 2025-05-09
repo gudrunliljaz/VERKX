@@ -154,7 +154,7 @@ def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_ma
     summary = df_all.groupby("ár")["meðaltal"].sum().reset_index()
     summary["Fermetrar"] = summary["meðaltal"].round(0).astype(int) * UNIT_SIZE_SQM
     summary["Kostnaðarverð eininga"] = summary["Fermetrar"] * (0.19*269700 + 0.80*290000 + 0.01*304500 + 0.001*330000)
-    summary["Flutningskostnaður"] = summary["Fermetrar"] * 74000
+    summary["Flutningskostnaður"] = summary["Fermetrar"] * 43424
     summary["Afhending innanlands"] = summary["Fermetrar"] * 80 * 8
     summary["Fastur kostnaður"] = FIXED_COST_PER_YEAR
     summary["Heildarkostnaður"] = summary[["Kostnaðarverð eininga", "Flutningskostnaður", "Afhending innanlands", "Fastur kostnaður"]].sum(axis=1)
@@ -196,7 +196,7 @@ def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10
     )
     kostnadur_per_fm = heildarkostnadur_einingar / heildarfm if heildarfm else 0
 
-    flutningur_til_islands = heildarfm * 74000
+    flutningur_til_islands = heildarfm * 43424
     sendingarkostnadur = heildarfm * distance_km * 8
     samtals_breytilegur = heildarkostnadur_einingar + flutningur_til_islands + sendingarkostnadur
 
