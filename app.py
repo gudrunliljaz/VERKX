@@ -151,7 +151,11 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
             st.write(f"**Tilboðsverð (EUR):** €{result['tilbod_eur']:,.2f}")
 
             try:
-                pdf_bytes = generate_offer_pdf(verkkaupi, stadsetning, result)
+                from unicodedata import normalize
+                # Hreinsum öll séríslensk tákn úr strengjum
+                hreinsad_nafn = normalize('NFKD', verkkaupi).encode('ascii', 'ignore').decode('ascii')
+                hreinsud_stadsetning = normalize('NFKD', stadsetning).encode('ascii', 'ignore').decode('ascii')
+                pdf_bytes = generate_offer_pdf(hreinsad_nafn, hreinsud_stadsetning, result)
                 st.download_button(
                     label="📄 Sækja PDF tilboð" if language == "Íslenska" else "📄 Download offer PDF",
                     data=pdf_bytes,
@@ -160,3 +164,4 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
                 )
             except UnicodeEncodeError:
                 st.error("Villa við útgáfu PDF skjals – vinsamlegast forðastu séríslensk tákn í nafni eða staðsetningu.")
+
