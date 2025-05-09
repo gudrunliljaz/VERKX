@@ -4,6 +4,7 @@ import numpy as np
 from verkx_code import main_forecast_logic, main_forecast_logic_from_excel, calculate_offer, generate_offer_pdf
 import requests
 from datetime import date
+from io import BytesIO
 
 # Page configuration
 st.set_page_config(page_title="Cubit", page_icon="andreim.png", layout="wide")
@@ -149,10 +150,13 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
             st.write(f"**Tilboðsverð (ISK):** {result['tilbod']:,.0f} kr.")
             st.write(f"**Tilboðsverð (EUR):** €{result['tilbod_eur']:,.2f}")
 
-            pdf_bytes = generate_offer_pdf(verkkaupi, stadsetning, result)
-            st.download_button(
-                label="📄 Sækja PDF tilboð" if language == "Íslenska" else "📄 Download offer PDF",
-                data=pdf_bytes,
-                file_name=f"tilbod_{verkkaupi}.pdf",
-                mime="application/pdf"
-            )
+            try:
+                pdf_bytes = generate_offer_pdf(verkkaupi, stadsetning, result)
+                st.download_button(
+                    label="📄 Sækja PDF tilboð" if language == "Íslenska" else "📄 Download offer PDF",
+                    data=pdf_bytes,
+                    file_name=f"tilbod_{verkkaupi}.pdf",
+                    mime="application/pdf"
+                )
+            except UnicodeEncodeError:
+                st.error("Villa við útgáfu PDF skjals – vinsamlegast forðastu séríslensk tákn í nafni eða staðsetningu.")
