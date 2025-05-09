@@ -224,10 +224,10 @@ def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10
     }
 
 def generate_offer_pdf(verkkaupi, stadsetning, result):
+    from fpdf import FPDF
+
     pdf = FPDF()
     pdf.add_page()
-
-    # Notum leturgerð sem styður Unicode
     pdf.add_font('DejaVu', '', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', uni=True)
     pdf.set_font('DejaVu', '', 12)
 
@@ -239,6 +239,7 @@ def generate_offer_pdf(verkkaupi, stadsetning, result):
     pdf.cell(0, 10, f"Tilboðsverð (ISK): {result['tilbod']:,.0f} kr.", ln=True)
     pdf.cell(0, 10, f"Tilboðsverð (EUR): €{result['tilbod_eur']:,.2f}", ln=True)
 
-    pdf_output = BytesIO()
-    pdf.output(pdf_output)
-    return pdf_output.getvalue()
+    # Skila PDF sem byte array
+    pdf_bytes = pdf.output(dest='S').encode('latin-1')
+    return pdf_bytes
+
