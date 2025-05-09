@@ -149,21 +149,52 @@ elif "Rekstrarspá" in page or "All Markets Forecast" in page:
 elif "Tilboðsreiknivél" in page or "Quotation" in page:
     st.title("Tilboðsreiknivél" if language == "Íslenska" else "Quotation Calculator")
 
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        modul3 = st.number_input("3 Modules", min_value=0, value=0)
-    with col2:
-        modul2 = st.number_input("2 Modules", min_value=0, value=0)
-    with col3:
-        modul1 = st.number_input("1 Module", min_value=0, value=0)
-    with col4:
-        modul_half = st.number_input("0.5 Module", min_value=0, value=0)
+    afhendingar_map = {
+        "Íslenska": {
+            "Höfuðborgarsvæðið": 60, "Selfoss": 30, "Hveragerði": 40, "Akranes": 100,
+            "Borgarnes": 150, "Stykkishólmur": 260, "Ísafjörður": 570, "Akureyri": 490,
+            "Húsavík": 520, "Sauðárkrókur": 450, "Egilsstaðir": 650, "Seyðisfjörður": 670,
+            "Neskaupstaður": 700, "Eskifjörður": 690, "Fáskrúðsfjörður": 680, "Höfn": 450,
+            "Vestmannaeyjar": 90, "Keflavík": 90, "Annað": None
+        },
+        "English": {
+            "Capital Region": 60, "Selfoss": 30, "Hveragerði": 40, "Akranes": 100,
+            "Borgarnes": 150, "Stykkishólmur": 260, "Ísafjörður": 570, "Akureyri": 490,
+            "Húsavík": 520, "Sauðárkrókur": 450, "Egilsstaðir": 650, "Seyðisfjörður": 670,
+            "Neskaupstaður": 700, "Eskifjörður": 690, "Fáskrúðsfjörður": 680, "Höfn": 450,
+            "Vestmannaeyjar": 90, "Keflavík": 90, "Other": None
+        }
+    }
 
-    delivery_location = st.text_input("Afhendingarstaður / Delivery Location")
-    distance_km = st.number_input("Fjarlægð frá Þorlákshöfn (km)", min_value=0)
-    verkkaupi = st.text_input("Verkkaupi / Client")
+    with st.form("tilbod_form"):
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            modul3 = st.number_input("3 Modules", min_value=0, value=0)
+        with col2:
+            modul2 = st.number_input("2 Modules", min_value=0, value=0)
+        with col3:
+            modul1 = st.number_input("1 Module", min_value=0, value=0)
+        with col4:
+            modul_half = st.number_input("0.5 Module", min_value=0, value=0)
 
-    if st.button("Reikna tilboð" if language == "Íslenska" else "Calculate offer"):
+        st.markdown("### Afhending")
+        afhendingarstaedir = afhendingar_map[language]
+        col5, col6 = st.columns(2)
+        with col5:
+            stadsetning_val = st.selectbox("Afhendingarstaður / Delivery Location", list(afhendingarstaedir.keys()))
+        with col6:
+            if stadsetning_val in ["Annað", "Other"]:
+                stadsetning = st.text_input("Sláðu inn staðsetningu")
+                km_fra_thorlakshofn = st.number_input("Km frá Þorlákshöfn", min_value=0.0)
+            else:
+                stadsetning = stadsetning_val
+                km_fra_thorlakshofn = afhendingarstaedir[stadsetning_val]
+
+        verkkaupi = st.text_input("Verkkaupi / Client")
+
+        submitted = st.form_submit_button("Reikna tilboð")
+
+    if submitted:
         modules = {
             "3m": modul3,
             "2m": modul2,
@@ -177,7 +208,7 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
         except:
             eur_to_isk = 146
 
-        result = calculate_offer(modules, distance_km, eur_to_isk)
+        result = calculate_offer(modules, km_fra_thorlakshofn, eur_to_isk)
 
         st.markdown("### Niðurstöður")
         st.write(f"**Heildarfermetrar:** {result['heildarfm']:.2f} fm")
@@ -194,7 +225,7 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
         st.write(f"**Tilboðsverð (ISK):** {result['tilbod']:,.0f} kr.")
         st.write(f"**Tilboðsverð (EUR):** €{result['tilbod_eur']:,.2f}")
 
-        pdf_bytes = generate_offer_pdf(verkkaupi, delivery_location, result)
+        pdf_bytes = generate_offer_pdf(verkkaupi, stadsetning, result)
         st.download_button(
             label="📄 Sækja PDF tilboð" if language == "Íslenska" else "📄 Download offer PDF",
             data=pdf_bytes,
