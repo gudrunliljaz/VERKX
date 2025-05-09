@@ -7,12 +7,10 @@ from datetime import date
 from fpdf import FPDF
 from io import BytesIO
 
-# File paths
 PAST_FILE = "data/GÖGN_VERKX.xlsx"
 FUTURE_FILE = "data/Framtidarspa.xlsx"
 SHARE_FILE = "data/markadshlutdeild.xlsx"
 
-# Constants
 UNIT_SIZE_SQM = 6.5
 FIXED_COST_PER_YEAR = 37_200_000
 
@@ -241,3 +239,4 @@ def generate_offer_pdf(verkkaupi, stadsetning, result):
     pdf_output = BytesIO()
     pdf.output(pdf_output)
     return pdf_output.getvalue()
+
