@@ -328,7 +328,7 @@ elif "Rekstrarspá" in page or "All Markets Forecast" in page:
     margin = st.slider("Arðsemiskrafa (%)", 0, 100, 15)
     margin_decimal = margin / 100
 
-    if st.button("Keyra heildarspá"):
+    if st.button("Keyra rekstrarspá"):
         with st.spinner("Reikna..."):
             try:
                 df = main_forecast_logic_from_excel(
