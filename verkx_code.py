@@ -164,60 +164,80 @@ def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_ma
     summary["Hagnaður"] = summary["Tekjur"] - summary["Heildarkostnaður"]
     return summary
 
-
-einingar = {
-    key: {
-        "fjoldi": modules.get(key, 0),
-        "fm": quotation_labels_dict[key]["fm"],
-        "verd_eur": quotation_labels_dict[key]["verd_eur"],
-        "kg": quotation_labels_dict[key]["kg"]
+def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10000, fixed_cost=37_200_000):
+    quotation_labels_dict = {
+        "3m": {"fm": 39, "verd_eur": 475, "kg": 6000},
+        "2m": {"fm": 26, "verd_eur": 415, "kg": 4100},
+        "1m": {"fm": 13, "verd_eur": 380, "kg": 2200},
+        "0.5m": {"fm": 6.5, "verd_eur": 370, "kg": 1100},
     }
-    for key in quotation_labels_dict
-}
 
-heildarfm = sum(e["fjoldi"] * e["fm"] for e in einingar.values())
-heildarthyngd = sum(e["fjoldi"] * e["kg"] for e in einingar.values())
+    einingar = {
+        key: {
+            "fjoldi": modules.get(key, 0),
+            "fm": quotation_labels_dict[key]["fm"],
+            "verd_eur": quotation_labels_dict[key]["verd_eur"],
+            "kg": quotation_labels_dict[key]["kg"]
+        }
+        for key in quotation_labels_dict
+    }
 
-afslattur = 0
-if heildarfm >= 650:
-    afslattur = 0.10
-if heildarfm >= 1300:
-    afslattur = 0.15 + ((heildarfm - 1300) // 325) * 0.01
-    afslattur = min(afslattur, 0.18)
+    heildarfm = sum(e["fjoldi"] * e["fm"] for e in einingar.values())
+    heildarthyngd = sum(e["fjoldi"] * e["kg"] for e in einingar.values())
 
-heildarkostnadur_einingar = sum(
-    e["fjoldi"] * e["fm"] * e["verd_eur"] * eur_to_isk * (1 - afslattur)
-    for e in einingar.values()
-)
-kostnadur_per_fm = heildarkostnadur_einingar / heildarfm if heildarfm else 0
+    afslattur = 0
+    if heildarfm >= 650:
+        afslattur = 0.10
+    if heildarfm >= 1300:
+        afslattur = 0.15 + ((heildarfm - 1300) // 325) * 0.01
+        afslattur = min(afslattur, 0.18)
 
-flutningur_til_islands = heildarfm * 74000
-sendingarkostnadur = heildarfm * distance_km * 8
-samtals_breytilegur = heildarkostnadur_einingar + flutningur_til_islands + sendingarkostnadur
+    heildarkostnadur_einingar = sum(
+        e["fjoldi"] * e["fm"] * e["verd_eur"] * eur_to_isk * (1 - afslattur)
+        for e in einingar.values()
+    )
+    kostnadur_per_fm = heildarkostnadur_einingar / heildarfm if heildarfm else 0
 
-uthlutadur_fastur_kostnadur = (heildarfm / annual_sqm) * fixed_cost if heildarfm else 0
-alagsstudull = 1 + (uthlutadur_fastur_kostnadur / samtals_breytilegur) if samtals_breytilegur else 0
+    flutningur_til_islands = heildarfm * 74000
+    sendingarkostnadur = heildarfm * distance_km * 8
+    samtals_breytilegur = heildarkostnadur_einingar + flutningur_til_islands + sendingarkostnadur
 
-tilbod = samtals_breytilegur * alagsstudull * (1 + markup)
-tilbod_eur = tilbod / eur_to_isk if eur_to_isk else 0
+    uthlutadur_fastur_kostnadur = (heildarfm / annual_sqm) * fixed_cost if heildarfm else 0
+    alagsstudull = 1 + (uthlutadur_fastur_kostnadur / samtals_breytilegur) if samtals_breytilegur else 0
 
-return {
-    "heildarfm": heildarfm,
-    "heildarthyngd": heildarthyngd,
-    "afslattur": afslattur,
-    "heildarkostnadur_einingar": heildarkostnadur_einingar,
-    "kostnadur_per_fm": kostnadur_per_fm,
-    "flutningur_til_islands": flutningur_til_islands,
-    "sendingarkostnadur": sendingarkostnadur,
-    "samtals_breytilegur": samtals_breytilegur,
-    "uthlutadur_fastur_kostnadur": uthlutadur_fastur_kostnadur,
-    "alagsstudull": alagsstudull,
-    "asemiskrafa": markup,
-    "tilbod": tilbod,
-    "tilbod_eur": tilbod_eur,
-    "dags": date.today()
-}
+    tilbod = samtals_breytilegur * alagsstudull * (1 + markup)
+    tilbod_eur = tilbod / eur_to_isk if eur_to_isk else 0
 
+    return {
+        "heildarfm": heildarfm,
+        "heildarthyngd": heildarthyngd,
+        "afslattur": afslattur,
+        "heildarkostnadur_einingar": heildarkostnadur_einingar,
+        "kostnadur_per_fm": kostnadur_per_fm,
+        "flutningur_til_islands": flutningur_til_islands,
+        "sendingarkostnadur": sendingarkostnadur,
+        "samtals_breytilegur": samtals_breytilegur,
+        "uthlutadur_fastur_kostnadur": uthlutadur_fastur_kostnadur,
+        "alagsstudull": alagsstudull,
+        "asemiskrafa": markup,
+        "tilbod": tilbod,
+        "tilbod_eur": tilbod_eur,
+        "dags": date.today()
+    }
 
+def generate_offer_pdf(verkkaupi, stadsetning, result):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
 
+    pdf.cell(200, 10, txt=f"Tilboð fyrir: {verkkaupi}", ln=True)
+    pdf.cell(200, 10, txt=f"Staðsetning: {stadsetning}", ln=True)
+    pdf.cell(200, 10, txt=f"Dags: {result['dags']}", ln=True)
+    pdf.cell(200, 10, txt=f"Heildarfermetrar: {result['heildarfm']:.2f} fm", ln=True)
+    pdf.cell(200, 10, txt=f"Heildarþyngd: {result['heildarthyngd']:,.0f} kg", ln=True)
+    pdf.cell(200, 10, txt=f"Tilboðsverð (ISK): {result['tilbod']:,.0f} kr.", ln=True)
+    pdf.cell(200, 10, txt=f"Tilboðsverð (EUR): €{result['tilbod_eur']:,.2f}", ln=True)
 
+    pdf_output = BytesIO()
+    pdf.output(pdf_output)
+    return pdf_output.getvalue()
