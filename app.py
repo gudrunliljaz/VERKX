@@ -14,14 +14,14 @@ with st.sidebar:
     language = st.selectbox("Language", ["Íslenska", "English"], index=0)
     page = st.radio(
         "Veldu síðu / Choose page",
-        ["Spálíkan", "Tilboðsreiknivél", "Rekstrarspá"] if language == "Íslenska"
+        ["Eftirspurnarspá", "Tilboðsreiknivél", "Rekstrarspá"] if language == "Íslenska"
         else ["Forecast Model", "Quotation Calculator", "All Markets Forecast"]
     )
 
 # --- Labels dictionary ---
 labels = {
     "Íslenska": {
-        "title": "Cubit Spá",
+        "title": "Eftirspurnarspá",
         "housing": "Tegund húsnæðis",
         "region": "Landshluti",
         "years": "Fjöldi ára fram í tímann",
@@ -38,7 +38,7 @@ labels = {
         "error": "Villa kom upp"
     },
     "English": {
-        "title": "Cubit Forecast",
+        "title": "Demand Forecast",
         "housing": "Housing type",
         "region": "Region",
         "years": "Years into future",
@@ -57,7 +57,7 @@ labels = {
 }
 
 # --- Forecast model ---
-if ("Spálíkan" in page and language == "Íslenska") or ("Forecast Model" in page and language == "English"):
+if ("Eftirspurnarspá" in page and language == "Íslenska") or ("Demand Forecast" in page and language == "English"):
     st.header(labels[language]['title'])
 
     housing_map = {
@@ -121,20 +121,18 @@ if ("Spálíkan" in page and language == "Íslenska") or ("Forecast Model" in pa
 elif "Rekstrarspá" in page or "All Markets Forecast" in page:
     if language == "Íslenska":
         st.title("Rekstrarspá allra markaða")
-        st.markdown("Þessi spá notar meðaltöl fortíðar- og framtíðarspáa með aðlögun fyrir markaðshlutdeild og sviðsmynd.")
         button_label = "Keyra rekstrarspá"
         download_label = "Sækja CSV"
         success_msg = "Lokið! Hér að neðan eru spár fyrir alla markaði."
-        warning_msg = "Engin gögn fundust eða ekkert sniðug spá tiltæk."
+        warning_msg = "Engin gögn fundust."
         error_msg = "Villa við útreikning"
         slider_label = "Arðsemiskrafa (%)"
     else:
         st.title("All Markets Forecast")
-        st.markdown("This forecast uses adjusted averages of past and future predictions, based on market share and scenario.")
         button_label = "Run forecast"
         download_label = "Download CSV"
         success_msg = "Done! Below are the forecasts for all markets."
-        warning_msg = "No data found or no valid forecast available."
+        warning_msg = "No data found."
         error_msg = "Error in calculation"
         slider_label = "Profit margin (%)"
 
@@ -187,31 +185,56 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
     }
 
     with st.form("tilbod_form"):
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            modul3 = st.number_input("3 Modules", min_value=0, value=0)
-        with col2:
-            modul2 = st.number_input("2 Modules", min_value=0, value=0)
-        with col3:
-            modul1 = st.number_input("1 Module", min_value=0, value=0)
-        with col4:
-            modul_half = st.number_input("0.5 Module", min_value=0, value=0)
+        if language == "Íslenska":
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                modul3 = st.number_input("Þrjár einingar", min_value=0, value=0)
+            with col2:
+                modul2 = st.number_input("Tvær einingar", min_value=0, value=0)
+            with col3:
+                modul1 = st.number_input("Ein eining", min_value=0, value=0)
+            with col4:
+                modul_half = st.number_input("Hálf eining", min_value=0, value=0)
+        else:
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                modul3 = st.number_input("Three Modules", min_value=0, value=0)
+            with col2:
+                modul2 = st.number_input("Two Modules", min_value=0, value=0)
+            with col3:
+                modul1 = st.number_input("One Module", min_value=0, value=0)
+            with col4:
+                modul_half = st.number_input("Half a Module", min_value=0, value=0)
+                
 
         afhendingarstaedir = afhendingar_map[language]
         col5, col6 = st.columns(2)
         with col5:
-            stadsetning_val = st.selectbox("Afhendingarstaður / Delivery Location", list(afhendingarstaedir.keys()))
+            if language == "Íslenska":
+                stadsetning_val = st.selectbox("Afhendingarstaður", list(afhendingarstaedir.keys()))
+            else: 
+                stadsetning_val = st.selectbox("Delivery Location", list(afhendingarstaedir.keys())) 
         with col6:
             if stadsetning_val in ["Annað", "Other"]:
-                stadsetning = st.text_input("Sláðu inn staðsetningu")
-                km_fra_thorlakshofn = st.number_input("Km frá Þorlákshöfn", min_value=0.0)
+                if language == "Íslenska":
+                    stadsetning = st.text_input("Sláðu inn staðsetningu")
+                    km_fra_thorlakshofn = st.number_input("Km frá Þorlákshöfn", min_value=0.0)
+                else:
+                    stadsetning = st.text_input("Address")
+                    km_fra_thorlakshofn = st.number_input("Km from Þorlákshöfn", min_value=0.0)
             else:
                 stadsetning = stadsetning_val
                 km_fra_thorlakshofn = afhendingarstaedir[stadsetning_val]
 
-        verkkaupi = st.text_input("Verkkaupi / Client")
+        if language == "Íslenska":
+            verkkaupi = st.text_input("Verkkaupi")
+        else:
+            verkkaupi = st.text_input("Client")
 
-        submitted = st.form_submit_button("Reikna tilboð")
+        if language == "Íslenska":
+            submitted = st.form_submit_button("Reikna tilboð")
+        else:
+            submitted = st.form_submit_button("Calculating offer")
 
     if submitted:
         modules = {
@@ -222,9 +245,15 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
         }
 
         if all(v == 0 for v in modules.values()):
-            st.warning("Vinsamlegast veldu einingargildi svo hægt sé að reikna tilboðið.")
+            if language == "Íslenska":
+                st.warning("Vinsamlegast veldu einingargildi svo hægt sé að reikna tilboðið.")
+            else:
+                st.warning("Please select unit values in order to calculate the offer.")
         elif stadsetning_val in ["Annað", "Other"] and km_fra_thorlakshofn == 0:
-            st.warning("Vinsamlegast sláðu inn km fjarlægð ef þú valdir 'Annað'.")
+            if language == "Íslenska":
+                st.warning("Vinsamlegast sláðu inn km fjarlægð ef þú valdir 'Annað'.")
+            else:
+                st.warning("Pleaseselect km distance if you chose 'Other'.")
         else:
             try:
                 response = requests.get("https://api.frankfurter.app/latest?from=EUR&to=ISK", timeout=5)
