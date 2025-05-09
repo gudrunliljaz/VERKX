@@ -27,7 +27,7 @@ labels = {
         "market": "Markaðshlutdeild (%)",
         "run": "Keyra spá",
         "loading": "Reikna spá...",
-        "result_tab": "Niiðurstöður",
+        "result_tab": "Niðurstöður",
         "download_tab": "Sækja gögn",
         "table_title": "Cubit einingar",
         "distribution": "Dreifing",
@@ -132,7 +132,7 @@ elif "Rekstrarspá" in page or "All Markets Forecast" in page:
                     profit_margin=margin_decimal
                 )
                 if df is not None and not df.empty:
-                    st.success("Lokii!" if language == "Íslenska" else "Done!")
+                    st.success("Lokið!" if language == "Íslenska" else "Done!")
                     st.dataframe(df)
                     st.download_button(
                         "Sækja CSV" if language == "Íslenska" else "Download CSV",
@@ -145,9 +145,63 @@ elif "Rekstrarspá" in page or "All Markets Forecast" in page:
             except Exception as e:
                 st.error(f"Villa: {e}" if language == "Íslenska" else f"Error: {e}")
 
-# --- Quotation calculator stub ---
+# --- Quotation calculator ---
 elif "Tilboðsreiknivél" in page or "Quotation" in page:
-    st.warning("Tilboðsreiknivél er ekki virkjur í þessari útgáfu." if language == "Íslenska" else "Quotation calculator is not enabled in this version.")
+    st.title("Tilboðsreiknivél" if language == "Íslenska" else "Quotation Calculator")
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        modul3 = st.number_input("3 Modules", min_value=0, value=0)
+    with col2:
+        modul2 = st.number_input("2 Modules", min_value=0, value=0)
+    with col3:
+        modul1 = st.number_input("1 Module", min_value=0, value=0)
+    with col4:
+        modul_half = st.number_input("0.5 Module", min_value=0, value=0)
+
+    delivery_location = st.text_input("Afhendingarstaður / Delivery Location")
+    distance_km = st.number_input("Fjarlægð frá Þorlákshöfn (km)", min_value=0)
+    verkkaupi = st.text_input("Verkkaupi / Client")
+
+    if st.button("Reikna tilboð" if language == "Íslenska" else "Calculate offer"):
+        modules = {
+            "3m": modul3,
+            "2m": modul2,
+            "1m": modul1,
+            "0.5m": modul_half
+        }
+
+        try:
+            response = requests.get("https://api.frankfurter.app/latest?from=EUR&to=ISK", timeout=5)
+            eur_to_isk = response.json()['rates']['ISK']
+        except:
+            eur_to_isk = 146
+
+        result = calculate_offer(modules, distance_km, eur_to_isk)
+
+        st.markdown("### Niðurstöður")
+        st.write(f"**Heildarfermetrar:** {result['heildarfm']:.2f} fm")
+        st.write(f"**Heildarþyngd:** {result['heildarthyngd']:,.0f} kg")
+        st.write(f"**Afsláttur:** {int(result['afslattur'] * 100)}%")
+        st.write(f"**Kaupverð eininga:** {result['heildarkostnadur_einingar']:,.0f} kr.")
+        st.write(f"**Kostnaðarverð á fermetra:** {result['kostnadur_per_fm']:,.0f} kr.")
+        st.write(f"**Flutningur til Íslands:** {result['flutningur_til_islands']:,.0f} kr.")
+        st.write(f"**Sendingarkostnaður innanlands:** {result['sendingarkostnadur']:,.0f} kr.")
+        st.write(f"**Samtals breytilegur kostnaður:** {result['samtals_breytilegur']:,.0f} kr.")
+        st.write(f"**Úthlutaður fastur kostnaður:** {result['uthlutadur_fastur_kostnadur']:,.0f} kr.")
+        st.write(f"**Álagsstuðull:** {result['alagsstudull']:.2f}")
+        st.write(f"**Arðsemiskrafa:** {int(result['asemiskrafa'] * 100)}%")
+        st.write(f"**Tilboðsverð (ISK):** {result['tilbod']:,.0f} kr.")
+        st.write(f"**Tilboðsverð (EUR):** €{result['tilbod_eur']:,.2f}")
+
+        pdf_bytes = generate_offer_pdf(verkkaupi, delivery_location, result)
+        st.download_button(
+            label="📄 Sækja PDF tilboð" if language == "Íslenska" else "📄 Download offer PDF",
+            data=pdf_bytes,
+            file_name=f"tilbod_{verkkaupi}.pdf",
+            mime="application/pdf"
+        )
+
 
 
 
