@@ -59,12 +59,111 @@ labels = {
 # --- Forecast model ---
 if "Spálíkan" in page or "Forecast" in page:
     st.header(labels[language]['title'])
-    st.write("(Spálíkan virkni hér — þú getur sett inn forecast kóðann þinn)")
+
+    housing_map = {
+        "Íslenska": ["Íbúðir", "Leikskólar", "Gistirými", "Elliheimili", "Atvinnuhús"],
+        "English": ["Apartments", "Kindergartens", "Accommodation facilities", "Nursing homes", "Commercial buildings"]
+    }
+    housing_reverse = dict(zip(housing_map["English"], housing_map["Íslenska"]))
+
+    region_map = {
+        "Íslenska": [
+            "Höfuðborgarsvæðið", "Suðurnes", "Vesturland", "Vestfirðir",
+            "Norðurland vestra", "Norðurland eystra", "Austurland", "Suðurland"
+        ],
+        "English": [
+            "Capital Region", "Southern Peninsula", "Western Region", "Westfjords",
+            "Northwestern Region", "Northeastern Region", "Eastern Region", "Southern Region"
+        ]
+    }
+    region_reverse = dict(zip(region_map["English"], region_map["Íslenska"]))
+
+    col1, col2 = st.columns(2)
+    with col1:
+        housing_display = st.selectbox(labels[language]["housing"], housing_map[language])
+        housing_type = housing_reverse[housing_display] if language == "English" else housing_display
+    with col2:
+        region_display = st.selectbox(labels[language]["region"], region_map[language])
+        region = region_reverse[region_display] if language == "English" else region_display
+
+    col3, col4 = st.columns(2)
+    with col3:
+        future_years = st.number_input(labels[language]["years"], min_value=1, value=5)
+    with col4:
+        market_share = st.slider(labels[language]["market"], 0, 100, 50) / 100
+
+    if st.button(labels[language]["run"]):
+        with st.spinner(labels[language]["loading"]):
+            try:
+                df, figures, used_years = main_forecast_logic(housing_type, region, future_years, market_share)
+
+                if used_years < future_years:
+                    st.warning(labels[language]["warning"].format(used_years))
+
+                tabs = st.tabs([labels[language]["result_tab"], labels[language]["download_tab"]])
+
+                with tabs[0]:
+                    st.subheader(labels[language]["table_title"])
+                    st.dataframe(df.set_index(df.columns[0]))
+
+                    st.subheader(labels[language]["distribution"])
+                    for fig in figures:
+                        st.pyplot(fig)
+
+                with tabs[1]:
+                    csv = df.to_csv(index=False).encode("utf-8-sig")
+                    st.download_button(labels[language]["download_button"], csv, labels[language]["download_name"], "text/csv")
+
+            except Exception as e:
+                st.error(f"{labels[language]['error']}: {e}")
 
 # --- All markets forecast ---
 elif "Rekstrarspá" in page or "All Markets Forecast" in page:
-    st.header("Rekstrarspá allra markaða" if language == "Íslenska" else "All Markets Forecast")
-    st.write("(All Markets virkni hér — þú getur sett inn heildarspá kóðann)")
+    if language == "Íslenska":
+        st.title("Rekstrarspá allra markaða")
+        st.markdown("Þessi spá notar meðaltöl fortíðar- og framtíðarspáa með aðlögun fyrir markaðshlutdeild og sviðsmynd.")
+        button_label = "Keyra rekstrarspá"
+        download_label = "Sækja CSV"
+        success_msg = "Lokið! Hér að neðan eru spár fyrir alla markaði."
+        warning_msg = "Engin gögn fundust eða ekkert sniðug spá tiltæk."
+        error_msg = "Villa við útreikning"
+        slider_label = "Arðsemiskrafa (%)"
+    else:
+        st.title("All Markets Forecast")
+        st.markdown("This forecast uses adjusted averages of past and future predictions, based on market share and scenario.")
+        button_label = "Run forecast"
+        download_label = "Download CSV"
+        success_msg = "Done! Below are the forecasts for all markets."
+        warning_msg = "No data found or no valid forecast available."
+        error_msg = "Error in calculation"
+        slider_label = "Profit margin (%)"
+
+    margin = st.slider(slider_label, 0, 100, 15)
+    margin_decimal = margin / 100
+
+    if st.button(button_label, key="run_all_markets_forecast_button"):
+        with st.spinner("Reikna..." if language == "Íslenska" else "Calculating..."):
+            try:
+                df = main_forecast_logic_from_excel(
+                    past_file="data/GÖGN_VERKX.xlsx",
+                    future_file="data/Framtidarspa.xlsx",
+                    share_file="data/markadshlutdeild.xlsx",
+                    profit_margin=margin_decimal
+                )
+                if df is not None and not df.empty:
+                    st.success(success_msg)
+                    st.dataframe(df)
+
+                    st.download_button(
+                        download_label,
+                        data=df.to_csv(index=False).encode("utf-8-sig"),
+                        file_name="heildarspa.csv",
+                        mime="text/csv"
+                    )
+                else:
+                    st.warning(warning_msg)
+            except Exception as e:
+                st.error(f"{error_msg}: {e}")")
 
 # --- Quotation calculator ---
 elif "Tilboðsreiknivél" in page or "Quotation" in page:
@@ -164,4 +263,5 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
                 )
             except UnicodeEncodeError:
                 st.error("Villa við útgáfu PDF skjals – vinsamlegast forðastu séríslensk tákn í nafni eða staðsetningu.")
+
 
