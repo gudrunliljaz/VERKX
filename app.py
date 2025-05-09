@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from verkx_code import main_forecast_logic, main_forecast_logic_from_excel
-from datetime import date
+from verkx_code import main_forecast_logic, main_forecast_logic_from_excel, calculate_offer
 import requests
 from io import BytesIO
 from fpdf import FPDF
