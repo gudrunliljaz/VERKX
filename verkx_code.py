@@ -150,13 +150,13 @@ def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_ma
         return None
 
     df_all = pd.concat(all_rows)
-    summary = df_all.groupby("ár")["meðaltal"].sum().reset_index()
-    summary["fermetrar"] = summary["meðaltal"].round(0).astype(int) * UNIT_SIZE_SQM
-    summary["kostnaðarverð eininga"] = summary["fermetrar"] * (0.19*269700 + 0.80*290000 + 0.01*304500 + 0.001*330000)
+    summary = df_all.groupby("Ár")["Meðaltal"].sum().reset_index()
+    summary["Fermetrar"] = summary["Meðaltal"].round(0).astype(int) * UNIT_SIZE_SQM
+    summary["Kostnaðarverð eininga"] = summary["Fermetrar"] * (0.19*269700 + 0.80*290000 + 0.01*304500 + 0.001*330000)
     summary["Flutningskostnaður"] = summary["fermetrar"] * 74000
     summary["Afhending innanlands"] = summary["fermetrar"] * 80 * 8
     summary["Fastur kostnaður"] = FIXED_COST_PER_YEAR
-    summary["Heildarkostnaður"] = summary[["kostnaðarverð eininga", "Flutningskostnaður", "Afhending innanlands", "Fastur kostnaður"]].sum(axis=1)
+    summary["Heildarkostnaður"] = summary[["Kostnaðarverð eininga", "Flutningskostnaður", "Afhending innanlands", "Fastur kostnaður"]].sum(axis=1)
     summary["Tekjur"] = summary["Heildarkostnaður"] * (1 + profit_margin)
     summary["Hagnaður"] = summary["Tekjur"] - summary["Heildarkostnaður"]
     return summary
