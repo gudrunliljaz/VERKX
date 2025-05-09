@@ -163,7 +163,7 @@ elif "Rekstrarspá" in page or "All Markets Forecast" in page:
                 else:
                     st.warning(warning_msg)
             except Exception as e:
-                st.error(f"{error_msg}: {e}")")
+                st.error(f"{error_msg}: {e}")
 
 # --- Quotation calculator ---
 elif "Tilboðsreiknivél" in page or "Quotation" in page:
