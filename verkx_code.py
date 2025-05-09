@@ -226,17 +226,19 @@ def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10
 def generate_offer_pdf(verkkaupi, stadsetning, result):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
 
-    pdf.cell(200, 10, txt=f"Tilboð fyrir: {verkkaupi}", ln=True)
-    pdf.cell(200, 10, txt=f"Staðsetning: {stadsetning}", ln=True)
-    pdf.cell(200, 10, txt=f"Dags: {result['dags']}", ln=True)
-    pdf.cell(200, 10, txt=f"Heildarfermetrar: {result['heildarfm']:.2f} fm", ln=True)
-    pdf.cell(200, 10, txt=f"Heildarþyngd: {result['heildarthyngd']:,.0f} kg", ln=True)
-    pdf.cell(200, 10, txt=f"Tilboðsverð (ISK): {result['tilbod']:,.0f} kr.", ln=True)
-    pdf.cell(200, 10, txt=f"Tilboðsverð (EUR): €{result['tilbod_eur']:,.2f}", ln=True)
+    # Notum leturgerð sem styður Unicode
+    pdf.add_font('DejaVu', '', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', uni=True)
+    pdf.set_font('DejaVu', '', 12)
+
+    pdf.cell(0, 10, f"Tilboð fyrir: {verkkaupi}", ln=True)
+    pdf.cell(0, 10, f"Afhendingarstaður: {stadsetning}", ln=True)
+    pdf.cell(0, 10, f"Heildarfermetrar: {result['heildarfm']:.2f} fm", ln=True)
+    pdf.cell(0, 10, f"Heildarþyngd: {result['heildarthyngd']:,.0f} kg", ln=True)
+    pdf.cell(0, 10, f"Afsláttur: {int(result['afslattur'] * 100)}%", ln=True)
+    pdf.cell(0, 10, f"Tilboðsverð (ISK): {result['tilbod']:,.0f} kr.", ln=True)
+    pdf.cell(0, 10, f"Tilboðsverð (EUR): €{result['tilbod_eur']:,.2f}", ln=True)
 
     pdf_output = BytesIO()
     pdf.output(pdf_output)
     return pdf_output.getvalue()
-
