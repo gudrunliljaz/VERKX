@@ -116,7 +116,6 @@ if ("Eftirspurnarspá" in page and language == "Íslenska") or ("Demand Forecast
 
             except Exception as e:
                 st.error(f"{labels[language]['error']}: {e}")
-
 # --- All markets forecast ---
 elif "Rekstrarspá" in page or "All Markets Forecast" in page:
     if language == "Íslenska":
@@ -126,7 +125,7 @@ elif "Rekstrarspá" in page or "All Markets Forecast" in page:
         success_msg = "Lokið! Hér að neðan eru spár fyrir alla markaði."
         warning_msg = "Engin gögn fundust."
         error_msg = "Villa við útreikning"
-        slider_label = "Arðsemiskrafa fyrir árið"
+        slider_labels = ["Arðsemiskrafa 2025 (%)", "2026", "2027", "2028"]
     else:
         st.title("All Markets Forecast")
         button_label = "Run forecast"
@@ -134,13 +133,13 @@ elif "Rekstrarspá" in page or "All Markets Forecast" in page:
         success_msg = "Done! Below are the forecasts for all markets."
         warning_msg = "No data found."
         error_msg = "Error in calculation"
-        slider_label = "Profit margin for"
+        slider_labels = ["Profit margin 2025 (%)", "2026", "2027", "2028"]
 
     col1, col2, col3, col4 = st.columns(4)
-    margin_2025 = col1.slider(f"{slider_label} 2025", 0, 100, 15) / 100
-    margin_2026 = col2.slider(f"{slider_label} 2026", 0, 100, 15) / 100
-    margin_2027 = col3.slider(f"{slider_label} 2027", 0, 100, 15) / 100
-    margin_2028 = col4.slider(f"{slider_label} 2028", 0, 100, 15) / 100
+    margin_2025 = col1.slider(slider_labels[0], 0, 100, 15) / 100
+    margin_2026 = col2.slider(slider_labels[1], 0, 100, 15) / 100
+    margin_2027 = col3.slider(slider_labels[2], 0, 100, 15) / 100
+    margin_2028 = col4.slider(slider_labels[3], 0, 100, 15) / 100
 
     if st.button(button_label, key="run_all_markets_forecast_button"):
         with st.spinner("Reikna..." if language == "Íslenska" else "Calculating..."):
@@ -169,9 +168,8 @@ elif "Rekstrarspá" in page or "All Markets Forecast" in page:
             except Exception as e:
                 st.error(f"{error_msg}: {e}")
 
-
 # --- Quotation calculator ---
-elif "Tilboðsreiknivél" in page or "Quotation" in page:
+elif "Tilboðsreiknivél" in page or "Quotation Calculator" in page:
     st.header("Tilboðsreiknivél" if language == "Íslenska" else "Quotation Calculator")
 
     afhendingar_map = {
@@ -192,75 +190,35 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
     }
 
     with st.form("tilbod_form"):
-        if language == "Íslenska":
-            col1, col2, col3, col4 = st.columns(4)
-            with col1:
-                modul3 = st.number_input("Þrjár einingar", min_value=0, value=0)
-            with col2:
-                modul2 = st.number_input("Tvær einingar", min_value=0, value=0)
-            with col3:
-                modul1 = st.number_input("Ein eining", min_value=0, value=0)
-            with col4:
-                modul_half = st.number_input("Hálf eining", min_value=0, value=0)
-        else:
-            col1, col2, col3, col4 = st.columns(4)
-            with col1:
-                modul3 = st.number_input("Three Modules", min_value=0, value=0)
-            with col2:
-                modul2 = st.number_input("Two Modules", min_value=0, value=0)
-            with col3:
-                modul1 = st.number_input("One Module", min_value=0, value=0)
-            with col4:
-                modul_half = st.number_input("Half a Module", min_value=0, value=0)
-                
+        col1, col2, col3, col4 = st.columns(4)
+        modul3 = col1.number_input("Þrjár einingar" if language == "Íslenska" else "Three Modules", min_value=0, value=0)
+        modul2 = col2.number_input("Tvær einingar" if language == "Íslenska" else "Two Modules", min_value=0, value=0)
+        modul1 = col3.number_input("Ein eining" if language == "Íslenska" else "One Module", min_value=0, value=0)
+        modul_half = col4.number_input("Hálf eining" if language == "Íslenska" else "Half a Module", min_value=0, value=0)
 
         afhendingarstaedir = afhendingar_map[language]
         col5, col6 = st.columns(2)
         with col5:
-            if language == "Íslenska":
-                stadsetning_val = st.selectbox("Afhendingarstaður", list(afhendingarstaedir.keys()))
-            else: 
-                stadsetning_val = st.selectbox("Delivery Location", list(afhendingarstaedir.keys())) 
+            stadsetning_val = st.selectbox("Afhendingarstaður" if language == "Íslenska" else "Delivery Location", list(afhendingarstaedir.keys()))
         with col6:
             if stadsetning_val in ["Annað", "Other"]:
-                if language == "Íslenska":
-                    stadsetning = st.text_input("Sláðu inn staðsetningu")
-                    km_fra_thorlakshofn = st.number_input("Km frá Þorlákshöfn", min_value=0.0)
-                else:
-                    stadsetning = st.text_input("Address")
-                    km_fra_thorlakshofn = st.number_input("Km from Þorlákshöfn", min_value=0.0)
+                stadsetning = st.text_input("Staðsetning" if language == "Íslenska" else "Location")
+                km_fra_thorlakshofn = st.number_input("Km frá Þorlákshöfn" if language == "Íslenska" else "Km from Þorlákshöfn", min_value=0.0)
             else:
                 stadsetning = stadsetning_val
                 km_fra_thorlakshofn = afhendingarstaedir[stadsetning_val]
 
-        if language == "Íslenska":
-            verkkaupi = st.text_input("Verkkaupi")
-        else:
-            verkkaupi = st.text_input("Client")
+        verkkaupi = st.text_input("Verkkaupi" if language == "Íslenska" else "Client")
 
-        if language == "Íslenska":
-            submitted = st.form_submit_button("Reikna tilboð")
-        else:
-            submitted = st.form_submit_button("Calculate offer")
+        submitted = st.form_submit_button("Reikna tilboð" if language == "Íslenska" else "Calculate offer")
 
     if submitted:
-        modules = {
-            "3m": modul3,
-            "2m": modul2,
-            "1m": modul1,
-            "0.5m": modul_half
-        }
+        modules = {"3m": modul3, "2m": modul2, "1m": modul1, "0.5m": modul_half}
 
         if all(v == 0 for v in modules.values()):
-            if language == "Íslenska":
-                st.warning("Vinsamlegast veldu einingargildi svo hægt sé að reikna tilboðið.")
-            else:
-                st.warning("Please select unit values in order to calculate the offer.")
+            st.warning("Veldu einingar" if language == "Íslenska" else "Please enter module counts.")
         elif stadsetning_val in ["Annað", "Other"] and km_fra_thorlakshofn == 0:
-            if language == "Íslenska":
-                st.warning("Vinsamlegast sláðu inn km fjarlægð ef þú valdir 'Annað'.")
-            else:
-                st.warning("Pleaseselect km distance if you chose 'Other'.")
+            st.warning("Sláðu inn km fjarlægð" if language == "Íslenska" else "Enter distance from Þorlákshöfn.")
         else:
             try:
                 response = requests.get("https://api.frankfurter.app/latest?from=EUR&to=ISK", timeout=5)
@@ -269,26 +227,13 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
                 eur_to_isk = 146
 
             result = calculate_offer(modules, km_fra_thorlakshofn, eur_to_isk)
-
-            st.markdown("### Niðurstöður" if language == "Íslenska" else "### Results")
+            st.subheader("Niðurstöður" if language == "Íslenska" else "Results")
             st.write(f"**Heildarfermetrar:** {result['heildarfm']:.2f} fm" if language == "Íslenska" else f"**Total area:** {result['heildarfm']:.2f} sqm")
-            st.write(f"**Heildarþyngd:** {result['heildarthyngd']:,.0f} kg" if language == "Íslenska" else f"**Total weight:** {result['heildarthyngd']:,.0f} kg")
-            st.write(f"**Afsláttur:** {int(result['afslattur'] * 100)}%" if language == "Íslenska" else f"**Discount:** {int(result['afslattur'] * 100)}%")
-            st.write(f"**Kaupverð eininga:** {result['heildarkostnadur_einingar']:,.0f} kr." if language == "Íslenska" else f"**Unit purchase cost:** {result['heildarkostnadur_einingar']:,.0f} ISK")
-            st.write(f"**Kostnaðarverð á fermetra:** {result['kostnadur_per_fm']:,.0f} kr." if language == "Íslenska" else f"**Cost per sqm:** {result['kostnadur_per_fm']:,.0f} ISK")
-            st.write(f"**Flutningur til Íslands:** {result['flutningur_til_islands']:,.0f} kr." if language == "Íslenska" else f"**Shipping to Iceland:** {result['flutningur_til_islands']:,.0f} ISK")
-            st.write(f"**Sendingarkostnaður innanlands:** {result['sendingarkostnadur']:,.0f} kr." if language == "Íslenska" else f"**Domestic delivery:** {result['sendingarkostnadur']:,.0f} ISK")
-            st.write(f"**Samtals breytilegur kostnaður:** {result['samtals_breytilegur']:,.0f} kr." if language == "Íslenska" else f"**Total variable cost:** {result['samtals_breytilegur']:,.0f} ISK")
-            st.write(f"**Úthlutaður fastur kostnaður:** {result['uthlutadur_fastur_kostnadur']:,.0f} kr." if language == "Íslenska" else f"**Allocated fixed cost:** {result['uthlutadur_fastur_kostnadur']:,.0f} ISK")
-            st.write(f"**Álagsstuðull:** {result['alagsstudull']:.2f}" if language == "Íslenska" else f"**Markup factor:** {result['alagsstudull']:.2f}")
-            st.write(f"**Arðsemiskrafa:** {int(result['asemiskrafa'] * 100)}%" if language == "Íslenska" else f"**Profit margin:** {int(result['asemiskrafa'] * 100)}%")
             st.write(f"**Tilboðsverð (ISK):** {result['tilbod']:,.0f} kr." if language == "Íslenska" else f"**Offer price (ISK):** {result['tilbod']:,.0f} ISK")
             st.write(f"**Tilboðsverð (EUR):** €{result['tilbod_eur']:,.2f}" if language == "Íslenska" else f"**Offer price (EUR):** €{result['tilbod_eur']:,.2f}")
 
-
             try:
                 from unicodedata import normalize
-                # Hreinsum öll séríslensk tákn úr strengjum
                 hreinsad_nafn = normalize('NFKD', verkkaupi).encode('ascii', 'ignore').decode('ascii')
                 hreinsud_stadsetning = normalize('NFKD', stadsetning).encode('ascii', 'ignore').decode('ascii')
                 pdf_bytes = generate_offer_pdf(hreinsad_nafn, hreinsud_stadsetning, result)
@@ -299,7 +244,7 @@ elif "Tilboðsreiknivél" in page or "Quotation" in page:
                     mime="application/pdf"
                 )
             except UnicodeEncodeError:
-                st.error("Villa við útgáfu PDF skjals.")
+                st.error("Villa við útgáfu PDF" if language == "Íslenska" else "PDF generation error")
 
 
 
