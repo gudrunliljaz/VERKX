@@ -148,7 +148,7 @@ elif "Rekstrarspá" in page or "All Markets Forecast" in page:
         success_msg = "Lokið! Hér að neðan eru spár fyrir alla markaði."
         warning_msg = "Engin gögn fundust."
         error_msg = "Villa við útreikning"
-        slider_label = "Arðsemiskrafa (%)"
+        margin_label = "Veldu arðsemiskröfu fyrir hvert ár"
     else:
         st.title("All Markets Forecast")
         button_label = "Run forecast"
@@ -156,10 +156,7 @@ elif "Rekstrarspá" in page or "All Markets Forecast" in page:
         success_msg = "Done! Below are the forecasts for all markets."
         warning_msg = "No data found."
         error_msg = "Error in calculation"
-        slider_label = "Profit margin (%)"
-
-    margin = st.slider(slider_label, 0, 100, 15)
-    margin_decimal = margin / 100
+        margin_label = "Set profit margin for each year"
 
     if st.button(button_label, key="run_all_markets_forecast_button"):
         with st.spinner("Reikna..." if language == "Íslenska" else "Calculating..."):
@@ -167,11 +164,30 @@ elif "Rekstrarspá" in page or "All Markets Forecast" in page:
                 df = main_forecast_logic_from_excel(
                     past_file="data/GÖGN_VERKX.xlsx",
                     future_file="data/Framtidarspa.xlsx",
-                    share_file="data/markadshlutdeild.xlsx",
-                    profit_margin=margin_decimal
+                    share_file="data/markadshlutdeild.xlsx"
                 )
+
                 if df is not None and not df.empty:
                     st.success(success_msg)
+
+                    st.subheader(margin_label)
+                    year_rates = {}
+                    for year in df["Ár"]:
+                        label = f"Arðsemiskrafa fyrir árið {year}" if language == "Íslenska" else f"Profit margin for year {year}"
+                        key = f"margin_{year}"
+                        year_rates[year] = st.number_input(
+                            label,
+                            min_value=0.0,
+                            max_value=1.0,
+                            value=0.15,
+                            step=0.01,
+                            key=key
+                        )
+
+                    df["Arðsemiskrafa"] = df["Ár"].map(year_rates)
+                    df["Tekjur"] = df["Heildarkostnaður"] * (1 + df["Arðsemiskrafa"])
+                    df["Hagnaður"] = df["Tekjur"] - df["Heildarkostnaður"]
+
                     st.dataframe(df)
 
                     st.download_button(
