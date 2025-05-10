@@ -253,3 +253,4 @@ elif "Tilboðsreiknivél" in page or "Quotation Calculator" in page:
 
 
 
+
