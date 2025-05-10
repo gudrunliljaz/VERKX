@@ -118,38 +118,57 @@ if ("Eftirspurnarspá" in page and language == "Íslenska") or ("Demand Forecast
                 st.error(f"{labels[language]['error']}: {e}")
 
 # --- All markets forecast ---
-col1, col2, col3, col4 = st.columns(4)
-margin_2025 = col1.slider("2025", 0, 100, 15) / 100
-margin_2026 = col2.slider("2026", 0, 100, 15) / 100
-margin_2027 = col3.slider("2027", 0, 100, 15) / 100
-margin_2028 = col4.slider("2028", 0, 100, 15) / 100
+elif "Rekstrarspá" in page or "All Markets Forecast" in page:
+    if language == "Íslenska":
+        st.title("Rekstrarspá allra markaða")
+        button_label = "Keyra rekstrarspá"
+        download_label = "Sækja CSV"
+        success_msg = "Lokið! Hér að neðan eru spár fyrir alla markaði."
+        warning_msg = "Engin gögn fundust."
+        error_msg = "Villa við útreikning"
+        slider_label = "Arðsemiskrafa fyrir árið"
+    else:
+        st.title("All Markets Forecast")
+        button_label = "Run forecast"
+        download_label = "Download CSV"
+        success_msg = "Done! Below are the forecasts for all markets."
+        warning_msg = "No data found."
+        error_msg = "Error in calculation"
+        slider_label = "Profit margin for"
 
-if st.button(button_label, key="run_all_markets_forecast_button"):
-    with st.spinner("Reikna..." if language == "Íslenska" else "Calculating..."):
-        try:
-            df = main_forecast_logic_from_excel(
-                past_file="data/GÖGN_VERKX.xlsx",
-                future_file="data/Framtidarspa.xlsx",
-                share_file="data/markadshlutdeild.xlsx",
-                margin_2025=margin_2025,
-                margin_2026=margin_2026,
-                margin_2027=margin_2027,
-                margin_2028=margin_2028
-            )
-            if df is not None and not df.empty:
-                st.success(success_msg)
-                st.dataframe(df)
+    col1, col2, col3, col4 = st.columns(4)
+    margin_2025 = col1.slider(f"{slider_label} 2025", 0, 100, 15) / 100
+    margin_2026 = col2.slider(f"{slider_label} 2026", 0, 100, 15) / 100
+    margin_2027 = col3.slider(f"{slider_label} 2027", 0, 100, 15) / 100
+    margin_2028 = col4.slider(f"{slider_label} 2028", 0, 100, 15) / 100
 
-                st.download_button(
-                    download_label,
-                    data=df.to_csv(index=False).encode("utf-8-sig"),
-                    file_name="heildarspa.csv",
-                    mime="text/csv"
+    if st.button(button_label, key="run_all_markets_forecast_button"):
+        with st.spinner("Reikna..." if language == "Íslenska" else "Calculating..."):
+            try:
+                df = main_forecast_logic_from_excel(
+                    past_file="data/GÖGN_VERKX.xlsx",
+                    future_file="data/Framtidarspa.xlsx",
+                    share_file="data/markadshlutdeild.xlsx",
+                    margin_2025=margin_2025,
+                    margin_2026=margin_2026,
+                    margin_2027=margin_2027,
+                    margin_2028=margin_2028
                 )
-            else:
-                st.warning(warning_msg)
-        except Exception as e:
-            st.error(f"{error_msg}: {e}")
+                if df is not None and not df.empty:
+                    st.success(success_msg)
+                    st.dataframe(df)
+
+                    st.download_button(
+                        download_label,
+                        data=df.to_csv(index=False).encode("utf-8-sig"),
+                        file_name="heildarspa.csv",
+                        mime="text/csv"
+                    )
+                else:
+                    st.warning(warning_msg)
+            except Exception as e:
+                st.error(f"{error_msg}: {e}")
+
 
 # --- Quotation calculator ---
 elif "Tilboðsreiknivél" in page or "Quotation" in page:
