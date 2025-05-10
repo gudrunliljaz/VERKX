@@ -260,7 +260,7 @@ elif "Tilboðsreiknivél" in page or "Quotation Calculator" in page:
                 from unicodedata import normalize
                 hreinsad_nafn = normalize('NFKD', verkkaupi).encode('ascii', 'ignore').decode('ascii')
                 hreinsud_stadsetning = normalize('NFKD', stadsetning).encode('ascii', 'ignore').decode('ascii')
-                pdf_bytes = generate_offer_pdf(hreinsad_nafn, hreinsud_stadsetning, result)
+                pdf_bytes = generate_offer_pdf(hreinsad_nafn, hreinsud_stadsetning, result, language)
                 st.download_button(
                     label="Sækja PDF tilboð" if language == "Íslenska" else "Download offer PDF",
                     data=pdf_bytes,
