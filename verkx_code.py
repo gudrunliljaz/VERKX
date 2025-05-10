@@ -230,14 +230,27 @@ def generate_offer_pdf(verkkaupi, stadsetning, result):
     pdf.add_page()
     pdf.add_font('DejaVu', '', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', uni=True)
     pdf.set_font('DejaVu', '', 12)
+
     pdf.cell(0, 10, f"Tilboð fyrir: {verkkaupi}", ln=True)
     pdf.cell(0, 10, f"Afhendingarstaður: {stadsetning}", ln=True)
+    pdf.ln(5)
+
     pdf.cell(0, 10, f"Heildarfermetrar: {result['heildarfm']:.2f} fm", ln=True)
     pdf.cell(0, 10, f"Heildarþyngd: {result['heildarthyngd']:,.0f} kg", ln=True)
     pdf.cell(0, 10, f"Afsláttur: {int(result['afslattur'] * 100)}%", ln=True)
+    pdf.cell(0, 10, f"Kaupverð eininga: {result['heildarkostnadur_einingar']:,.0f} kr.", ln=True)
+    pdf.cell(0, 10, f"Kostnaðarverð á fermetra: {result['kostnadur_per_fm']:,.0f} kr.", ln=True)
+    pdf.cell(0, 10, f"Flutningur til Íslands: {result['flutningur_til_islands']:,.0f} kr.", ln=True)
+    pdf.cell(0, 10, f"Sendingarkostnaður innanlands: {result['sendingarkostnadur']:,.0f} kr.", ln=True)
+    pdf.cell(0, 10, f"Samtals breytilegur kostnaður: {result['samtals_breytilegur']:,.0f} kr.", ln=True)
+    pdf.cell(0, 10, f"Úthlutaður fastur kostnaður: {result['uthlutadur_fastur_kostnadur']:,.0f} kr.", ln=True)
+    pdf.cell(0, 10, f"Álagsstuðull: {result['alagsstudull']:.2f}", ln=True)
+    pdf.cell(0, 10, f"Arðsemiskrafa: {int(result['asemiskrafa'] * 100)}%", ln=True)
     pdf.cell(0, 10, f"Tilboðsverð (ISK): {result['tilbod']:,.0f} kr.", ln=True)
     pdf.cell(0, 10, f"Tilboðsverð (EUR): €{result['tilbod_eur']:,.2f}", ln=True)
+
     return pdf.output(dest="S").encode("latin-1")
+
 
 
 
