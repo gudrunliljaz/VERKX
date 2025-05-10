@@ -101,6 +101,7 @@ if ("Eftirspurnarspá" in page and language == "Íslenska") or ("Demand Forecast
                     st.warning(labels[language]["warning"].format(used_years))
 
                 tabs = st.tabs([labels[language]["result_tab"], labels[language]["download_tab"]])
+
                 with tabs[0]:
                     st.subheader(labels[language]["table_title"])
                     st.dataframe(df.set_index(df.columns[0]))
