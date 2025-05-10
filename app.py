@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from verkx_code import main_forecast_logic, main_forecast_logic_from_excel, calculate_offer, generate_offer_pdf
+from verkx_code import main_forecast_logic, main_forecast_logic_from_excel, calculate_offer, generate_offer_pdf, MODULE_SHARES, MODULE_COSTS, MODULE_FM
 import requests
 from datetime import date
 from io import BytesIO
@@ -95,6 +95,12 @@ elif ("Rekstrarspá" in page and language == "Íslenska") or ("All Markets Forec
         error_msg = "Error in calculation"
         margin_label = "Set profit margin for each year"
 
+    st.subheader(margin_label)
+    year_rates = {}
+    for y in range(2025, 2030):
+        label = f"Arðsemiskrafa fyrir árið {y}" if language == "Íslenska" else f"Profit margin for year {y}"
+        year_rates[y] = st.number_input(label, min_value=0.0, max_value=1.0, value=0.15, step=0.01, key=f"rate_{y}")
+
     if st.button(button_label, key="run_all_markets_forecast_button"):
         with st.spinner("Reikna..." if language == "Íslenska" else "Calculating..."):
             try:
@@ -105,26 +111,10 @@ elif ("Rekstrarspá" in page and language == "Íslenska") or ("All Markets Forec
                 )
 
                 if df is not None and not df.empty:
-                    st.success(success_msg)
-
-                    st.subheader(margin_label)
-                    year_rates = {}
-                    for year in df["Ár"]:
-                        label = f"Arðsemiskrafa fyrir árið {year}" if language == "Íslenska" else f"Profit margin for year {year}"
-                        key = f"margin_{year}_rekstrar"
-                        year_rates[year] = st.number_input(
-                            label,
-                            min_value=0.0,
-                            max_value=1.0,
-                            value=0.15,
-                            step=0.01,
-                            key=key
-                        )
-
                     df["Arðsemiskrafa"] = df["Ár"].map(year_rates)
                     df["Tekjur"] = df["Heildarkostnaður"] * (1 + df["Arðsemiskrafa"])
                     df["Hagnaður"] = df["Tekjur"] - df["Heildarkostnaður"]
-
+                    st.success(success_msg)
                     st.dataframe(df)
 
                     st.download_button(
@@ -138,10 +128,6 @@ elif ("Rekstrarspá" in page and language == "Íslenska") or ("All Markets Forec
             except Exception as e:
                 st.error(f"{error_msg}: {e}")
 
-# --- Quotation calculator (Placeholder, to be completed) ---
-elif ("Tilboðsreiknivél" in page and language == "Íslenska") or ("Quotation Calculator" in page and language == "English"):
-    st.title("Tilboðsreiknivél" if language == "Íslenska" else "Quotation Calculator")
-    st.write("[Tilboðsreiknir kóði verður settur hér]")
 
 
 
