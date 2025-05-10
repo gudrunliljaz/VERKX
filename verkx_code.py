@@ -1,9 +1,11 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 import unicodedata
 from datetime import date
 from fpdf import FPDF
+from io import BytesIO
 
 # Constants
 PAST_FILE = "data/GÖGN_VERKX.xlsx"
