@@ -1,10 +1,11 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from verkx_code import main_forecast_logic, main_forecast_logic_from_excel, calculate_offer, generate_offer_pdf, MODULE_SHARES, MODULE_COSTS, MODULE_FM
+from verkx_code import main_forecast_logic, main_forecast_logic_from_excel, calculate_offer, generate_offer_pdf
 import requests
 from datetime import date
 from io import BytesIO
+import unicodedata
 
 # Page configuration
 st.set_page_config(page_title="Cubit", page_icon="cubitlogo.png", layout="wide")
@@ -127,6 +128,69 @@ elif ("Rekstrarspá" in page and language == "Íslenska") or ("All Markets Forec
                     st.warning(warning_msg)
             except Exception as e:
                 st.error(f"{error_msg}: {e}")
+
+# --- Quotation calculator ---
+elif ("Tilboðsreiknivél" in page and language == "Íslenska") or ("Quotation Calculator" in page and language == "English"):
+    st.header("Tilboðsreiknivél" if language == "Íslenska" else "Quotation Calculator")
+
+    afh_map = {
+        "Íslenska": {
+            "Höfuðborgarsvæðið": 60, "Selfoss": 30, "Akranes": 100,
+            "Akureyri": 490, "Egilsstaðir": 650, "Keflavík": 90,
+            "Annað": None
+        },
+        "English": {
+            "Capital Region": 60, "Selfoss": 30, "Akranes": 100,
+            "Akureyri": 490, "Egilsstaðir": 650, "Keflavík": 90,
+            "Other": None
+        }
+    }
+
+    with st.form("form_offer"):
+        col1, col2, col3, col4 = st.columns(4)
+        modul3 = col1.number_input("Þrjár einingar" if language == "Íslenska" else "Three Modules", min_value=0, value=0)
+        modul2 = col2.number_input("Tvær einingar" if language == "Íslenska" else "Two Modules", min_value=0, value=0)
+        modul1 = col3.number_input("Ein eining" if language == "Íslenska" else "One Module", min_value=0, value=0)
+        modul_half = col4.number_input("Hálf eining" if language == "Íslenska" else "Half Module", min_value=0, value=0)
+
+        locs = afh_map[language]
+        col5, col6 = st.columns(2)
+        place = col5.selectbox("Afhendingarstaður" if language == "Íslenska" else "Delivery location", list(locs))
+        if place in ["Annað", "Other"]:
+            addr = col5.text_input("Staðsetning" if language == "Íslenska" else "Location")
+            dist = col6.number_input("Fjarlægð frá Þorlákshöfn (km)" if language == "Íslenska" else "Distance from Þorlákshöfn (km)", min_value=0.0)
+        else:
+            addr = place
+            dist = locs[place]
+
+        client = st.text_input("Verkkaupi" if language == "Íslenska" else "Client")
+        submit = st.form_submit_button("Reikna tilboð" if language == "Íslenska" else "Calculate offer")
+
+    if submit:
+        modules = {"3m": modul3, "2m": modul2, "1m": modul1, "0.5m": modul_half}
+        if all(v == 0 for v in modules.values()):
+            st.warning("Veldu einingar" if language == "Íslenska" else "Select modules")
+        elif dist == 0:
+            st.warning("Settu inn fjarlægð" if language == "Íslenska" else "Enter distance")
+        else:
+            try:
+                rate = requests.get("https://api.frankfurter.app/latest?from=EUR&to=ISK", timeout=5)
+                eur_to_isk = rate.json()['rates']['ISK']
+            except:
+                eur_to_isk = 146
+
+            result = calculate_offer(modules, dist, eur_to_isk)
+
+            st.write(f"**Tilboðsverð (ISK):** {result['tilbod']:,.0f}" if language == "Íslenska" else f"**Offer price (ISK):** {result['tilbod']:,.0f}")
+            st.write(f"**Tilboðsverð (EUR):** €{result['tilbod_eur']:,.2f}" if language == "Íslenska" else f"**Offer price (EUR):** €{result['tilbod_eur']:,.2f}")
+
+            try:
+                nafn = unicodedata.normalize('NFKD', client).encode('ascii', 'ignore').decode('ascii')
+                stadur = unicodedata.normalize('NFKD', addr).encode('ascii', 'ignore').decode('ascii')
+                pdf_bytes = generate_offer_pdf(nafn, stadur, result)
+                st.download_button("Sækja PDF tilboð" if language == "Íslenska" else "Download offer PDF", pdf_bytes, file_name=f"tilbod_{nafn}.pdf", mime="application/pdf")
+            except:
+                st.error("Villa við útgáfu PDF.")
 
 
 
