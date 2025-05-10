@@ -225,12 +225,29 @@ def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10
         "dags": date.today()
     }
 
+
+
 def generate_offer_pdf(verkkaupi, stadsetning, result):
     pdf = FPDF()
     pdf.add_page()
     pdf.add_font('DejaVu', '', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', uni=True)
     pdf.set_font('DejaVu', '', 12)
 
+    # Titill og dagsetning
+    try:
+        pdf.image("cubitlogo.png", x=10, y=8, w=30)
+    except:
+        pass  # ef logo finnst ekki heldur áfram
+    pdf.set_xy(50, 10)
+    pdf.set_font('DejaVu', '', 16)
+    pdf.cell(0, 10, "Tilboð - Cubit", ln=True)
+
+    pdf.set_font('DejaVu', '', 10)
+    pdf.set_xy(50, 20)
+    pdf.cell(0, 10, f"Dags: {date.today().strftime('%d.%m.%Y')}", ln=True)
+
+    pdf.ln(20)
+    pdf.set_font('DejaVu', '', 12)
     pdf.cell(0, 10, f"Tilboð fyrir: {verkkaupi}", ln=True)
     pdf.cell(0, 10, f"Afhendingarstaður: {stadsetning}", ln=True)
     pdf.ln(5)
