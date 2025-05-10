@@ -56,7 +56,15 @@ def linear_forecast(df, demand_column, start_year, future_years):
     predictions = model.predict(future_years_range.reshape(-1, 1))
     return future_years_range, predictions
 
-def main_forecast_logic_from_excel(past_file, future_file, share_file, margin_2025, margin_2026, margin_2027, margin_2028):
+def main_forecast_logic_from_excel(
+    past_file,
+    future_file,
+    share_file,
+    margin_2025=0.15,
+    margin_2026=0.15,
+    margin_2027=0.15,
+    margin_2028=0.15
+):
     xl = pd.ExcelFile(share_file, engine="openpyxl")
     all_rows = []
 
@@ -93,24 +101,20 @@ def main_forecast_logic_from_excel(past_file, future_file, share_file, margin_20
     df_all = pd.concat(all_rows)
     summary = df_all.groupby("Ár")["Meðaltal"].sum().reset_index()
     summary["Fermetrar"] = summary["Meðaltal"].round(0).astype(int) * UNIT_SIZE_SQM
-    summary["Kostnaðarverð eininga"] = summary["Fermetrar"] * sum(
-        MODULE_SHARES[k] * MODULE_COSTS[k] * MODULE_FM[k] for k in MODULE_SHARES
-    )
+    summary["Kostnaðarverð eininga"] = summary["Fermetrar"] * (0.19*269700 + 0.80*290000 + 0.01*304500 + 0.001*330000)
     summary["Flutningskostnaður"] = summary["Fermetrar"] * 43424
     summary["Afhending innanlands"] = summary["Fermetrar"] * 80 * 8
     summary["Fastur kostnaður"] = FIXED_COST_PER_YEAR
-    summary["Heildarkostnaður"] = summary[[
-        "Kostnaðarverð eininga", "Flutningskostnaður", "Afhending innanlands", "Fastur kostnaður"
-    ]].sum(axis=1)
+    summary["Heildarkostnaður"] = summary[["Kostnaðarverð eininga", "Flutningskostnaður", "Afhending innanlands", "Fastur kostnaður"]].sum(axis=1)
 
-    year_margin_map = {
+    # Mismunandi arðsemiskrafa eftir ári
+    margin_map = {
         2025: margin_2025,
         2026: margin_2026,
         2027: margin_2027,
         2028: margin_2028
     }
-
-    summary["Arðsemiskrafa"] = summary["Ár"].map(year_margin_map)
+    summary["Arðsemiskrafa"] = summary["Ár"].map(margin_map)
     summary["Tekjur"] = summary["Heildarkostnaður"] * (1 + summary["Arðsemiskrafa"])
     summary["Hagnaður"] = summary["Tekjur"] - summary["Heildarkostnaður"]
 
