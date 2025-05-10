@@ -100,30 +100,44 @@ if ("Eftirspurnarspá" in page and language == "Íslenska") or ("Demand Forecast
     with col4:
         market_share = st.slider(labels[language]["market"], 0, 100, 50) / 100
 
-    if st.button(labels[language]["run"]):
-        with st.spinner(labels[language]["loading"]):
+    if st.button(button_label, key="run_all_markets_forecast_button"):
+        with st.spinner("Reikna..." if language == "Íslenska" else "Calculating..."):
             try:
-                df, figures, used_years = main_forecast_logic(housing_type, region, future_years, market_share)
+                df = main_forecast_logic_from_excel(
+                    past_file="data/GÖGN_VERKX.xlsx",
+                    future_file="data/Framtidarspa.xlsx",
+                    share_file="data/markadshlutdeild.xlsx",
+                    profit_margin=0.0  # við notum custom margins í staðinn
+                )
 
-                if used_years < future_years:
-                    st.warning(labels[language]["warning"].format(used_years))
+                if df is not None and not df.empty:
+                    st.success(success_msg)
 
-                tabs = st.tabs([labels[language]["result_tab"], labels[language]["download_tab"]])
+                    # Búa til val fyrir arðsemiskröfu fyrir hvert ár
+                    year_rates = {}
+                    st.subheader("Arðsemiskrafa eftir ári" if language == "Íslenska" else "Profit margin per year")
+                    for year in df["Ár"]:
+                        key = f"margin_{year}"
+                        year_rates[year] = st.number_input(
+                            f"{year}", min_value=0.0, max_value=1.0, value=0.15, step=0.01, key=key
+                        )
 
-                with tabs[0]:
-                    st.subheader(labels[language]["table_title"])
-                    st.dataframe(df.set_index(df.columns[0]))
+                    # Endurreikna Tekjur og Hagnað með sértækum arðsemiskröfum
+                    df["Arðsemiskrafa"] = df["Ár"].map(year_rates)
+                    df["Tekjur"] = df["Heildarkostnaður"] * (1 + df["Arðsemiskrafa"])
+                    df["Hagnaður"] = df["Tekjur"] - df["Heildarkostnaður"]
 
-                    st.subheader(labels[language]["distribution"])
-                    for fig in figures:
-                        st.pyplot(fig)
+                    st.dataframe(df)
 
-                with tabs[1]:
-                    csv = df.to_csv(index=False).encode("utf-8-sig")
-                    st.download_button(labels[language]["download_button"], csv, labels[language]["download_name"], "text/csv")
+                    st.download_button(
+                        download_label,
+                        data=df.to_csv(index=False).encode("utf-8-sig"),
+                        file_name="heildarspa.csv",
+                        mime="text/csv"
+                    )
+                else:
+                    st.warning(warning_msg)
 
-            except Exception as e:
-                st.error(f"{labels[language]['error']}: {e}")
 
 # --- All markets forecast ---
 elif "Rekstrarspá" in page or "All Markets Forecast" in page:
