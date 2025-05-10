@@ -202,7 +202,7 @@ elif "Tilboðsreiknivél" in page or "Quotation Calculator" in page:
         with col3:
             modul1 = st.number_input("Ein eining" if language == "Íslenska" else "One Module", min_value=0, value=0)
         with col4:
-            modul_half = st.number_input("Hálf eining" if language == "Íslenska" else "Half Module", min_value=0, value=0)
+            modul_half = st.number_input("Hálf eining" if language == "Íslenska" else "Half a Module", min_value=0, value=0)
 
         afhendingarstaedir = afhendingar_map[language]
         col5, col6 = st.columns(2)
