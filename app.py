@@ -210,7 +210,7 @@ elif "Tilboðsreiknivél" in page or "Quotation Calculator" in page:
             stadsetning_val = st.selectbox("Afhendingarstaður" if language == "Íslenska" else "Delivery Location", list(afhendingarstaedir.keys()))
         with col6:
             if stadsetning_val in ["Annað", "Other"]:
-                stadsetning = st.text_input("Sláðu inn staðsetningu" if language == "Íslenska" else "Enter location")
+                stadsetning = st.text_input("Sláðu inn staðsetningu" if language == "Íslenska" else "Please enter location")
                 km_fra_thorlakshofn = st.number_input("Km frá Þorlákshöfn" if language == "Íslenska" else "Km from Þorlákshöfn", min_value=0.0)
             else:
                 stadsetning = stadsetning_val
@@ -222,9 +222,9 @@ elif "Tilboðsreiknivél" in page or "Quotation Calculator" in page:
     if submitted:
         modules = {"3m": modul3, "2m": modul2, "1m": modul1, "0.5m": modul_half}
         if all(v == 0 for v in modules.values()):
-            st.warning("Veldu einingar." if language == "Íslenska" else "Please select modules.")
+            st.warning("Vinsamlegast veldu einingar." if language == "Íslenska" else "Please select modules.")
         elif stadsetning_val in ["Annað", "Other"] and km_fra_thorlakshofn == 0:
-            st.warning("Sláðu inn km." if language == "Íslenska" else "Enter km.")
+            st.warning("Vinsamlegast sláðu inn km." if language == "Íslenska" else "Please enter km.")
         else:
             try:
                 response = requests.get("https://api.frankfurter.app/latest?from=EUR&to=ISK", timeout=5)
