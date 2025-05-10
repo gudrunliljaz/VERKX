@@ -118,67 +118,38 @@ if ("Eftirspurnarspá" in page and language == "Íslenska") or ("Demand Forecast
                 st.error(f"{labels[language]['error']}: {e}")
 
 # --- All markets forecast ---
-elif "Rekstrarspá" in page or "All Markets Forecast" in page:
-    if language == "Íslenska":
-        st.title("Rekstrarspá allra markaða")
-        button_label = "Keyra rekstrarspá"
-        download_label = "Sækja CSV"
-        success_msg = "Lokið! Hér að neðan eru spár fyrir alla markaði."
-        warning_msg = "Engin gögn fundust."
-        error_msg = "Villa við útreikning"
-        margin_label = "Arðsemiskrafa eftir ári"
-    else:
-        st.title("All Markets Forecast")
-        button_label = "Run forecast"
-        download_label = "Download CSV"
-        success_msg = "Done! Below are the forecasts for all markets."
-        warning_msg = "No data found."
-        error_msg = "Error in calculation"
-        margin_label = "Profit margin per year"
+col1, col2, col3, col4 = st.columns(4)
+margin_2025 = col1.slider("2025", 0, 100, 15) / 100
+margin_2026 = col2.slider("2026", 0, 100, 15) / 100
+margin_2027 = col3.slider("2027", 0, 100, 15) / 100
+margin_2028 = col4.slider("2028", 0, 100, 15) / 100
 
-    if st.button(button_label, key="run_all_markets_forecast_button"):
-        with st.spinner("Reikna..." if language == "Íslenska" else "Calculating..."):
-            try:
-                df = main_forecast_logic_from_excel(
-                    past_file="data/GÖGN_VERKX.xlsx",
-                    future_file="data/Framtidarspa.xlsx",
-                    share_file="data/markadshlutdeild.xlsx",
-                    profit_margin=0.0  # Við notum custom margins fyrir hvert ár
+if st.button(button_label, key="run_all_markets_forecast_button"):
+    with st.spinner("Reikna..." if language == "Íslenska" else "Calculating..."):
+        try:
+            df = main_forecast_logic_from_excel(
+                past_file="data/GÖGN_VERKX.xlsx",
+                future_file="data/Framtidarspa.xlsx",
+                share_file="data/markadshlutdeild.xlsx",
+                margin_2025=margin_2025,
+                margin_2026=margin_2026,
+                margin_2027=margin_2027,
+                margin_2028=margin_2028
+            )
+            if df is not None and not df.empty:
+                st.success(success_msg)
+                st.dataframe(df)
+
+                st.download_button(
+                    download_label,
+                    data=df.to_csv(index=False).encode("utf-8-sig"),
+                    file_name="heildarspa.csv",
+                    mime="text/csv"
                 )
-
-                if df is not None and not df.empty:
-                    st.success(success_msg)
-
-                    st.subheader(margin_label)
-                    year_rates = {}
-                    for year in df["Ár"]:
-                        label = f"Arðsemiskrafa fyrir {year}" if language == "Íslenska" else f"Profit margin for {year}"
-                        key = f"margin_{year}"
-                        year_rates[year] = st.number_input(
-                            label,
-                            min_value=0.0,
-                            max_value=1.0,
-                            value=0.15,
-                            step=0.01,
-                            key=key
-                        )
-
-                    df["Arðsemiskrafa"] = df["Ár"].map(year_rates)
-                    df["Tekjur"] = df["Heildarkostnaður"] * (1 + df["Arðsemiskrafa"])
-                    df["Hagnaður"] = df["Tekjur"] - df["Heildarkostnaður"]
-
-                    st.dataframe(df)
-
-                    st.download_button(
-                        label=download_label,
-                        data=df.to_csv(index=False).encode("utf-8-sig"),
-                        file_name="heildarspa.csv",
-                        mime="text/csv"
-                    )
-                else:
-                    st.warning(warning_msg)
-            except Exception as e:
-                st.error(f"{error_msg}: {e}")
+            else:
+                st.warning(warning_msg)
+        except Exception as e:
+            st.error(f"{error_msg}: {e}")
 
 # --- Quotation calculator ---
 elif "Tilboðsreiknivél" in page or "Quotation" in page:
