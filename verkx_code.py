@@ -243,7 +243,7 @@ def generate_offer_pdf(verkkaupi, stadsetning, result, language="Íslenska"):
     pdf.set_font('DejaVu', '', 10)
     pdf.set_xy(50, 20)
     today = date.today().strftime('%d.%m.%Y')
-    label_date = "Dags" if language == "Íslenska" else "Date"
+    label_date = "Dagsetning" if language == "Íslenska" else "Date"
     pdf.cell(0, 10, f"{label_date}: {today}", ln=True)
 
     pdf.ln(20)
