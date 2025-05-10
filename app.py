@@ -76,6 +76,74 @@ if ("Eftirspurnarspá" in page and language == "Íslenska") or ("Demand Forecast
             except Exception as e:
                 st.error(f"{error_msg}: {e}")
 
+# --- All markets forecast ---
+elif ("Rekstrarspá" in page and language == "Íslenska") or ("All Markets Forecast" in page and language == "English"):
+    if language == "Íslenska":
+        st.title("Rekstrarspá allra markaða")
+        button_label = "Keyra rekstrarspá"
+        download_label = "Sækja CSV"
+        success_msg = "Lokið! Hér að neðan eru spár fyrir alla markaði."
+        warning_msg = "Engin gögn fundust."
+        error_msg = "Villa við útreikning"
+        margin_label = "Veldu arðsemiskröfu fyrir hvert ár"
+    else:
+        st.title("All Markets Forecast")
+        button_label = "Run forecast"
+        download_label = "Download CSV"
+        success_msg = "Done! Below are the forecasts for all markets."
+        warning_msg = "No data found."
+        error_msg = "Error in calculation"
+        margin_label = "Set profit margin for each year"
+
+    if st.button(button_label, key="run_all_markets_forecast_button"):
+        with st.spinner("Reikna..." if language == "Íslenska" else "Calculating..."):
+            try:
+                df = main_forecast_logic_from_excel(
+                    past_file="data/GÖGN_VERKX.xlsx",
+                    future_file="data/Framtidarspa.xlsx",
+                    share_file="data/markadshlutdeild.xlsx"
+                )
+
+                if df is not None and not df.empty:
+                    st.success(success_msg)
+
+                    st.subheader(margin_label)
+                    year_rates = {}
+                    for year in df["Ár"]:
+                        label = f"Arðsemiskrafa fyrir árið {year}" if language == "Íslenska" else f"Profit margin for year {year}"
+                        key = f"margin_{year}_rekstrar"
+                        year_rates[year] = st.number_input(
+                            label,
+                            min_value=0.0,
+                            max_value=1.0,
+                            value=0.15,
+                            step=0.01,
+                            key=key
+                        )
+
+                    df["Arðsemiskrafa"] = df["Ár"].map(year_rates)
+                    df["Tekjur"] = df["Heildarkostnaður"] * (1 + df["Arðsemiskrafa"])
+                    df["Hagnaður"] = df["Tekjur"] - df["Heildarkostnaður"]
+
+                    st.dataframe(df)
+
+                    st.download_button(
+                        download_label,
+                        data=df.to_csv(index=False).encode("utf-8-sig"),
+                        file_name="rekstrarspa.csv",
+                        mime="text/csv"
+                    )
+                else:
+                    st.warning(warning_msg)
+            except Exception as e:
+                st.error(f"{error_msg}: {e}")
+
+# --- Quotation calculator (Placeholder, to be completed) ---
+elif ("Tilboðsreiknivél" in page and language == "Íslenska") or ("Quotation Calculator" in page and language == "English"):
+    st.title("Tilboðsreiknivél" if language == "Íslenska" else "Quotation Calculator")
+    st.write("[Tilboðsreiknir kóði verður settur hér]")
+
+
 
 
 
