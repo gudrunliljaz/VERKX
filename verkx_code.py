@@ -22,18 +22,23 @@ def load_excel(file_path, sheet_name):
     return df
 
 def filter_data(df, region, demand_column):
-    df = df[df['landshluti'].map(normalize) == normalize(region)].copy()
+    df = df[df['landshluti'].str.strip().map(normalize) == normalize(region)].copy()
+    df.columns = [col.strip().lower() for col in df.columns]
+    demand_column = demand_column.lower()
+    if demand_column not in df.columns:
+        raise KeyError(f"'{demand_column}' fannst ekki.")
     df['ar'] = pd.to_numeric(df['ar'], errors='coerce')
     df = df.dropna(subset=['ar', demand_column])
+    df = df.sort_values('ar')
     return df[['ar', demand_column]]
 
 def linear_forecast(df, demand_column, start_year, future_years):
     X = df[['ar']].values
     y = df[demand_column].values
     model = LinearRegression().fit(X, y)
-    future_years_range = np.arange(start_year, start_year + future_years)
-    prediction = model.predict(future_years_range.reshape(-1, 1))
-    return future_years_range, prediction
+    future_years_range = np.array(range(start_year, start_year + future_years))
+    predictions = model.predict(future_years_range.reshape(-1, 1))
+    return future_years_range, predictions
 
 def monte_carlo_simulation(values, market_shares, simulations=10000, volatility=0.1):
     mean_val = np.mean(values)
