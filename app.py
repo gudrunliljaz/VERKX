@@ -137,10 +137,10 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
         slider_label = "Profit margin (%)"
 
     col1, col2, col3, col4 = st.columns(4)
-    margin_2025 = col1.slider("2025", 0, 100, 15) / 100
-    margin_2026 = col2.slider("2026", 0, 100, 15) / 100
-    margin_2027 = col3.slider("2027", 0, 100, 15) / 100
-    margin_2028 = col4.slider("2028", 0, 100, 15) / 100
+    margin_2025 = col1.slider("Profit margin 2025 (%)", 0, 100, 15) / 100
+    margin_2026 = col2.slider("Profit margin 2026 (%)", 0, 100, 15) / 100
+    margin_2027 = col3.slider("Profit margin 2027 (%)", 0, 100, 15) / 100
+    margin_2028 = col4.slider("Profit margin 2028 (%)", 0, 100, 15) / 100
 
     if st.button(button_label, key="run_all_markets_forecast_button"):
         with st.spinner("Reikna..." if language == "Íslenska" else "Calculating..."):
