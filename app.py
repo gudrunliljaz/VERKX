@@ -35,7 +35,8 @@ labels = {
         "download_button": "Sækja CSV",
         "download_name": "spa.csv",
         "warning": "Aðeins {} ár fundust í framtíðarspá",
-        "error": "Villa kom upp"
+        "error": "Villa kom upp",
+        "profitmargin": "Arðsemiskrafa (%)"
     },
     "English": {
         "title": "Demand Forecast",
@@ -52,7 +53,8 @@ labels = {
         "download_button": "Download CSV",
         "download_name": "forecast.csv",
         "warning": "Only {} years found in future forecast",
-        "error": "An error occurred"
+        "error": "An error occurred",
+        "profitmargin": "Profit Margin (%)"
     }
 }
 
@@ -137,10 +139,10 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
         slider_label = "Profit margin (%)"
 
     col1, col2, col3, col4 = st.columns(4)
-    margin_2025 = col1.slider("Profit margin 2025 (%)", 0, 100, 15) / 100
-    margin_2026 = col2.slider("Profit margin 2026 (%)", 0, 100, 15) / 100
-    margin_2027 = col3.slider("Profit margin 2027 (%)", 0, 100, 15) / 100
-    margin_2028 = col4.slider("Profit margin 2028 (%)", 0, 100, 15) / 100
+    margin_2025 = col1.slider("profitmargin""2025", 0, 100, 15) / 100
+    margin_2026 = col2.slider("profitmargin""2026", 0, 100, 15) / 100
+    margin_2027 = col3.slider("profitmargin""2027", 0, 100, 15) / 100
+    margin_2028 = col4.slider("profitmargin""2028", 0, 100, 15) / 100
 
     if st.button(button_label, key="run_all_markets_forecast_button"):
         with st.spinner("Reikna..." if language == "Íslenska" else "Calculating..."):
