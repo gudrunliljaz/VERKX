@@ -60,7 +60,7 @@ labels = {
 
 # --- Forecast model ---
 if ("Eftirspurnarspá" in page and language == "Íslenska") or ("Demand Forecast" in page and language == "English"):
-    st.header(labels[language]['title'])
+    st.title(labels[language]['title'])
 
     housing_map = {
         "Íslenska": ["Íbúðir", "Leikskólar", "Gistirými", "Elliheimili", "Atvinnuhús"],
@@ -180,7 +180,7 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
 
 # --- Quotation Calculator ---
 elif "Tilboðsreiknivél" in page or "Quotation Calculator" in page:
-    st.header("Tilboðsreiknivél" if language == "Íslenska" else "Quotation Calculator")
+    st.title("Tilboðsreiknivél" if language == "Íslenska" else "Quotation Calculator")
 
     afhendingar_map = {
         "Íslenska": {
