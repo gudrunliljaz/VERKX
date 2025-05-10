@@ -35,7 +35,11 @@ labels = {
         "download_button": "Sækja CSV",
         "download_name": "spa.csv",
         "warning": "Aðeins {} ár fundust í framtíðarspá",
-        "error": "Villa kom upp"
+        "error": "Villa kom upp",
+        "Ár": "Ár",
+        "Fortíðargögn spá": "Fortíðargögn spá",
+        "Framtíðarspá": "Framtíðarspá",
+        "Meðaltal": "Meðaltal"
     },
     "English": {
         "title": "Demand Forecast",
@@ -52,7 +56,11 @@ labels = {
         "download_button": "Download CSV",
         "download_name": "forecast.csv",
         "warning": "Only {} years found in future forecast",
-        "error": "An error occurred"
+        "error": "An error occurred",
+        "Ár": "Year",
+        "Fortíðargögn spá": "Historical data forecast",
+        "Framtíðarspá": "Future forecast",
+        "Meðaltal": "Average"
     }
 }
 
