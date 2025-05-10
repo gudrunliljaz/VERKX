@@ -1,12 +1,11 @@
 import pandas as pd
 import numpy as np
-from sklearn.linear_model import LinearRegression
 import unicodedata
+from sklearn.linear_model import LinearRegression
 
 PAST_FILE = "data/GÖGN_VERKX.xlsx"
 FUTURE_FILE = "data/Framtidarspa.xlsx"
 SHARE_FILE = "data/markadshlutdeild.xlsx"
-
 UNIT_SIZE_SQM = 6.5
 FIXED_COST_PER_YEAR = 37_200_000
 
@@ -17,10 +16,10 @@ MODULE_SHARES = {
     '½_módúla': 0.001,
 }
 MODULE_COSTS = {
-    '3_módúla': 269_700,
-    '2_módúla': 290_000,
-    '1_módúla': 304_500,
-    '½_módúla': 330_000,
+    '3_módúla': 269700,
+    '2_módúla': 290000,
+    '1_módúla': 304500,
+    '½_módúla': 330000,
 }
 MODULE_FM = {
     '3_módúla': 19.5,
@@ -29,17 +28,14 @@ MODULE_FM = {
     '½_módúla': 3.25,
 }
 
-
 def normalize(text):
     nfkd = unicodedata.normalize('NFKD', str(text))
     return ''.join(c for c in nfkd if not unicodedata.combining(c)).lower().strip()
-
 
 def load_excel(file_path, sheet_name):
     df = pd.read_excel(file_path, sheet_name=sheet_name, engine="openpyxl")
     df.columns = [col.strip().lower() for col in df.columns]
     return df
-
 
 def filter_data(df, region, demand_column):
     df = df[df['landshluti'].str.strip().map(normalize) == normalize(region)].copy()
@@ -52,7 +48,6 @@ def filter_data(df, region, demand_column):
     df = df.sort_values('ar')
     return df[['ar', demand_column]]
 
-
 def linear_forecast(df, demand_column, start_year, future_years):
     X = df[['ar']].values
     y = df[demand_column].values
@@ -60,7 +55,6 @@ def linear_forecast(df, demand_column, start_year, future_years):
     future_years_range = np.array(range(start_year, start_year + future_years))
     predictions = model.predict(future_years_range.reshape(-1, 1))
     return future_years_range, predictions
-
 
 def main_forecast_logic_from_excel(past_file, future_file, share_file, margin_2025, margin_2026, margin_2027, margin_2028):
     xl = pd.ExcelFile(share_file, engine="openpyxl")
@@ -99,44 +93,27 @@ def main_forecast_logic_from_excel(past_file, future_file, share_file, margin_20
     df_all = pd.concat(all_rows)
     summary = df_all.groupby("Ár")["Meðaltal"].sum().reset_index()
     summary["Fermetrar"] = summary["Meðaltal"].round(0).astype(int) * UNIT_SIZE_SQM
-
-    for key in MODULE_SHARES:
-        col_name = f'kostnaður_{key}'
-        summary[col_name] = summary['Fermetrar'] * MODULE_SHARES[key] * MODULE_COSTS[key] * MODULE_FM[key]
-
-    mod_cols = [f'kostnaður_{k}' for k in MODULE_SHARES]
-    summary["Kostnaðarverð eininga"] = summary[mod_cols].sum(axis=1)
-
-    summary["Flutningskostnaður"] = (
-        summary["Fermetrar"] * 0.19 * 19.5 +
-        summary["Fermetrar"] * 0.80 * 13 +
-        summary["Fermetrar"] * 0.01 * 6.5
-    ) * 74000
-
-    summary["Afhending innanlands"] = (
-        summary["Fermetrar"] * 0.19 * 19.5 +
-        summary["Fermetrar"] * 0.80 * 13 +
-        summary["Fermetrar"] * 0.01 * 6.5
-    ) * 80 * 8
-
+    summary["Kostnaðarverð eininga"] = summary["Fermetrar"] * sum(
+        MODULE_SHARES[k] * MODULE_COSTS[k] * MODULE_FM[k] for k in MODULE_SHARES
+    )
+    summary["Flutningskostnaður"] = summary["Fermetrar"] * 43424
+    summary["Afhending innanlands"] = summary["Fermetrar"] * 80 * 8
     summary["Fastur kostnaður"] = FIXED_COST_PER_YEAR
+    summary["Heildarkostnaður"] = summary[[
+        "Kostnaðarverð eininga", "Flutningskostnaður", "Afhending innanlands", "Fastur kostnaður"
+    ]].sum(axis=1)
 
-    summary["Arðsemiskrafa"] = summary["Ár"].map({
+    year_margin_map = {
         2025: margin_2025,
         2026: margin_2026,
         2027: margin_2027,
         2028: margin_2028
-    })
+    }
 
-    summary["Heildarkostnaður"] = summary[[
-        "Kostnaðarverð eininga",
-        "Flutningskostnaður",
-        "Afhending innanlands",
-        "Fastur kostnaður"
-    ]].sum(axis=1)
-
+    summary["Arðsemiskrafa"] = summary["Ár"].map(year_margin_map)
     summary["Tekjur"] = summary["Heildarkostnaður"] * (1 + summary["Arðsemiskrafa"])
     summary["Hagnaður"] = summary["Tekjur"] - summary["Heildarkostnaður"]
 
     return summary
+
 
