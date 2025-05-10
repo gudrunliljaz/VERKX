@@ -227,44 +227,68 @@ def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10
 
 
 
-def generate_offer_pdf(verkkaupi, stadsetning, result):
+
+def generate_offer_pdf(verkkaupi, stadsetning, result, language="Íslenska"):
     pdf = FPDF()
     pdf.add_page()
     pdf.add_font('DejaVu', '', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', uni=True)
     pdf.set_font('DejaVu', '', 12)
+    pdf.image("cubitlogo.png", x=10, y=8, w=30)
 
-    # Titill og dagsetning
-    try:
-        pdf.image("cubitlogo.png", x=10, y=8, w=30)
-    except:
-        pass  # ef logo finnst ekki heldur áfram
     pdf.set_xy(50, 10)
     pdf.set_font('DejaVu', '', 16)
-    pdf.cell(0, 10, "Tilboð - Cubit", ln=True)
+    title = "Tilboð - Cubit" if language == "Íslenska" else "Offer - Cubit"
+    pdf.cell(0, 10, title, ln=True)
 
     pdf.set_font('DejaVu', '', 10)
     pdf.set_xy(50, 20)
-    pdf.cell(0, 10, f"Dags: {date.today().strftime('%d.%m.%Y')}", ln=True)
+    today = date.today().strftime('%d.%m.%Y')
+    label_date = "Dags" if language == "Íslenska" else "Date"
+    pdf.cell(0, 10, f"{label_date}: {today}", ln=True)
 
     pdf.ln(20)
     pdf.set_font('DejaVu', '', 12)
-    pdf.cell(0, 10, f"Tilboð fyrir: {verkkaupi}", ln=True)
-    pdf.cell(0, 10, f"Afhendingarstaður: {stadsetning}", ln=True)
-    pdf.ln(5)
 
-    pdf.cell(0, 10, f"Heildarfermetrar: {result['heildarfm']:.2f} fm", ln=True)
-    pdf.cell(0, 10, f"Heildarþyngd: {result['heildarthyngd']:,.0f} kg", ln=True)
-    pdf.cell(0, 10, f"Afsláttur: {int(result['afslattur'] * 100)}%", ln=True)
-    pdf.cell(0, 10, f"Kaupverð eininga: {result['heildarkostnadur_einingar']:,.0f} kr.", ln=True)
-    pdf.cell(0, 10, f"Kostnaðarverð á fermetra: {result['kostnadur_per_fm']:,.0f} kr.", ln=True)
-    pdf.cell(0, 10, f"Flutningur til Íslands: {result['flutningur_til_islands']:,.0f} kr.", ln=True)
-    pdf.cell(0, 10, f"Sendingarkostnaður innanlands: {result['sendingarkostnadur']:,.0f} kr.", ln=True)
-    pdf.cell(0, 10, f"Samtals breytilegur kostnaður: {result['samtals_breytilegur']:,.0f} kr.", ln=True)
-    pdf.cell(0, 10, f"Úthlutaður fastur kostnaður: {result['uthlutadur_fastur_kostnadur']:,.0f} kr.", ln=True)
-    pdf.cell(0, 10, f"Álagsstuðull: {result['alagsstudull']:.2f}", ln=True)
-    pdf.cell(0, 10, f"Arðsemiskrafa: {int(result['asemiskrafa'] * 100)}%", ln=True)
-    pdf.cell(0, 10, f"Tilboðsverð (ISK): {result['tilbod']:,.0f} kr.", ln=True)
-    pdf.cell(0, 10, f"Tilboðsverð (EUR): €{result['tilbod_eur']:,.2f}", ln=True)
+    # Labels eftir tungumáli
+    labels = {
+        "Íslenska": [
+            ("Tilboð fyrir", verkkaupi),
+            ("Afhendingarstaður", stadsetning),
+            ("Heildarfermetrar", f"{result['heildarfm']:.2f} fm"),
+            ("Heildarþyngd", f"{result['heildarthyngd']:,.0f} kg"),
+            ("Afsláttur", f"{int(result['afslattur'] * 100)}%"),
+            ("Kaupverð eininga", f"{result['heildarkostnadur_einingar']:,.0f} kr."),
+            ("Kostnaðarverð á fermetra", f"{result['kostnadur_per_fm']:,.0f} kr."),
+            ("Flutningur til Íslands", f"{result['flutningur_til_islands']:,.0f} kr."),
+            ("Sendingarkostnaður innanlands", f"{result['sendingarkostnadur']:,.0f} kr."),
+            ("Samtals breytilegur kostnaður", f"{result['samtals_breytilegur']:,.0f} kr."),
+            ("Úthlutaður fastur kostnaður", f"{result['uthlutadur_fastur_kostnadur']:,.0f} kr."),
+            ("Álagsstuðull", f"{result['alagsstudull']:.2f}"),
+            ("Arðsemiskrafa", f"{int(result['asemiskrafa'] * 100)}%"),
+            ("Tilboðsverð (ISK)", f"{result['tilbod']:,.0f} kr."),
+            ("Tilboðsverð (EUR)", f"€{result['tilbod_eur']:,.2f}")
+        ],
+        "English": [
+            ("Offer for", verkkaupi),
+            ("Delivery location", stadsetning),
+            ("Total area", f"{result['heildarfm']:.2f} sqm"),
+            ("Total weight", f"{result['heildarthyngd']:,.0f} kg"),
+            ("Discount", f"{int(result['afslattur'] * 100)}%"),
+            ("Unit purchase cost", f"{result['heildarkostnadur_einingar']:,.0f} ISK"),
+            ("Cost per sqm", f"{result['kostnadur_per_fm']:,.0f} ISK"),
+            ("Shipping to Iceland", f"{result['flutningur_til_islands']:,.0f} ISK"),
+            ("Domestic delivery", f"{result['sendingarkostnadur']:,.0f} ISK"),
+            ("Total variable cost", f"{result['samtals_breytilegur']:,.0f} ISK"),
+            ("Allocated fixed cost", f"{result['uthlutadur_fastur_kostnadur']:,.0f} ISK"),
+            ("Markup factor", f"{result['alagsstudull']:.2f}"),
+            ("Profit margin", f"{int(result['asemiskrafa'] * 100)}%"),
+            ("Offer price (ISK)", f"{result['tilbod']:,.0f} ISK"),
+            ("Offer price (EUR)", f"€{result['tilbod_eur']:,.2f}")
+        ]
+    }
+
+    for label, value in labels[language]:
+        pdf.cell(0, 10, f"{label}: {value}", ln=True)
 
     return pdf.output(dest="S").encode("latin-1")
 
