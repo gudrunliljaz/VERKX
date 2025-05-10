@@ -16,7 +16,7 @@ with st.sidebar:
     page = st.radio(
         "Veldu síðu / Choose page",
         ["Eftirspurnarspá", "Tilboðsreiknivél", "Rekstrarspá"] if language == "Íslenska"
-        else ["Demand Forecast", "Quotation Calculator", "All Markets Forecast"]
+        else ["Demand Forecast", "Quotation Calculator", "Operational Forecast"]
     )
 
 labels = {
@@ -117,8 +117,8 @@ if ("Eftirspurnarspá" in page and language == "Íslenska") or ("Demand Forecast
             except Exception as e:
                 st.error(f"{labels[language]['error']}: {e}")
 
-# --- All Markets Forecast ---
-elif "Rekstrarspá" in page or "All Markets Forecast" in page:
+# --- Operational Forecast ---
+elif "Rekstrarspá" in page or "Operational Forecast" in page:
     if language == "Íslenska":
         st.title("Rekstrarspá allra markaða")
         button_label = "Keyra rekstrarspá"
@@ -128,7 +128,7 @@ elif "Rekstrarspá" in page or "All Markets Forecast" in page:
         error_msg = "Villa við útreikning"
         slider_label = "Arðsemiskrafa (%)"
     else:
-        st.title("All Markets Forecast")
+        st.title("Operational Forecast")
         button_label = "Run forecast"
         download_label = "Download CSV"
         success_msg = "Done! Below are the forecasts for all markets."
