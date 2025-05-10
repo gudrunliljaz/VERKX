@@ -106,6 +106,12 @@ if ("Eftirspurnarspá" in page and language == "Íslenska") or ("Demand Forecast
 
                 with tabs[0]:
                     st.subheader(labels[language]["table_title"])
+                    if language == "English":
+                        df.columns = df.columns.str.replace("Ár", "Year")
+                        df.columns = df.columns.str.replace("Fortíðargögn spá", "Historical Forecast")
+                        df.columns = df.columns.str.replace("Framtíðarspá", "Future Forecast")
+                        df.columns = df.columns.str.replace("Meðaltal", "Average")
+
                     st.dataframe(df.set_index(df.columns[0]))
 
                     st.subheader(labels[language]["distribution"])
