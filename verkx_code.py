@@ -116,7 +116,7 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
         ]
         return df, figures, len(future_vals)
 
-def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_margin=0.15):
+def main_forecast_logic_from_excel(past_file, future_file, share_file):
     xl = pd.ExcelFile(share_file, engine="openpyxl")
     all_rows = []
 
@@ -153,14 +153,37 @@ def main_forecast_logic_from_excel(past_file, future_file, share_file, profit_ma
     df_all = pd.concat(all_rows)
     summary = df_all.groupby("Ár")["Meðaltal"].sum().reset_index()
     summary["Fermetrar"] = summary["Meðaltal"].round(0).astype(int) * UNIT_SIZE_SQM
-    summary["Kostnaðarverð eininga"] = summary["Fermetrar"] * (0.19*269700 + 0.80*290000 + 0.01*304500 + 0.001*330000)
-    summary["Flutningskostnaður"] = summary["Fermetrar"] * 43424
-    summary["Afhending innanlands"] = summary["Fermetrar"] * 80 * 8
+
+    for key in MODULE_SHARES:
+        col_name = f'kostnaður_{key}'
+        summary[col_name] = summary['Fermetrar'] * MODULE_SHARES[key] * MODULE_COSTS[key] * MODULE_FM[key]
+
+    mod_cols = [f'kostnaður_{k}' for k in MODULE_SHARES]
+    summary["Kostnaðarverð eininga"] = summary[mod_cols].sum(axis=1)
+
+    summary["Flutningskostnaður"] = (
+        summary["Fermetrar"] * 0.19 * 19.5 +
+        summary["Fermetrar"] * 0.80 * 13 +
+        summary["Fermetrar"] * 0.01 * 6.5
+    ) * 74000
+
+    summary["Afhending innanlands"] = (
+        summary["Fermetrar"] * 0.19 * 19.5 +
+        summary["Fermetrar"] * 0.80 * 13 +
+        summary["Fermetrar"] * 0.01 * 6.5
+    ) * 80 * 8
+
     summary["Fastur kostnaður"] = FIXED_COST_PER_YEAR
-    summary["Heildarkostnaður"] = summary[["Kostnaðarverð eininga", "Flutningskostnaður", "Afhending innanlands", "Fastur kostnaður"]].sum(axis=1)
-    summary["Tekjur"] = summary["Heildarkostnaður"] * (1 + profit_margin)
-    summary["Hagnaður"] = summary["Tekjur"] - summary["Heildarkostnaður"]
+
+    summary["Heildarkostnaður"] = summary[[
+        "Kostnaðarverð eininga",
+        "Flutningskostnaður",
+        "Afhending innanlands",
+        "Fastur kostnaður"
+    ]].sum(axis=1)
+
     return summary
+
 
 def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10000, fixed_cost=37_200_000):
     quotation_labels_dict = {
