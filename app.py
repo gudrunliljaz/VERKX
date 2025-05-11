@@ -127,9 +127,10 @@ if ("Eftirspurnarspá" in page and language == "Íslenska") or ("Demand Forecast
 elif "Rekstrarspá" in page or "Operational Forecast" in page:
     is_islenska = language == "Íslenska"
     st.title("Rekstrarspá allra markaða" if is_islenska else "Operational Forecast")
+
     button_label = "Keyra rekstrarspá" if is_islenska else "Run forecast"
     download_label = "Sækja CSV" if is_islenska else "Download CSV"
-    success_msg = "Lokið! Hér að neðan eru spár fyrir alla markaði." if is_islenska else "Done! Below are the forecasts for all markets."
+    success_msg = "Lokið! Hér að neðan eru tvær töflur með spá." if is_islenska else "Done! Below are two forecast tables."
     warning_msg = "Engin gögn fundust." if is_islenska else "No data found."
     error_msg = "Villa við útreikning" if is_islenska else "Error in calculation"
 
@@ -143,7 +144,7 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
     if st.button(button_label, key="run_all_markets_forecast_button"):
         with st.spinner("Reikna..." if is_islenska else "Calculating..."):
             try:
-                df = main_opperational_forecast(
+                df_units, df_costs = main_opperational_forecast(
                     past_file="data/GÖGN_VERKX.xlsx",
                     future_file="data/Framtidarspa.xlsx",
                     share_file="data/markadshlutdeild.xlsx",
@@ -153,37 +154,25 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
                     margin_2028=margin_2028
                 )
 
-                if df is not None and not df.empty:
+                if df_units is not None and not df_units.empty:
                     st.success(success_msg)
 
-                    rename_map = {
-                        'ár': "Ár" if is_islenska else "Year",
-                        'fermetrar': "Heildarfermetrar" if is_islenska else "Total sqm",
-                        'kostnaður_3_módúla': "Kostnaður - 3 módúlur" if is_islenska else "Cost - 3 modules",
-                        'kostnaður_2_módúla': "Kostnaður - 2 módúlur" if is_islenska else "Cost - 2 modules",
-                        'kostnaður_1_módúla': "Kostnaður - 1 módúla" if is_islenska else "Cost - 1 module",
-                        'kostnaður_½_módúla': "Kostnaður - ½ módúla" if is_islenska else "Cost - ½ module",
-                        'kostnaðarverð eininga': "Kostnaðarverð eininga" if is_islenska else "Unit cost",
-                        'flutningskostnaður': "Flutningur til Íslands" if is_islenska else "Shipping to Iceland",
-                        'afhending innanlands': "Afhending innanlands" if is_islenska else "Domestic delivery",
-                        'fastur kostnaður': "Fastur kostnaður" if is_islenska else "Fixed cost",
-                        'heildarkostnaður': "Heildarkostnaður" if is_islenska else "Total cost",
-                        'arðsemiskrafa': "Arðsemiskrafa" if is_islenska else "Profit margin",
-                        'tekjur': "Tekjur" if is_islenska else "Revenue",
-                        'hagnaður': "Hagnaður" if is_islenska else "Profit"
-                    }
+                    st.subheader("1. Einingafjöldi og fermetrar" if is_islenska else "1. Unit Count and Square Meters")
+                    st.dataframe(df_units)
 
-                    df = df.rename(columns=rename_map)
-                    percent_col = "Arðsemiskrafa" if is_islenska else "Profit margin"
-                    format_dict = {col: "{:,.0f}" for col in df.columns if col != percent_col}
-                    format_dict[percent_col] = "{:.1%}"
-
-                    st.dataframe(df.style.format(format_dict))
+                    st.subheader("2. Kostnaður eftir árum" if is_islenska else "2. Costs by Year")
+                    st.dataframe(df_costs)
 
                     st.download_button(
-                        label=download_label,
-                        data=df.to_csv(index=False).encode("utf-8-sig"),
-                        file_name="heildarspa.csv",
+                        label="Sækja einingatöflu CSV" if is_islenska else "Download Unit Table CSV",
+                        data=df_units.to_csv(index=False).encode("utf-8-sig"),
+                        file_name="einingar_og_fermetrar.csv",
+                        mime="text/csv"
+                    )
+                    st.download_button(
+                        label="Sækja kostnaðartöflu CSV" if is_islenska else "Download Cost Table CSV",
+                        data=df_costs.to_csv(index=False).encode("utf-8-sig"),
+                        file_name="kostnadargreining.csv",
                         mime="text/csv"
                     )
                 else:
