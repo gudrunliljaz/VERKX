@@ -152,7 +152,7 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
     if st.button(button_label, key="run_all_markets_forecast_button"):
         with st.spinner("Reikna..." if language == "Íslenska" else "Calculating..."):
             try:
-                df = main_opperational_forecast_from_excel(
+                df = main_opperational_forecast(
                     past_file="data/GÖGN_VERKX.xlsx",
                     future_file="data/Framtidarspa.xlsx",
                     share_file="data/markadshlutdeild.xlsx",
