@@ -117,34 +117,12 @@ def main_forecast(housing_type, region, future_years, final_market_share):
 
 def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0.15, margin_2026=0.15, margin_2027=0.15, margin_2028=0.15):
 
-    SCENARIO_SHARE = {
-        'lágspá': 0.01,
-        'miðspá': 0.03,
-        'háspá':  0.05,
-    }
-
-    MODULE_SHARES = {
-        '3_módúla': 0.19,
-        '2_módúla': 0.80,
-        '1_módúla': 0.01,
-        '½_módúla': 0.001,
-    }
-
-    MODULE_COSTS = {
-        '3_módúla': 269_700,
-        '2_módúla': 290_000,
-        '1_módúla': 304_500,
-        '½_módúla': 330_000,
-    }
-
-    MODULE_FM = {
-        '3_módúla': 19.5,
-        '2_módúla': 13,
-        '1_módúla': 6.5,
-        '½_módúla': 3.25,
-    }
-
-    FIXED_COST = 34800000
+    SCENARIO_SHARE = {'lágspá': 0.01, 'miðspá': 0.03, 'háspá':  0.05}
+    MODULE_SHARES = {'3_módúla': 0.19, '2_módúla': 0.80, '1_módúla': 0.01, '½_módúla': 0.001}
+    MODULE_COSTS = {'3_módúla': 269_700, '2_módúla': 290_000, '1_módúla': 304_500, '½_módúla': 330_000}
+    MODULE_FM = {'3_módúla': 19.5, '2_módúla': 13, '1_módúla': 6.5, '½_módúla': 3.25}
+    FIXED_COST = 34_800_000
+    UNIT_SIZE = 6.5  # Fermetrastærð einingar
 
     share_df = pd.read_excel(share_file, engine="openpyxl")
     share_df.columns = [normalize(c) for c in share_df.columns]
@@ -182,22 +160,24 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
 
                 base = df_result['meðaltal'] if 'meðaltal' in df_result.columns else df_result['fortíð']
                 factor = SCENARIO_SHARE.get(scen, 1)
-                df_result['fermetrar'] = (base * share * factor).round(0)
-                df_result['fermetrar'] = df_result['fermetrar'](0.19*19.5 + 0.80*13 + 0.01*6.5)
-                all_rows.append(df_result[['ár', 'fermetrar']])
+                df_result['einingar'] = (base * share * factor).round(0)
+                all_rows.append(df_result[['ár', 'einingar']])
 
     df_all = pd.concat(all_rows)
-    summary = df_all.groupby("ár")["fermetrar"].sum().reset_index()
+    summary = df_all.groupby("ár")["einingar"].sum().reset_index()
+
+    # Reikna fermetrana út frá fjölda eininga
+    summary['fermetrar'] = summary['einingar'] * UNIT_SIZE
 
     for key in MODULE_SHARES:
         col_name = f'kostnaður_{key}'
         summary[col_name] = summary['fermetrar'] * MODULE_SHARES[key] * MODULE_COSTS[key] * MODULE_FM[key]
     mod_cols = [f'kostnaður_{k}' for k in MODULE_SHARES]
     summary['kostnaðarverð eininga'] = summary[mod_cols].sum(axis=1)
-    
 
-    summary['flutningskostnaður'] = (summary['fermetrar'] * (0.19*19.5 + 0.80*13 + 0.01*6.5)) * 74_000
-    summary['afhending innanlands'] = (summary['fermetrar'] * (0.19*19.5 + 0.80*13 + 0.01*6.5)) * 80 * 8
+    coeff = 0.19 * 19.5 + 0.80 * 13 + 0.01 * 6.5
+    summary['flutningskostnaður'] = summary['fermetrar'] * coeff * 74_000
+    summary['afhending innanlands'] = summary['fermetrar'] * coeff * 80 * 8
     summary['fastur kostnaður'] = FIXED_COST
     summary['heildarkostnaður'] = summary[['kostnaðarverð eininga', 'flutningskostnaður', 'afhending innanlands', 'fastur kostnaður']].sum(axis=1)
 
@@ -207,6 +187,7 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
     summary['hagnaður'] = summary['tekjur'] - summary['heildarkostnaður']
 
     return summary
+
 
 #tilboðsreiknivél
 def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10000, fixed_cost=37_200_000):
