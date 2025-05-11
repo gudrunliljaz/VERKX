@@ -124,18 +124,17 @@ if ("Eftirspurnarspá" in page and language == "Íslenska") or ("Demand Forecast
                 st.error(f"{labels[language]['error']}: {e}")
 
 elif "Rekstrarspá" in page or "Operational Forecast" in page:
-    is_islenska = language == "Íslenska"
-    st.title("Rekstrarspá allra markaða" if is_islenska else "Operational Forecast")
+    st.title("Rekstrarspá allra markaða" if language == "Íslenska" else "Operational Forecast")
 
-    st.subheader("Arðsemiskrafa (%)" if is_islenska else "Profit Margin (%)")
+    st.subheader("Arðsemiskrafa (%)" if language == "Íslenska" else "Profit Margin (%)")
     col1, col2, col3, col4 = st.columns(4)
     margin_2025 = col1.slider("2025", 0, 100, 15) / 100
     margin_2026 = col2.slider("2026", 0, 100, 15) / 100
     margin_2027 = col3.slider("2027", 0, 100, 15) / 100
     margin_2028 = col4.slider("2028", 0, 100, 15) / 100
 
-    if st.button("Keyra rekstrarspá" if is_islenska else "Run forecast", key="run_all_markets_forecast_button"):
-        with st.spinner("Reikna..." if is_islenska else "Calculating..."):
+    if st.button("Keyra rekstrarspá" if language == "Íslenska" else "Run forecast", key="run_all_markets_forecast_button"):
+        with st.spinner("Reikna..." if language == "Íslenska" else "Calculating..."):
             try:
                 df_units, df_cost = main_opperational_forecast(
                     past_file="data/GÖGN_VERKX.xlsx",
@@ -148,56 +147,57 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
                 )
 
                 if df_units is not None and not df_units.empty:
-                    st.success("Lokið! Hér að neðan eru tvær töflur með spá." if is_islenska else "Done! Below are two forecast tables.")
+                    st.success("Lokið! Hér að neðan eru tvær töflur með spá." if language == "Íslenska" else "Done! Below are two forecast tables.")
 
                     # Nafnabreytingar á töflum
                     rename_units = {
-                        'ár': "Ár" if is_islenska else "Year",
-                        'heildarfermetrar': "Heildarfermetrar" if is_islenska else "Total sqm",
-                        '½_módúla einingar': "Hálfs módúla einingar" if is_islenska else "Half module units",
-                        '1_módúla einingar': "Einnar módúla einingar" if is_islenska else "One module units",
-                        '2_módúla einingar': "Tveggja módúla einingar" if is_islenska else "Two module units",
-                        '3_módúla einingar': "Þriggja módúla einingar" if is_islenska else "Three module units"
+                        'ár': "Ár" if language == "Íslenska" else "Year",
+                        'einingar': "Cubit einingar" if language == "Íslenska" else "Cubit Units",
+                        'heildarfermetrar': "Heildarfermetrar" if language == "Íslenska" else "Total sqm",
+                        '½_módúla einingar': "Hálfs módúla einingar" if language == "Íslenska" else "Half module units",
+                        '1_módúla einingar': "Einnar módúla einingar" if language == "Íslenska" else "One module units",
+                        '2_módúla einingar': "Tveggja módúla einingar" if language == "Íslenska" else "Two module units",
+                        '3_módúla einingar': "Þriggja módúla einingar" if language == "Íslenska" else "Three module units"
                     }
 
                     rename_cost = {
-                        'kostnaður_½_módúla': "Kostnaður - ½ módúla" if is_islenska else "Cost - ½ module",
-                        'kostnaður_1_módúla': "Kostnaður - 1 módúla" if is_islenska else "Cost - 1 module",
-                        'kostnaður_2_módúla': "Kostnaður - 2 módúlur" if is_islenska else "Cost - 2 modules",
-                        'kostnaður_3_módúla': "Kostnaður - 3 módúlur" if is_islenska else "Cost - 3 modules",
-                        'kostnaðarverð eininga': "Kostnaðarverð eininga" if is_islenska else "Unit cost",
-                        'flutningskostnaður': "Flutningskostnaður" if is_islenska else "Shipping to Iceland",
-                        'afhending innanlands': "Afhending innanlands" if is_islenska else "Domestic delivery",
-                        'fastur kostnaður': "Fastur kostnaður" if is_islenska else "Fixed cost",
-                        'heildarkostnaður': "Heildarkostnaður" if is_islenska else "Total cost",
-                        'arðsemiskrafa': "Arðsemiskrafa" if is_islenska else "Profit margin",
-                        'tekjur': "Tekjur" if is_islenska else "Revenue",
-                        'hagnaður': "Hagnaður" if is_islenska else "Profit"
+                        'kostnaður_½_módúla': "Kostnaður - ½ módúla" if language == "Íslenska" else "Cost - ½ module",
+                        'kostnaður_1_módúla': "Kostnaður - 1 módúla" if language == "Íslenska" else "Cost - 1 module",
+                        'kostnaður_2_módúla': "Kostnaður - 2 módúlur" if language == "Íslenska" else "Cost - 2 modules",
+                        'kostnaður_3_módúla': "Kostnaður - 3 módúlur" if language == "Íslenska" else "Cost - 3 modules",
+                        'kostnaðarverð eininga': "Kostnaðarverð eininga" if language == "Íslenska" else "Unit cost",
+                        'flutningskostnaður': "Flutningskostnaður" if language == "Íslenska" else "Shipping to Iceland",
+                        'afhending innanlands': "Afhending innanlands" if language == "Íslenska" else "Domestic delivery",
+                        'fastur kostnaður': "Fastur kostnaður" if language == "Íslenska" else "Fixed cost",
+                        'heildarkostnaður': "Heildarkostnaður" if language == "Íslenska" else "Total cost",
+                        'arðsemiskrafa': "Arðsemiskrafa" if language == "Íslenska" else "Profit margin",
+                        'tekjur': "Tekjur" if language == "Íslenska" else "Revenue",
+                        'hagnaður': "Hagnaður" if language == "Íslenska" else "Profit"
                     }
 
                     df_units_disp = df_units.rename(columns=rename_units)
                     df_cost_disp = df_cost.rename(columns=rename_cost)
 
-                    st.subheader("1. Einingafjöldi og fermetrar" if is_islenska else "1. Units and square meters")
+                    st.subheader("1. Einingafjöldi og fermetrar" if language == "Íslenska" else "1. Units and square meters")
                     st.dataframe(df_units_disp)
 
-                    st.subheader("2. Kostnaður, tekjur og hagnaður" if is_islenska else "2. Cost, revenue, and profit")
+                    st.subheader("2. Kostnaður, tekjur og hagnaður" if language == "Íslenska" else "2. Cost, revenue, and profit")
                     st.dataframe(df_cost_disp)
 
-                    st.download_button("Sækja CSV (einingar)" if is_islenska else "Download CSV (units)",
+                    st.download_button("Sækja CSV (einingar)" if language == "Íslenska" else "Download CSV (units)",
                                        df_units_disp.to_csv(index=False).encode("utf-8-sig"),
                                        file_name="einingar.csv",
                                        mime="text/csv")
 
-                    st.download_button("Sækja CSV (kostnaður)" if is_islenska else "Download CSV (cost)",
+                    st.download_button("Sækja CSV (kostnaður)" if language == "Íslenska" else "Download CSV (cost)",
                                        df_cost_disp.to_csv(index=False).encode("utf-8-sig"),
                                        file_name="kostnadur.csv",
                                        mime="text/csv")
                 else:
-                    st.warning("Engin gögn fundust." if is_islenska else "No data found.")
+                    st.warning("Engin gögn fundust." if language == "Íslenska" else "No data found.")
 
             except Exception as e:
-                st.error(f"Villa við útreikning: {e}" if is_islenska else f"Error during calculation: {e}")
+                st.error(f"Villa við útreikning: {e}" if language == "Íslenska" else f"Error during calculation: {e}")
 
 
 
