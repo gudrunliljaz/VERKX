@@ -209,10 +209,10 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
 #tilboðsreiknivél
 def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10000, fixed_cost=37_200_000):
     data = {
-        "3m": {"fm": 39, "verd_eur": 475, "kg": 6000},
-        "2m": {"fm": 26, "verd_eur": 415, "kg": 4100},
-        "1m": {"fm": 13, "verd_eur": 380, "kg": 2200},
-        "0.5m": {"fm": 6.5, "verd_eur": 370, "kg": 1100},
+        "3m": {"fm": 19.5, "verd_eur": 475, "kg": 6000},
+        "2m": {"fm": 13, "verd_eur": 415, "kg": 4100},
+        "1m": {"fm": 6.5, "verd_eur": 380, "kg": 2200},
+        "0.5m": {"fm": 3.25, "verd_eur": 370, "kg": 1100},
     }
 
     einingar = {
