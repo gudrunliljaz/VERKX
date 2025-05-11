@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from verkx_code import main_forecast, main_forecast_logic_from_excel, calculate_offer, generate_offer_pdf
+from verkx_code import main_forecast, main_opperational_forecast, calculate_offer, generate_offer_pdf
 import requests
 from datetime import date
 from io import BytesIO
@@ -152,7 +152,7 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
     if st.button(button_label, key="run_all_markets_forecast_button"):
         with st.spinner("Reikna..." if language == "Íslenska" else "Calculating..."):
             try:
-                df = main_forecast_logic_from_excel(
+                df = main_opperational_forecast_from_excel(
                     past_file="data/GÖGN_VERKX.xlsx",
                     future_file="data/Framtidarspa.xlsx",
                     share_file="data/markadshlutdeild.xlsx",
