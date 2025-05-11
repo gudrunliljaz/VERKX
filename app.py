@@ -149,7 +149,6 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
                 if df_units is not None and not df_units.empty:
                     st.success("Lokið! Hér að neðan eru tvær töflur með spá." if language == "Íslenska" else "Done! Below are two forecast tables.")
 
-                    # Nafnabreytingar á töflum
                     rename_units = {
                         'ár': "Ár" if language == "Íslenska" else "Year",
                         'einingar': "Cubit einingar" if language == "Íslenska" else "Cubit Units",
@@ -198,8 +197,6 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
 
             except Exception as e:
                 st.error(f"Villa við útreikning: {e}" if language == "Íslenska" else f"Error during calculation: {e}")
-
-
 
 elif "Tilboðsreiknivél" in page or "Quotation Calculator" in page:
     st.title("Tilboðsreiknivél" if language == "Íslenska" else "Quotation Calculator")
