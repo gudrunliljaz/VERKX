@@ -124,7 +124,7 @@ if ("Eftirspurnarspá" in page and language == "Íslenska") or ("Demand Forecast
                 st.error(f"{labels[language]['error']}: {e}")
 
 
-elif "Rekstrarspá" in page or "Operational Forecast" in page:
+elif "Rekstrarspá" in page or "All Markets Forecast" in page:
     if language == "Íslenska":
         st.title("Rekstrarspá allra markaða")
         button_label = "Keyra rekstrarspá"
@@ -132,16 +132,14 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
         success_msg = "Lokið! Hér að neðan eru spár fyrir alla markaði."
         warning_msg = "Engin gögn fundust."
         error_msg = "Villa við útreikning"
-        slider_label = "Arðsemiskrafa (%)"
     else:
-        st.title("Operational Forecast")
+        st.title("All Markets Forecast")
         button_label = "Run forecast"
         download_label = "Download CSV"
         success_msg = "Done! Below are the forecasts for all markets."
         warning_msg = "No data found."
         error_msg = "Error in calculation"
-        slider_label = "Profit margin (%)"
-
+    
     st.subheader(labels[language]["profitmargin"])
     col1, col2, col3, col4 = st.columns(4)
     margin_2025 = col1.slider("2025", 0, 100, 15) / 100
@@ -168,13 +166,14 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
                     st.download_button(
                         label=download_label,
                         data=df.to_csv(index=False).encode("utf-8-sig"),
-                        file_name="heildarspa.csv",
+                        file_name="rekstrarspa.csv",
                         mime="text/csv"
                     )
                 else:
                     st.warning(warning_msg)
             except Exception as e:
                 st.error(f"{error_msg}: {e}")
+
 
 elif "Tilboðsreiknivél" in page or "Quotation Calculator" in page:
     st.title("Tilboðsreiknivél" if language == "Íslenska" else "Quotation Calculator")
