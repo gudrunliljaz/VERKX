@@ -273,7 +273,7 @@ elif "Tilboðsreiknivél" in page or "Quotation Calculator" in page:
             st.write(f"**Samtals breytilegur kostnaður:** {result['samtals_breytilegur']:,.0f} kr." if language == "Íslenska" else f"**Total variable cost:** {result['samtals_breytilegur']:,.0f} ISK")
             st.write(f"**Úthlutaður fastur kostnaður:** {result['uthlutadur_fastur_kostnadur']:,.0f} kr." if language == "Íslenska" else f"**Allocated fixed cost:** {result['uthlutadur_fastur_kostnadur']:,.0f} ISK")
             st.write(f"**Álagsstuðull:** {result['alagsstudull']:.2f}" if language == "Íslenska" else f"**Markup factor:** {result['alagsstudull']:.2f}")
-            st.write(f"**Arðsemiskrafa:** {int(result['asemiskrafa'] * 100)}%" if language == "Íslenska" else f"**Profit margin:** {int(result['asemiskrafa'] * 100)}%")
+            st.write(f"**Arðsemiskrafa:** {int(result['arðsemiskrafa'] * 100)}%" if language == "Íslenska" else f"**Profit margin:** {int(result['arðsemiskrafa'] * 100)}%")
             st.write(f"**Tilboðsverð (ISK):** {result['tilbod']:,.0f} kr." if language == "Íslenska" else f"**Offer price (ISK):** {result['tilbod']:,.0f} ISK")
             st.write(f"**Tilboðsverð (EUR):** €{result['tilbod_eur']:,.2f}" if language == "Íslenska" else f"**Offer price (EUR):** €{result['tilbod_eur']:,.2f}")
 
