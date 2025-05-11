@@ -203,15 +203,15 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
             share = share_map.get(region, 0)
             for scen in scenarios:
                 df_past = load_excel(past_file, sheet_name)
-                past = filter_data(df_past, region, "fjöldi eininga")
-                years, past_pred = linear_forecast(past, "fjöldi eininga", 2025, 4)
+                past = filter_data(df_past, region, "fjoldi eininga")
+                years, past_pred = linear_forecast(past, "fjoldi eininga", 2025, 4)
                 df_result = pd.DataFrame({'ár': years, 'fortíð': past_pred})
 
                 if scen:
                     df_fut = load_excel(future_file, sheet_name)
                     df_fut = df_fut[df_fut['sviðsmynd'].str.lower() == scen]
-                    future = filter_data(df_fut, region, "fjöldi eininga")
-                    _, fut_pred = linear_forecast(future, "fjöldi eininga", 2025, 4)
+                    future = filter_data(df_fut, region, "fjoldi eininga")
+                    _, fut_pred = linear_forecast(future, "fjoldi eininga", 2025, 4)
                     if len(fut_pred) == 4:
                         df_result['framtíð'] = fut_pred
                         df_result['meðaltal'] = (df_result['fortíð'] + df_result['framtíð']) / 2
