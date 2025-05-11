@@ -183,6 +183,7 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
                 base = df_result['meðaltal'] if 'meðaltal' in df_result.columns else df_result['fortíð']
                 factor = SCENARIO_SHARE.get(scen, 1)
                 df_result['fermetrar'] = (base * share * factor).round(0)
+                df_result['fermetrar'] = df_result['fermetrar'](0.19*19.5 + 0.80*13 + 0.01*6.5)
                 all_rows.append(df_result[['ár', 'fermetrar']])
 
     df_all = pd.concat(all_rows)
@@ -193,6 +194,7 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
         summary[col_name] = summary['fermetrar'] * MODULE_SHARES[key] * MODULE_COSTS[key] * MODULE_FM[key]
     mod_cols = [f'kostnaður_{k}' for k in MODULE_SHARES]
     summary['kostnaðarverð eininga'] = summary[mod_cols].sum(axis=1)
+    
 
     summary['flutningskostnaður'] = (summary['fermetrar'] * (0.19*19.5 + 0.80*13 + 0.01*6.5)) * 74_000
     summary['afhending innanlands'] = (summary['fermetrar'] * (0.19*19.5 + 0.80*13 + 0.01*6.5)) * 80 * 8
@@ -329,7 +331,6 @@ def generate_offer_pdf(verkkaupi, stadsetning, result, language="Íslenska"):
         pdf.cell(0, 10, f"{label}: {value}", ln=True)
 
     return pdf.output(dest="S").encode("latin-1")
-
 
 
 
