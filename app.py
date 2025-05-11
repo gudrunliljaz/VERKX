@@ -181,7 +181,11 @@ elif "Rekstrarspá" in page or "All Markets Forecast" in page:
                     }
 
                     df = df.rename(columns=column_renames)
-                    st.dataframe(df.style.format("{:,.0f}"))
+                    st.dataframe(df.style.format({
+                        col: "{:,.0f}" for col in df.columns if col != ("Arðsemiskrafa" if language == "Íslenska" else "Profit margin")
+                    } | {
+                        ("Arðsemiskrafa" if language == "Íslenska" else "Profit margin"): "{:.2%}"
+                    }))
 
                     st.download_button(
                         label=download_label,
