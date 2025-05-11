@@ -119,7 +119,7 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
     SCENARIO_SHARE = {'lágspá': 0.01, 'miðspá': 0.03, 'háspá': 0.05}
     MODULE_SIZES = {'3_módúla': 19.5, '2_módúla': 13, '1_módúla': 6.5, '½_módúla': 3.25}
     MODULE_COSTS = {'3_módúla': 269_700, '2_módúla': 290_000, '1_módúla': 304_500, '½_módúla': 330_000}
-    MODULE_SHARES = {'3_módúla': 0.19, '2_módúla': 0.80, '1_módúla': 0.01, '½_módúla': 0.001}
+    MODULE_SHARES = {'3_módúla': 0.19, '2_módúla': 0.80, '1_módúla': 0.01, '½_módúla': 0.0001}
     FIXED_COST = 34_800_000
 
     share_df = pd.read_excel(share_file, engine="openpyxl")
