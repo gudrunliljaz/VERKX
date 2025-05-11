@@ -153,17 +153,17 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
                         'ár': "Ár" if language == "Íslenska" else "Year",
                         'einingar': "Cubit einingar" if language == "Íslenska" else "Cubit Units",
                         'heildarfermetrar': "Heildarfermetrar" if language == "Íslenska" else "Total sqm",
-                        '½_módúla einingar': "Hálfs módúla einingar" if language == "Íslenska" else "Half module units",
-                        '1_módúla einingar': "Einnar módúla einingar" if language == "Íslenska" else "One module units",
-                        '2_módúla einingar': "Tveggja módúla einingar" if language == "Íslenska" else "Two module units",
-                        '3_módúla einingar': "Þriggja módúla einingar" if language == "Íslenska" else "Three module units"
+                        '½_módúla einingar': "Hálf eining" if language == "Íslenska" else "Half a unit",
+                        '1_módúla einingar': "Ein einingar" if language == "Íslenska" else "One unit",
+                        '2_módúla einingar': "Tvær einingar" if language == "Íslenska" else "Two units",
+                        '3_módúla einingar': "Þrjár einingar" if language == "Íslenska" else "Three units"
                     }
 
                     rename_cost = {
-                        'kostnaður_½_módúla': "Kostnaður - ½ módúla" if language == "Íslenska" else "Cost - ½ module",
-                        'kostnaður_1_módúla': "Kostnaður - 1 módúla" if language == "Íslenska" else "Cost - 1 module",
-                        'kostnaður_2_módúla': "Kostnaður - 2 módúlur" if language == "Íslenska" else "Cost - 2 modules",
-                        'kostnaður_3_módúla': "Kostnaður - 3 módúlur" if language == "Íslenska" else "Cost - 3 modules",
+                        'kostnaður_½_módúla': "Kostnaður - hálf eining" if language == "Íslenska" else "Cost - half a module",
+                        'kostnaður_1_módúla': "Kostnaður - ein eining" if language == "Íslenska" else "Cost - one module",
+                        'kostnaður_2_módúla': "Kostnaður - tvær einingarr" if language == "Íslenska" else "Cost - two modules",
+                        'kostnaður_3_módúla': "Kostnaður - þrjár einingar" if language == "Íslenska" else "Cost - three modules",
                         'kostnaðarverð eininga': "Kostnaðarverð eininga" if language == "Íslenska" else "Unit cost",
                         'flutningskostnaður': "Flutningskostnaður" if language == "Íslenska" else "Shipping to Iceland",
                         'afhending innanlands': "Afhending innanlands" if language == "Íslenska" else "Domestic delivery",
