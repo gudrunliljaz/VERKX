@@ -116,36 +116,13 @@ def main_forecast(housing_type, region, future_years, final_market_share):
         return df, figures, len(future_values)
 
 ### rekstarspá
-def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0.15, margin_2026=0.15, margin_2027=0.15, margin_2028=0.15):
-    SCENARIO_SHARE = {
-        'lágspá': 0.01,
-        'miðspá': 0.03,
-        'háspá':  0.05,
-    }
+def main_opperational_forecast(past_file, future_file, share_file,
+                                margin_2025=0.15, margin_2026=0.15,
+                                margin_2027=0.15, margin_2028=0.15):
 
-    MODULE_SHARES = {
-        '3_módúla': 0.19,
-        '2_módúla': 0.80,
-        '1_módúla': 0.01,
-        '½_módúla': 0.001,
-    }
-
-    MODULE_COSTS = {
-        '3_módúla': 269_700,
-        '2_módúla': 290_000,
-        '1_módúla': 304_500,
-        '½_módúla': 330_000,
-    }
-
-    MODULE_FM = {
-        '3_módúla': 19.5,
-        '2_módúla': 13,
-        '1_módúla': 6.5,
-        '½_módúla': 3.25,
-    }
-
+    scenario_factor = 0.03  # miðspá
     xl = pd.ExcelFile(share_file, engine="openpyxl")
-    all_rows = []
+    all_data = []
 
     for sheet in xl.sheet_names:
         df_share = xl.parse(sheet)
@@ -154,63 +131,48 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
 
         housing_type = sheet.strip()
         sheet_name = f"{housing_type} eftir landshlutum"
-
         use_forecast = normalize(housing_type) in ['íbúðir', 'leikskólar']
-        scenarios = ['miðspá'] if use_forecast else ['']
 
         for _, row in df_share.iterrows():
             region = row['landshluti']
             share = row['markaðshlutdeild']
 
-            for scen in scenarios:
-                try:
-                    df_past = pd.read_excel(past_file, sheet_name=sheet_name, engine="openpyxl")
-                    df_past.columns = [normalize(c) for c in df_past.columns]
-                    past = filter_data(df_past, region, "fjoldi eininga")
-                    if past.empty:
-                        continue
-
-                    years, past_pred = linear_forecast(past, "fjoldi eininga", 2025, 4)
-                    df_result = pd.DataFrame({'Ár': years, 'Fortíð': past_pred})
-
-                    if scen:
-                        df_future = pd.read_excel(future_file, sheet_name=sheet_name, engine="openpyxl")
-                        df_future.columns = [normalize(c) for c in df_future.columns]
-                        df_future = df_future[df_future['sviðsmynd'].str.lower() == scen]
-                        future = filter_data(df_future, region, "fjoldi eininga")
-                        fut_years, fut_pred = linear_forecast(future, "fjoldi eininga", 2025, 4)
-                        if len(fut_pred) == 4:
-                            df_result['Framtíð'] = fut_pred
-                            df_result['Meðaltal'] = (df_result['Fortíð'] + df_result['Framtíð']) / 2
-
-                    base = df_result['Meðaltal'] if 'Meðaltal' in df_result.columns else df_result['Fortíð']
-                    scenario_factor = SCENARIO_SHARE.get(scen, 1)
-                    df_result['Eftirspurn'] = base * share * scenario_factor
-
-                    all_rows.append(df_result[['Ár', 'Eftirspurn']])
-                except:
+            try:
+                df_past = pd.read_excel(past_file, sheet_name=sheet_name, engine="openpyxl")
+                df_past.columns = [normalize(c) for c in df_past.columns]
+                past = filter_data(df_past, region, "fjoldi eininga")
+                if past.empty:
                     continue
+                years, linear_pred = linear_forecast(past, "fjoldi eininga", 2025, 4)
 
-    if not all_rows:
+                if use_forecast:
+                    df_future = pd.read_excel(future_file, sheet_name=sheet_name, engine="openpyxl")
+                    df_future.columns = [normalize(c) for c in df_future.columns]
+                    df_future = df_future[df_future['sviðsmynd'].str.lower() == 'miðspá']
+                    df_future = filter_data(df_future, region, "fjoldi eininga")
+                    df_future = df_future[df_future['ar'].isin(years)]
+                    future_vals = df_future.set_index('ar').reindex(years)['fjoldi eininga'].fillna(0).values
+                    avg_pred = (linear_pred + future_vals) / 2
+                else:
+                    avg_pred = linear_pred
+
+                adjusted = avg_pred * share * scenario_factor
+                df_adj = pd.DataFrame({"Ár": years, "Spá": adjusted})
+                all_data.append(df_adj)
+            except:
+                continue
+
+    if not all_data:
         return None
 
-    df_all = pd.concat(all_rows)
-    summary = df_all.groupby("Ár")["Eftirspurn"].sum().reset_index()
-    summary["Fermetrar"] = summary["Eftirspurn"].round().astype(int)
+    df_all = pd.concat(all_data)
+    summary = df_all.groupby("Ár")["Spá"].sum().reset_index()
+    summary["Fermetrar"] = summary["Spá"].round().astype(int) * UNIT_SIZE_SQM
 
-    for mod in MODULE_SHARES:
-        hlutfall = MODULE_SHARES[mod]
-        verð = MODULE_COSTS[mod]
-        stærð = MODULE_FM[mod]
-        summary[f"Kostnaður_{mod}"] = summary["Fermetrar"] * hlutfall * verð * stærð
-
-    kostnaðarsúlur = [f"Kostnaður_{mod}" for mod in MODULE_SHARES]
-    summary["Kostnaðarverð eininga"] = summary[kostnaðarsúlur].sum(axis=1)
-
+    summary["Kostnaðarverð eininga"] = summary["Fermetrar"] * (0.19*269700 + 0.80*290000 + 0.01*304500 + 0.001*330000)
     summary["Flutningskostnaður"] = summary["Fermetrar"] * 43424
     summary["Afhending innanlands"] = summary["Fermetrar"] * 80 * 8
     summary["Fastur kostnaður"] = FIXED_COST
-
     summary["Heildarkostnaður"] = summary[
         ["Kostnaðarverð eininga", "Flutningskostnaður", "Afhending innanlands", "Fastur kostnaður"]
     ].sum(axis=1)
@@ -226,8 +188,6 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
     summary["Hagnaður"] = summary["Tekjur"] - summary["Heildarkostnaður"]
 
     return summary
-
-
 
 #tilboðsreiknivél
 def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10000, fixed_cost=37_200_000):
