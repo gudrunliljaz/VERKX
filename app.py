@@ -128,20 +128,14 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
     is_islenska = language == "Íslenska"
     st.title("Rekstrarspá allra markaða" if is_islenska else "Operational Forecast")
 
-    button_label = "Keyra rekstrarspá" if is_islenska else "Run forecast"
-    download_label = "Sækja CSV" if is_islenska else "Download CSV"
-    success_msg = "Lokið! Hér að neðan eru tvær töflur með spá." if is_islenska else "Done! Below are two forecast tables."
-    warning_msg = "Engin gögn fundust." if is_islenska else "No data found."
-    error_msg = "Villa við útreikning" if is_islenska else "Error in calculation"
-
-    st.subheader(labels[language]["profitmargin"])
+    st.subheader("Arðsemiskrafa (%)" if is_islenska else "Profit Margin (%)")
     col1, col2, col3, col4 = st.columns(4)
     margin_2025 = col1.slider("2025", 0, 100, 15) / 100
     margin_2026 = col2.slider("2026", 0, 100, 15) / 100
     margin_2027 = col3.slider("2027", 0, 100, 15) / 100
     margin_2028 = col4.slider("2028", 0, 100, 15) / 100
 
-    if st.button(button_label, key="run_all_markets_forecast_button"):
+    if st.button("Keyra rekstrarspá" if is_islenska else "Run forecast", key="run_all_markets_forecast_button"):
         with st.spinner("Reikna..." if is_islenska else "Calculating..."):
             try:
                 df_units, df_cost = main_opperational_forecast(
@@ -155,34 +149,29 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
                 )
 
                 if df_units is not None and not df_units.empty:
-                    st.success(success_msg)
+                    st.success("Lokið! Hér að neðan eru tvær töflur með spá." if is_islenska else "Done! Below are two forecast tables.")
 
-                    st.subheader("1. Einingafjöldi og fermetrar" if is_islenska else "1. Units and total sqm")
+                    st.subheader("1. Einingafjöldi og fermetrar" if is_islenska else "1. Units and square meters")
                     st.dataframe(df_units)
 
-                    st.subheader("2. Kostnaður, tekjur og hagnaður" if is_islenska else "2. Cost, revenue and profit")
+                    st.subheader("2. Kostnaður, tekjur og hagnaður" if is_islenska else "2. Cost, revenue, and profit")
                     st.dataframe(df_cost)
 
-                    st.download_button(
-                        label="Sækja CSV (fermetrar og einingar)" if is_islenska else "Download CSV (units)",
-                        data=df_units.to_csv(index=False).encode("utf-8-sig"),
-                        file_name="einingar.csv",
-                        mime="text/csv"
-                    )
+                    st.download_button("Sækja CSV (einingar)" if is_islenska else "Download CSV (units)",
+                                       df_units.to_csv(index=False).encode("utf-8-sig"),
+                                       file_name="einingar.csv",
+                                       mime="text/csv")
 
-                    st.download_button(
-                        label="Sækja CSV (kostnaður)" if is_islenska else "Download CSV (cost)",
-                        data=df_cost.to_csv(index=False).encode("utf-8-sig"),
-                        file_name="kostnadur.csv",
-                        mime="text/csv"
-                    )
+                    st.download_button("Sækja CSV (kostnaður)" if is_islenska else "Download CSV (cost)",
+                                       df_cost.to_csv(index=False).encode("utf-8-sig"),
+                                       file_name="kostnadur.csv",
+                                       mime="text/csv")
                 else:
-                    st.warning(warning_msg)
+                    st.warning("Engin gögn fundust." if is_islenska else "No data found.")
 
             except Exception as e:
-                st.error(f"{error_msg}: {e}")
+                st.error(f"Villa við útreikning: {e}" if is_islenska else f"Error during calculation: {e}")
 
-                    
 
 elif "Tilboðsreiknivél" in page or "Quotation Calculator" in page:
     st.title("Tilboðsreiknivél" if language == "Íslenska" else "Quotation Calculator")
