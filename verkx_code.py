@@ -92,28 +92,28 @@ def main_forecast(housing_type, region, future_years, final_market_share):
         figures = [plot_distribution(sim_past, "Monte Carlo - Fortíðargögn")]
         return df, figures, future_years
     else:
-        future_vals = future_data['fjoldi eininga'].values[:future_years]
+        future_values = future_data['fjoldi eininga'].values[:future_years]
         future_years_vals = future_data['ar'].values[:future_years]
-        market_shares = np.linspace(initial_share, final_market_share, len(future_vals))
-        linear_years, linear_pred = linear_forecast(past_data, demand_column, 2025, len(future_vals))
-        linear_pred = linear_pred[:len(future_vals)]
-        avg_vals = (linear_pred + future_vals) / 2
+        market_shares = np.linspace(initial_share, final_market_share, len(future_values))
+        linear_years, linear_pred = linear_forecast(past_data, demand_column, 2025, len(future_values))
+        linear_pred = linear_pred[:len(future_values)]
+        avg_vals = (linear_pred + future_values) / 2
         linear_pred_adj = linear_pred * market_shares
-        future_vals_adj = future_vals * market_shares
+        future_values_adj = future_values * market_shares
         avg_vals_adj = avg_vals * market_shares
         sim_avg = monte_carlo_simulation(avg_vals, market_shares)
         df = pd.DataFrame({
             'Ár': future_years_vals,
             'Fortíðargögn spá': linear_pred_adj,
-            'Framtíðarspá': future_vals_adj,
+            'Framtíðarspá': future_values_adj,
             'Meðaltal': avg_vals_adj
         })
         figures = [
             plot_distribution(monte_carlo_simulation(linear_pred, market_shares), "Monte Carlo - Fortíðargögn"),
-            plot_distribution(monte_carlo_simulation(future_vals, market_shares), "Monte Carlo - Framtíðarspá"),
+            plot_distribution(monte_carlo_simulation(future_values, market_shares), "Monte Carlo - Framtíðarspá"),
             plot_distribution(sim_avg, "Monte Carlo - Meðaltal")
         ]
-        return df, figures, len(future_vals)
+        return df, figures, len(future_values)
 
 def main_forecast_logic_from_excel(past_file, future_file, share_file, margin_2025=0.15, margin_2026=0.15, margin_2027=0.15, margin_2028=0.15):
     xl = pd.ExcelFile(share_file, engine="openpyxl")
