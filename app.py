@@ -1,5 +1,3 @@
-# app.py (hluti 1)
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -58,7 +56,7 @@ labels = {
     }
 }
 
-# --- Forecast model ---
+
 if ("Eftirspurnarspá" in page and language == "Íslenska") or ("Demand Forecast" in page and language == "English"):
     st.title(labels[language]['title'])
 
@@ -125,7 +123,7 @@ if ("Eftirspurnarspá" in page and language == "Íslenska") or ("Demand Forecast
             except Exception as e:
                 st.error(f"{labels[language]['error']}: {e}")
 
-# --- Operational Forecast ---
+
 elif "Rekstrarspá" in page or "Operational Forecast" in page:
     if language == "Íslenska":
         st.title("Rekstrarspá allra markaða")
@@ -178,7 +176,6 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
             except Exception as e:
                 st.error(f"{error_msg}: {e}")
 
-# --- Quotation Calculator ---
 elif "Tilboðsreiknivél" in page or "Quotation Calculator" in page:
     st.title("Tilboðsreiknivél" if language == "Íslenska" else "Quotation Calculator")
 
@@ -258,13 +255,13 @@ elif "Tilboðsreiknivél" in page or "Quotation Calculator" in page:
 
             try:
                 from unicodedata import normalize
-                hreinsad_nafn = normalize('NFKD', verkkaupi).encode('ascii', 'ignore').decode('ascii')
+                hreinsadur_verkkaupi = normalize('NFKD', verkkaupi).encode('ascii', 'ignore').decode('ascii')
                 hreinsud_stadsetning = normalize('NFKD', stadsetning).encode('ascii', 'ignore').decode('ascii')
-                pdf_bytes = generate_offer_pdf(hreinsad_nafn, hreinsud_stadsetning, result, language)
+                pdf_bytes = generate_offer_pdf(hreinsadur_verkkaupi, hreinsud_stadsetning, result, language)
                 st.download_button(
                     label="Sækja PDF tilboð" if language == "Íslenska" else "Download offer PDF",
                     data=pdf_bytes,
-                    file_name=f"tilbod_{hreinsad_nafn}.pdf",
+                    file_name=f"tilbod_{hreinsadur_verkkaupi}.pdf",
                     mime="application/pdf"
                 )
             except UnicodeEncodeError:
