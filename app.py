@@ -159,21 +159,40 @@ elif "Rekstrarspá" in page or "All Markets Forecast" in page:
                     margin_2027=margin_2027,
                     margin_2028=margin_2028
                 )
+
                 if df is not None and not df.empty:
                     st.success(success_msg)
-                    st.dataframe(df)
+
+                    column_renames = {
+                        'ár': "Ár" if language == "Íslenska" else "Year",
+                        'fermetrar': "Heildarfermetrar" if language == "Íslenska" else "Total sqm",
+                        'kostnaður_3_módúla': "Kostnaður - 3 módúlur" if language == "Íslenska" else "Cost - 3 modules",
+                        'kostnaður_2_módúla': "Kostnaður - 2 módúlur" if language == "Íslenska" else "Cost - 2 modules",
+                        'kostnaður_1_módúla': "Kostnaður - 1 módúla" if language == "Íslenska" else "Cost - 1 module",
+                        'kostnaður_½_módúla': "Kostnaður - ½ módúla" if language == "Íslenska" else "Cost - ½ module",
+                        'kostnaðarverð eininga': "Kostnaðarverð eininga" if language == "Íslenska" else "Unit cost",
+                        'flutningskostnaður': "Flutningur til Íslands" if language == "Íslenska" else "Shipping to Iceland",
+                        'afhending innanlands': "Afhending innanlands" if language == "Íslenska" else "Domestic delivery",
+                        'fastur kostnaður': "Fastur kostnaður" if language == "Íslenska" else "Fixed cost",
+                        'heildarkostnaður': "Heildarkostnaður" if language == "Íslenska" else "Total cost",
+                        'arðsemiskrafa': "Arðsemiskrafa" if language == "Íslenska" else "Profit margin",
+                        'tekjur': "Tekjur" if language == "Íslenska" else "Revenue",
+                        'hagnaður': "Hagnaður" if language == "Íslenska" else "Profit"
+                    }
+
+                    df = df.rename(columns=column_renames)
+                    st.dataframe(df.style.format("{:,.0f}"))
 
                     st.download_button(
                         label=download_label,
                         data=df.to_csv(index=False).encode("utf-8-sig"),
-                        file_name="rekstrarspa.csv",
+                        file_name="heildarspa.csv",
                         mime="text/csv"
                     )
                 else:
                     st.warning(warning_msg)
             except Exception as e:
                 st.error(f"{error_msg}: {e}")
-
 
 elif "Tilboðsreiknivél" in page or "Quotation Calculator" in page:
     st.title("Tilboðsreiknivél" if language == "Íslenska" else "Quotation Calculator")
