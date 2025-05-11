@@ -61,73 +61,11 @@ def plot_distribution(sim_data, title):
     plt.tight_layout()
     return fig
 
-def main_forecast(housing_type, region, future_years, final_market_share):
-    sheet_name = f"{housing_type} eftir landshlutum"
-    use_forecast = housing_type.lower() in ["íbúðir", "leikskólar"]
-
-    past_df = load_excel(PAST_FILE, sheet_name)
-    demand_column = 'fjoldi eininga'
-    past_data = filter_data(past_df, region, demand_column)
-    if past_data.empty:
-        raise ValueError("Engin fortíðargögn fundust.")
-
-    initial_share = final_market_share * np.random.uniform(0.05, 0.1)
-
-    if use_forecast:
-        future_df = load_excel(FUTURE_FILE, sheet_name)
-        if 'sviðsmynd' in future_df.columns:
-            future_df = future_df[future_df['sviðsmynd'].str.lower() == 'miðspá']
-        future_df['ar'] = pd.to_numeric(future_df['ar'], errors='coerce')
-        future_data = filter_data(future_df, region, demand_column)
-        future_data = future_data[future_data['ar'] > past_data['ar'].max()]
-        if len(future_data) < future_years:
-            use_forecast = False
-
-    if not use_forecast:
-        linear_years, linear_pred = linear_forecast(past_data, demand_column, 2025, future_years)
-        market_shares = np.linspace(initial_share, final_market_share, future_years)
-        past_pred_adj = linear_pred * market_shares
-        sim_past = monte_carlo_simulation(linear_pred, market_shares)
-        df = pd.DataFrame({'Ár': linear_years, 'Spá útfrá fortíðargögnum': past_pred_adj})
-        figures = [plot_distribution(sim_past, "Monte Carlo - Fortíðargögn")]
-        return df, figures, future_years
-    else:
-        future_values = future_data['fjoldi eininga'].values[:future_years]
-        future_years_vals = future_data['ar'].values[:future_years]
-        market_shares = np.linspace(initial_share, final_market_share, len(future_values))
-        linear_years, linear_pred = linear_forecast(past_data, demand_column, 2025, len(future_values))
-        linear_pred = linear_pred[:len(future_values)]
-        avg_vals = (linear_pred + future_values) / 2
-        linear_pred_adj = linear_pred * market_shares
-        future_values_adj = future_values * market_shares
-        avg_vals_adj = avg_vals * market_shares
-        sim_avg = monte_carlo_simulation(avg_vals, market_shares)
-        df = pd.DataFrame({
-            'Ár': future_years_vals,
-            'Fortíðargögn spá': linear_pred_adj,
-            'Framtíðarspá': future_values_adj,
-            'Meðaltal': avg_vals_adj
-        })
-        figures = [
-            plot_distribution(monte_carlo_simulation(linear_pred, market_shares), "Monte Carlo - Fortíðargögn"),
-            plot_distribution(monte_carlo_simulation(future_values, market_shares), "Monte Carlo - Framtíðarspá"),
-            plot_distribution(sim_avg, "Monte Carlo - Meðaltal")
-        ]
-        return df, figures, len(future_values)
-
-def main_opperational_forecast(
-    past_file,
-    future_file,
-    share_file,
-    margin_2025=0.15,
-    margin_2026=0.15,
-    margin_2027=0.15,
-    margin_2028=0.15
-):
+def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0.15, margin_2026=0.15, margin_2027=0.15, margin_2028=0.15):
     SCENARIO_SHARE = {'lágspá': 0.01, 'miðspá': 0.03, 'háspá': 0.05}
-    MODULE_SHARES = {'3_módúla': 0.19, '2_módúla': 0.80, '1_módúla': 0.01, '½_módúla': 0.001}
     MODULE_SIZES = {'3_módúla': 19.5, '2_módúla': 13, '1_módúla': 6.5, '½_módúla': 3.25}
     MODULE_COSTS = {'3_módúla': 269_700, '2_módúla': 290_000, '1_módúla': 304_500, '½_módúla': 330_000}
+    MODULE_SHARES = {'3_módúla': 0.19, '2_módúla': 0.80, '1_módúla': 0.01, '½_módúla': 0.001}
     FIXED_COST = 34_800_000
 
     share_df = pd.read_excel(share_file, engine="openpyxl")
@@ -164,50 +102,38 @@ def main_opperational_forecast(
 
                 base = df_result['meðaltal'] if 'meðaltal' in df_result.columns else df_result['fortíð']
                 factor = SCENARIO_SHARE.get(scen, 1)
-                units = base * share * factor
-                df_result['einingar'] = units.round(0)
-                df_result['ár'] = df_result['ár'].astype(int)
+                df_result['einingar'] = base * share * factor
+                df_result['ár'] = years
                 all_rows.append(df_result[['ár', 'einingar']])
 
     df_all = pd.concat(all_rows)
-    summary = df_all.groupby("ár")["einingar"].sum().reset_index()
-
-    # Fjöldi fermetra = einingar * stærð (6.5)
-    summary["heildarfermetrar"] = summary["einingar"] * 6.5
+    yearly_units = df_all.groupby("ár")["einingar"].sum().reset_index()
+    yearly_units['heildarfermetrar'] = yearly_units['einingar'] * 6.5
 
     for key in MODULE_SHARES:
-        name = key.replace("_", " ")
-        size = MODULE_SIZES[key]
         share = MODULE_SHARES[key]
-        summary[name + " einingar"] = (summary["einingar"] * share).round(0)
+        size = MODULE_SIZES[key]
+        yearly_units[f'{key} einingar'] = (yearly_units['heildarfermetrar'] * share / size).round(0)
 
-    # Búum til units_df með fjölda
-    units_cols = ["ár", "heildarfermetrar"] + [k.replace("_", " ") + " einingar" for k in MODULE_SHARES]
-    units_df = summary[units_cols].copy()
-
-    # Búum til cost_df
-    cost_df = summary[["ár"]].copy()
+    cost_df = yearly_units[['ár']].copy()
     for key in MODULE_SHARES:
-        share = MODULE_SHARES[key]
-        cost = MODULE_COSTS[key]
-        size = MODULE_SIZES[key]
-        col = f"kostnaður_{key}"
-        cost_df[col] = summary["heildarfermetrar"] * share * cost
+        col_name = f'kostnaður_{key}'
+        cost_df[col_name] = yearly_units[f'{key} einingar'] * MODULE_SIZES[key] * MODULE_COSTS[key]
 
-    cost_df["kostnaðarverð eininga"] = sum(cost_df[f"kostnaður_{k}"] for k in MODULE_SHARES)
-    cost_df["flutningskostnaður"] = summary["heildarfermetrar"] * 74_000
-    cost_df["afhending innanlands"] = summary["heildarfermetrar"] * 80 * 8
-    cost_df["fastur kostnaður"] = FIXED_COST
-    cost_df["heildarkostnaður"] = cost_df[
-        ["kostnaðarverð eininga", "flutningskostnaður", "afhending innanlands", "fastur kostnaður"]
-    ].sum(axis=1)
+    mod_cols = [f'kostnaður_{k}' for k in MODULE_SHARES]
+    cost_df['kostnaðarverð eininga'] = cost_df[mod_cols].sum(axis=1)
+    cost_df['flutningskostnaður'] = yearly_units['heildarfermetrar'] * 74_000
+    cost_df['afhending innanlands'] = yearly_units['heildarfermetrar'] * 80 * 8
+    cost_df['fastur kostnaður'] = FIXED_COST
+    cost_df['heildarkostnaður'] = cost_df[['kostnaðarverð eininga', 'flutningskostnaður', 'afhending innanlands', 'fastur kostnaður']].sum(axis=1)
 
     margin_map = {2025: margin_2025, 2026: margin_2026, 2027: margin_2027, 2028: margin_2028}
-    cost_df["arðsemiskrafa"] = cost_df["ár"].map(margin_map)
-    cost_df["tekjur"] = cost_df["heildarkostnaður"] * (1 + cost_df["arðsemiskrafa"])
-    cost_df["hagnaður"] = cost_df["tekjur"] - cost_df["heildarkostnaður"]
+    cost_df['arðsemiskrafa'] = cost_df['ár'].map(margin_map)
+    cost_df['tekjur'] = cost_df['heildarkostnaður'] * (1 + cost_df['arðsemiskrafa'])
+    cost_df['hagnaður'] = cost_df['tekjur'] - cost_df['heildarkostnaður']
 
-    return units_df, cost_df
+    return yearly_units, cost_df
+
 
 
 #tilboðsreiknivél
