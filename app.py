@@ -184,7 +184,7 @@ elif "Rekstrarspá" in page or "All Markets Forecast" in page:
                     st.dataframe(df.style.format({
                         col: "{:,.0f}" for col in df.columns if col != ("Arðsemiskrafa" if language == "Íslenska" else "Profit margin")
                     } | {
-                        ("Arðsemiskrafa" if language == "Íslenska" else "Profit margin"): "{:.2%}"
+                        ("Arðsemiskrafa" if language == "Íslenska" else "Profit margin"): "{:.1%}"
                     }))
 
                     st.download_button(
