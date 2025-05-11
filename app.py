@@ -147,7 +147,7 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
                 )
 
                 if df_units is not None and not df_units.empty:
-                    st.success("Lokið! Hér að neðan eru tvær töflur með spá." if language == "Íslenska" else "Done! Below are two forecast tables.")
+                    st.success("Lokið!" if language == "Íslenska" else "Done!")
 
                     rename_units = {
                         'ár': "Ár" if language == "Íslenska" else "Year",
