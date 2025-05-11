@@ -117,7 +117,7 @@ def main_forecast(housing_type, region, future_years, final_market_share):
 
 def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0.15, margin_2026=0.15, margin_2027=0.15, margin_2028=0.15):
 
-        SCENARIO_SHARE = {'lágspá': 0.01, 'miðspá': 0.03, 'háspá': 0.05}
+    SCENARIO_SHARE = {'lágspá': 0.01, 'miðspá': 0.03, 'háspá': 0.05}
     MODULE_SHARES = {'3_módúla': 0.19, '2_módúla': 0.80, '1_módúla': 0.01, '½_módúla': 0.001}
     MODULE_COSTS = {'3_módúla': 269_700, '2_módúla': 290_000, '1_módúla': 304_500, '½_módúla': 330_000}
     FIXED_COST = 34_800_000
