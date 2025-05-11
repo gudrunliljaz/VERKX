@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from verkx_code import main_forecast_logic, main_forecast_logic_from_excel, calculate_offer, generate_offer_pdf
+from verkx_code import main_forecast, main_forecast_logic_from_excel, calculate_offer, generate_offer_pdf
 import requests
 from datetime import date
 from io import BytesIO
@@ -95,7 +95,7 @@ if ("Eftirspurnarspá" in page and language == "Íslenska") or ("Demand Forecast
     if st.button(labels[language]["run"]):
         with st.spinner(labels[language]["loading"]):
             try:
-                df, figures, used_years = main_forecast_logic(housing_type, region, future_years, market_share)
+                df, figures, used_years = main_forecast(housing_type, region, future_years, market_share)
 
                 if used_years < future_years:
                     st.warning(labels[language]["warning"].format(used_years))
