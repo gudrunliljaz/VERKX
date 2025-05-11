@@ -123,7 +123,6 @@ if ("Eftirspurnarspá" in page and language == "Íslenska") or ("Demand Forecast
             except Exception as e:
                 st.error(f"{labels[language]['error']}: {e}")
 
-
 elif "Rekstrarspá" in page or "Operational Forecast" in page:
     is_islenska = language == "Íslenska"
     st.title("Rekstrarspá allra markaða" if is_islenska else "Operational Forecast")
@@ -151,19 +150,47 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
                 if df_units is not None and not df_units.empty:
                     st.success("Lokið! Hér að neðan eru tvær töflur með spá." if is_islenska else "Done! Below are two forecast tables.")
 
+                    # Nafnabreytingar á töflum
+                    rename_units = {
+                        'ár': "Ár" if is_islenska else "Year",
+                        'heildarfermetrar': "Heildarfermetrar" if is_islenska else "Total sqm",
+                        '½_módúla einingar': "Hálfs módúla einingar" if is_islenska else "Half module units",
+                        '1_módúla einingar': "Einnar módúla einingar" if is_islenska else "One module units",
+                        '2_módúla einingar': "Tveggja módúla einingar" if is_islenska else "Two module units",
+                        '3_módúla einingar': "Þriggja módúla einingar" if is_islenska else "Three module units"
+                    }
+
+                    rename_cost = {
+                        'kostnaður_½_módúla': "Kostnaður - ½ módúla" if is_islenska else "Cost - ½ module",
+                        'kostnaður_1_módúla': "Kostnaður - 1 módúla" if is_islenska else "Cost - 1 module",
+                        'kostnaður_2_módúla': "Kostnaður - 2 módúlur" if is_islenska else "Cost - 2 modules",
+                        'kostnaður_3_módúla': "Kostnaður - 3 módúlur" if is_islenska else "Cost - 3 modules",
+                        'kostnaðarverð eininga': "Kostnaðarverð eininga" if is_islenska else "Unit cost",
+                        'flutningskostnaður': "Flutningskostnaður" if is_islenska else "Shipping to Iceland",
+                        'afhending innanlands': "Afhending innanlands" if is_islenska else "Domestic delivery",
+                        'fastur kostnaður': "Fastur kostnaður" if is_islenska else "Fixed cost",
+                        'heildarkostnaður': "Heildarkostnaður" if is_islenska else "Total cost",
+                        'arðsemiskrafa': "Arðsemiskrafa" if is_islenska else "Profit margin",
+                        'tekjur': "Tekjur" if is_islenska else "Revenue",
+                        'hagnaður': "Hagnaður" if is_islenska else "Profit"
+                    }
+
+                    df_units_disp = df_units.rename(columns=rename_units)
+                    df_cost_disp = df_cost.rename(columns=rename_cost)
+
                     st.subheader("1. Einingafjöldi og fermetrar" if is_islenska else "1. Units and square meters")
-                    st.dataframe(df_units)
+                    st.dataframe(df_units_disp)
 
                     st.subheader("2. Kostnaður, tekjur og hagnaður" if is_islenska else "2. Cost, revenue, and profit")
-                    st.dataframe(df_cost)
+                    st.dataframe(df_cost_disp)
 
                     st.download_button("Sækja CSV (einingar)" if is_islenska else "Download CSV (units)",
-                                       df_units.to_csv(index=False).encode("utf-8-sig"),
+                                       df_units_disp.to_csv(index=False).encode("utf-8-sig"),
                                        file_name="einingar.csv",
                                        mime="text/csv")
 
                     st.download_button("Sækja CSV (kostnaður)" if is_islenska else "Download CSV (cost)",
-                                       df_cost.to_csv(index=False).encode("utf-8-sig"),
+                                       df_cost_disp.to_csv(index=False).encode("utf-8-sig"),
                                        file_name="kostnadur.csv",
                                        mime="text/csv")
                 else:
@@ -171,6 +198,7 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
 
             except Exception as e:
                 st.error(f"Villa við útreikning: {e}" if is_islenska else f"Error during calculation: {e}")
+
 
 
 elif "Tilboðsreiknivél" in page or "Quotation Calculator" in page:
