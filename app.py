@@ -124,22 +124,15 @@ if ("Eftirspurnarspá" in page and language == "Íslenska") or ("Demand Forecast
                 st.error(f"{labels[language]['error']}: {e}")
 
 
-elif "Rekstrarspá" in page or "All Markets Forecast" in page:
-    if language == "Íslenska":
-        st.title("Rekstrarspá allra markaða")
-        button_label = "Keyra rekstrarspá"
-        download_label = "Sækja CSV"
-        success_msg = "Lokið! Hér að neðan eru spár fyrir alla markaði."
-        warning_msg = "Engin gögn fundust."
-        error_msg = "Villa við útreikning"
-    else:
-        st.title("All Markets Forecast")
-        button_label = "Run forecast"
-        download_label = "Download CSV"
-        success_msg = "Done! Below are the forecasts for all markets."
-        warning_msg = "No data found."
-        error_msg = "Error in calculation"
-    
+elif "Rekstrarspá" in page or "Operational Forecast" in page:
+    is_islenska = language == "Íslenska"
+    st.title("Rekstrarspá allra markaða" if is_islenska else "Operational Forecast")
+    button_label = "Keyra rekstrarspá" if is_islenska else "Run forecast"
+    download_label = "Sækja CSV" if is_islenska else "Download CSV"
+    success_msg = "Lokið! Hér að neðan eru spár fyrir alla markaði." if is_islenska else "Done! Below are the forecasts for all markets."
+    warning_msg = "Engin gögn fundust." if is_islenska else "No data found."
+    error_msg = "Villa við útreikning" if is_islenska else "Error in calculation"
+
     st.subheader(labels[language]["profitmargin"])
     col1, col2, col3, col4 = st.columns(4)
     margin_2025 = col1.slider("2025", 0, 100, 15) / 100
@@ -148,7 +141,7 @@ elif "Rekstrarspá" in page or "All Markets Forecast" in page:
     margin_2028 = col4.slider("2028", 0, 100, 15) / 100
 
     if st.button(button_label, key="run_all_markets_forecast_button"):
-        with st.spinner("Reikna..." if language == "Íslenska" else "Calculating..."):
+        with st.spinner("Reikna..." if is_islenska else "Calculating..."):
             try:
                 df = main_opperational_forecast(
                     past_file="data/GÖGN_VERKX.xlsx",
@@ -163,29 +156,29 @@ elif "Rekstrarspá" in page or "All Markets Forecast" in page:
                 if df is not None and not df.empty:
                     st.success(success_msg)
 
-                    column_renames = {
-                        'ár': "Ár" if language == "Íslenska" else "Year",
-                        'fermetrar': "Heildarfermetrar" if language == "Íslenska" else "Total sqm",
-                        'kostnaður_3_módúla': "Kostnaður - 3 módúlur" if language == "Íslenska" else "Cost - 3 modules",
-                        'kostnaður_2_módúla': "Kostnaður - 2 módúlur" if language == "Íslenska" else "Cost - 2 modules",
-                        'kostnaður_1_módúla': "Kostnaður - 1 módúla" if language == "Íslenska" else "Cost - 1 module",
-                        'kostnaður_½_módúla': "Kostnaður - ½ módúla" if language == "Íslenska" else "Cost - ½ module",
-                        'kostnaðarverð eininga': "Kostnaðarverð eininga" if language == "Íslenska" else "Unit cost",
-                        'flutningskostnaður': "Flutningur til Íslands" if language == "Íslenska" else "Shipping to Iceland",
-                        'afhending innanlands': "Afhending innanlands" if language == "Íslenska" else "Domestic delivery",
-                        'fastur kostnaður': "Fastur kostnaður" if language == "Íslenska" else "Fixed cost",
-                        'heildarkostnaður': "Heildarkostnaður" if language == "Íslenska" else "Total cost",
-                        'arðsemiskrafa': "Arðsemiskrafa" if language == "Íslenska" else "Profit margin",
-                        'tekjur': "Tekjur" if language == "Íslenska" else "Revenue",
-                        'hagnaður': "Hagnaður" if language == "Íslenska" else "Profit"
+                    rename_map = {
+                        'ár': "Ár" if is_islenska else "Year",
+                        'fermetrar': "Heildarfermetrar" if is_islenska else "Total sqm",
+                        'kostnaður_3_módúla': "Kostnaður - 3 módúlur" if is_islenska else "Cost - 3 modules",
+                        'kostnaður_2_módúla': "Kostnaður - 2 módúlur" if is_islenska else "Cost - 2 modules",
+                        'kostnaður_1_módúla': "Kostnaður - 1 módúla" if is_islenska else "Cost - 1 module",
+                        'kostnaður_½_módúla': "Kostnaður - ½ módúla" if is_islenska else "Cost - ½ module",
+                        'kostnaðarverð eininga': "Kostnaðarverð eininga" if is_islenska else "Unit cost",
+                        'flutningskostnaður': "Flutningur til Íslands" if is_islenska else "Shipping to Iceland",
+                        'afhending innanlands': "Afhending innanlands" if is_islenska else "Domestic delivery",
+                        'fastur kostnaður': "Fastur kostnaður" if is_islenska else "Fixed cost",
+                        'heildarkostnaður': "Heildarkostnaður" if is_islenska else "Total cost",
+                        'arðsemiskrafa': "Arðsemiskrafa" if is_islenska else "Profit margin",
+                        'tekjur': "Tekjur" if is_islenska else "Revenue",
+                        'hagnaður': "Hagnaður" if is_islenska else "Profit"
                     }
 
-                    df = df.rename(columns=column_renames)
-                    st.dataframe(df.style.format({
-                        col: "{:,.0f}" for col in df.columns if col != ("Arðsemiskrafa" if language == "Íslenska" else "Profit margin")
-                    } | {
-                        ("Arðsemiskrafa" if language == "Íslenska" else "Profit margin"): "{:.1%}"
-                    }))
+                    df = df.rename(columns=rename_map)
+                    percent_col = "Arðsemiskrafa" if is_islenska else "Profit margin"
+                    format_dict = {col: "{:,.0f}" for col in df.columns if col != percent_col}
+                    format_dict[percent_col] = "{:.1%}"
+
+                    st.dataframe(df.style.format(format_dict))
 
                     st.download_button(
                         label=download_label,
@@ -197,6 +190,7 @@ elif "Rekstrarspá" in page or "All Markets Forecast" in page:
                     st.warning(warning_msg)
             except Exception as e:
                 st.error(f"{error_msg}: {e}")
+
 
 elif "Tilboðsreiknivél" in page or "Quotation Calculator" in page:
     st.title("Tilboðsreiknivél" if language == "Íslenska" else "Quotation Calculator")
