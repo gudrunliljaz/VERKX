@@ -144,41 +144,30 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
     if st.button(button_label, key="run_all_markets_forecast_button"):
         with st.spinner("Reikna..." if is_islenska else "Calculating..."):
             try:
-                df_units, df_costs = main_opperational_forecast(
-                    past_file="data/GÖGN_VERKX.xlsx",
-                    future_file="data/Framtidarspa.xlsx",
-                    share_file="data/markadshlutdeild.xlsx",
-                    margin_2025=margin_2025,
-                    margin_2026=margin_2026,
-                    margin_2027=margin_2027,
-                    margin_2028=margin_2028
-                )
+                df_units, df_cost = main_opperational_forecast(
+                past_file="data/GÖGN_VERKX.xlsx",
+                future_file="data/Framtidarspa.xlsx",
+                share_file="data/markadshlutdeild.xlsx",
+                margin_2025=margin_2025,
+                margin_2026=margin_2026,
+                margin_2027=margin_2027,
+                margin_2028=margin_2028
+            )
 
-                if df_units is not None and not df_units.empty:
-                    st.success(success_msg)
+            if df_units is not None and not df_units.empty:
+                st.success(success_msg)
 
-                    st.subheader("1. Einingafjöldi og fermetrar" if is_islenska else "1. Unit Count and Square Meters")
-                    st.dataframe(df_units)
+                st.subheader("1. Einingafjöldi og fermetrar")
+                st.dataframe(df_units)
 
-                    st.subheader("2. Kostnaður eftir árum" if is_islenska else "2. Costs by Year")
-                    st.dataframe(df_costs)
+                st.subheader("2. Kostnaður, tekjur og hagnaður")
+                st.dataframe(df_cost)
 
-                    st.download_button(
-                        label="Sækja einingatöflu CSV" if is_islenska else "Download Unit Table CSV",
-                        data=df_units.to_csv(index=False).encode("utf-8-sig"),
-                        file_name="einingar_og_fermetrar.csv",
-                        mime="text/csv"
-                    )
-                    st.download_button(
-                        label="Sækja kostnaðartöflu CSV" if is_islenska else "Download Cost Table CSV",
-                        data=df_costs.to_csv(index=False).encode("utf-8-sig"),
-                        file_name="kostnadargreining.csv",
-                        mime="text/csv"
-                    )
-                else:
-                    st.warning(warning_msg)
-            except Exception as e:
-                st.error(f"{error_msg}: {e}")
+                st.download_button("Sækja CSV (fermetrar og einingar)", df_units.to_csv(index=False).encode("utf-8-sig"), "einingar.csv", mime="text/csv")
+                st.download_button("Sækja CSV (kostnaður)", df_cost.to_csv(index=False).encode("utf-8-sig"), "kostnadur.csv", mime="text/csv")
+            else:
+                st.warning(warning_msg)
+
 
 
 elif "Tilboðsreiknivél" in page or "Quotation Calculator" in page:
