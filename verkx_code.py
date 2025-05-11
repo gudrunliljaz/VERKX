@@ -117,6 +117,10 @@ def main_forecast(housing_type, region, future_years, final_market_share):
 
 ### rekstarspá
 def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0.15, margin_2026=0.15, margin_2027=0.15, margin_2028=0.15):
+    import pandas as pd
+    import numpy as np
+    from sklearn.linear_model import LinearRegression
+
     SCENARIO_SHARE = {
         'lágspá': 0.01,
         'miðspá': 0.03,
@@ -144,8 +148,35 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
         '½_módúla': 3.25,
     }
 
+    FIXED_COST = 34_800_000
+
+    def normalize(text):
+        import unicodedata
+        nfkd = unicodedata.normalize('NFKD', str(text))
+        return ''.join(c for c in nfkd if not unicodedata.combining(c)).lower().strip()
+
+    def filter_data(df, region, col):
+        df = df.copy()
+        df.columns = [normalize(c) for c in df.columns]
+        df = df[df['landshluti'].map(normalize) == normalize(region)]
+        df.loc[:, 'ar'] = pd.to_numeric(df['ar'], errors='coerce')
+        demand = normalize(col)
+        df = df.dropna(subset=['ar', demand]).sort_values('ar')
+        return df[['ar', demand]]
+
+    def linear_forecast(df, col, start_year, n_years):
+        if df.empty:
+            return np.array([]), np.array([])
+        X = df[['ar']].values
+        y = df[col].values
+        model = LinearRegression().fit(X, y)
+        years = np.arange(start_year, start_year + n_years)
+        preds = model.predict(years.reshape(-1,1))
+        preds = np.maximum(0, preds)
+        return years, preds
+
     xl = pd.ExcelFile(share_file, engine="openpyxl")
-    all_rows = []
+    all_series = []
 
     for sheet in xl.sheet_names:
         df_share = xl.parse(sheet)
@@ -154,9 +185,9 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
 
         housing_type = sheet.strip()
         sheet_name = f"{housing_type} eftir landshlutum"
+        use_future = normalize(housing_type) in ['íbúðir', 'leikskólar']
 
-        use_forecast = normalize(housing_type) in ['íbúðir', 'leikskólar']
-        scenarios = ['miðspá'] if use_forecast else ['']
+        scenarios = ['miðspá'] if use_future else ['']
 
         for _, row in df_share.iterrows():
             region = row['landshluti']
@@ -165,54 +196,58 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
             for scen in scenarios:
                 try:
                     df_past = pd.read_excel(past_file, sheet_name=sheet_name, engine="openpyxl")
-                    df_past.columns = [normalize(c) for c in df_past.columns]
                     past = filter_data(df_past, region, "fjoldi eininga")
-                    if past.empty:
-                        continue
-
                     years, past_pred = linear_forecast(past, "fjoldi eininga", 2025, 4)
-                    df_result = pd.DataFrame({'Ár': years, 'Fortíð': past_pred})
+                    if years.size == 0:
+                        continue
+                    df_res = pd.DataFrame({'ár': years, 'fortíð': past_pred})
 
                     if scen:
                         df_future = pd.read_excel(future_file, sheet_name=sheet_name, engine="openpyxl")
-                        df_future.columns = [normalize(c) for c in df_future.columns]
-                        df_future = df_future[df_future['sviðsmynd'].str.lower() == scen]
+                        df_future = df_future[df_future['sviðsmynd'].str.lower().map(normalize) == scen]
                         future = filter_data(df_future, region, "fjoldi eininga")
-                        fut_years, fut_pred = linear_forecast(future, "fjoldi eininga", 2025, 4)
-                        if len(fut_pred) == 4:
-                            df_result['Framtíð'] = fut_pred
-                            df_result['Meðaltal'] = (df_result['Fortíð'] + df_result['Framtíð']) / 2
+                        yrs_f, fut_pred = linear_forecast(future, "fjoldi eininga", 2025, 4)
+                        if fut_pred.size:
+                            df_res['framtíð'] = fut_pred
+                            df_res['meðaltal'] = (df_res['fortíð'] + df_res['framtíð']) / 2
 
-                    base = df_result['Meðaltal'] if 'Meðaltal' in df_result.columns else df_result['Fortíð']
-                    scenario_factor = SCENARIO_SHARE.get(scen, 1)
-                    df_result['Eftirspurn'] = base * share * scenario_factor
+                    base = df_res['meðaltal'] if 'meðaltal' in df_res.columns else df_res['fortíð']
+                    factor = SCENARIO_SHARE.get(scen, 1)
+                    df_res['adj_meðaltal'] = base * share * factor
 
-                    all_rows.append(df_result[['Ár', 'Eftirspurn']])
+                    all_series.append(df_res[['ár', 'adj_meðaltal']])
                 except:
                     continue
 
-    if not all_rows:
+    if not all_series:
         return None
 
-    df_all = pd.concat(all_rows)
-    summary = df_all.groupby("Ár")["Eftirspurn"].sum().reset_index()
-    summary["Fermetrar"] = summary["Eftirspurn"].round().astype(int)
+    df_all = pd.concat(all_series)
+    summary = df_all.groupby('ár')['adj_meðaltal'].sum().reset_index()
+    summary['fermetrar'] = summary['adj_meðaltal'].round().astype(int)
 
-    for mod in MODULE_SHARES:
-        hlutfall = MODULE_SHARES[mod]
-        verð = MODULE_COSTS[mod]
-        stærð = MODULE_FM[mod]
-        summary[f"Kostnaður_{mod}"] = summary["Fermetrar"] * hlutfall * verð * stærð
+    for key in MODULE_SHARES:
+        summary[f'kostnaður_{key}'] = (
+            summary['fermetrar'] * MODULE_SHARES[key] * MODULE_COSTS[key] * MODULE_FM[key]
+        )
 
-    kostnaðarsúlur = [f"Kostnaður_{mod}" for mod in MODULE_SHARES]
-    summary["Kostnaðarverð eininga"] = summary[kostnaðarsúlur].sum(axis=1)
+    mod_cols = [f'kostnaður_{k}' for k in MODULE_SHARES]
+    summary['kostnaðarverð eininga'] = summary[mod_cols].sum(axis=1)
 
-    summary["Flutningskostnaður"] = summary["Fermetrar"] * 43424
-    summary["Afhending innanlands"] = summary["Fermetrar"] * 80 * 8
-    summary["Fastur kostnaður"] = FIXED_COST
+    summary['Flutnings kostnaður til Íslands'] = (
+        summary['fermetrar'] * (
+            0.19 * 19.5 + 0.80 * 13 + 0.01 * 6.5
+        ) * 74_000
+    )
+    summary['Flutningur Innanlands'] = (
+        summary['fermetrar'] * (
+            0.19 * 19.5 + 0.80 * 13 + 0.01 * 6.5
+        ) * 80 * 8
+    )
+    summary['Fastur kostnaður'] = FIXED_COST
 
-    summary["Heildarkostnaður"] = summary[
-        ["Kostnaðarverð eininga", "Flutningskostnaður", "Afhending innanlands", "Fastur kostnaður"]
+    summary['Heildarkostnaður'] = summary[
+        ['kostnaðarverð eininga', 'Flutnings kostnaður til Íslands', 'Flutningur Innanlands', 'Fastur kostnaður']
     ].sum(axis=1)
 
     margin_map = {
@@ -221,11 +256,12 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
         2027: margin_2027,
         2028: margin_2028
     }
-    summary["Arðsemiskrafa"] = summary["Ár"].map(margin_map)
-    summary["Tekjur"] = summary["Heildarkostnaður"] * (1 + summary["Arðsemiskrafa"])
-    summary["Hagnaður"] = summary["Tekjur"] - summary["Heildarkostnaður"]
+    summary['Arðsemiskrafa'] = summary['ár'].map(margin_map)
+    summary['Tekjur'] = summary['Heildarkostnaður'] * (1 + summary['Arðsemiskrafa'])
+    summary['Hagnaður'] = summary['Tekjur'] - summary['Heildarkostnaður']
 
     return summary
+
 
 
 #tilboðsreiknivél
