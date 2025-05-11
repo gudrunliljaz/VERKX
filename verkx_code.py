@@ -115,7 +115,8 @@ def main_forecast(housing_type, region, future_years, final_market_share):
         ]
         return df, figures, len(future_values)
 
-def main_forecast_logic_from_excel(past_file, future_file, share_file, margin_2025=0.15, margin_2026=0.15, margin_2027=0.15, margin_2028=0.15):
+### rekstarspá
+def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0.15, margin_2026=0.15, margin_2027=0.15, margin_2028=0.15):
     xl = pd.ExcelFile(share_file, engine="openpyxl")
     all_data = []
 
@@ -168,6 +169,8 @@ def main_forecast_logic_from_excel(past_file, future_file, share_file, margin_20
 
     return summary
 
+
+#tilboðsreiknivél
 def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10000, fixed_cost=37_200_000):
     data = {
         "3m": {"fm": 39, "verd_eur": 475, "kg": 6000},
