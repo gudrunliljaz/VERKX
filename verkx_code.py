@@ -118,8 +118,8 @@ def main_forecast(housing_type, region, future_years, final_market_share):
 def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0.15, margin_2026=0.15, margin_2027=0.15, margin_2028=0.15):
     SCENARIO_SHARE = {'lágspá': 0.01, 'miðspá': 0.03, 'háspá': 0.05}
     MODULE_SIZES = {'3_módúla': 19.5, '2_módúla': 13, '1_módúla': 6.5, '½_módúla': 3.25}
-    MODULE_COSTS = {'3_módúla': 269_700, '2_módúla': 290_000, '1_módúla': 304_500, '½_módúla': 330_000}
     MODULE_SHARES = {'3_módúla': 0.19, '2_módúla': 0.80, '1_módúla': 0.01, '½_módúla': 0.001}
+    MODULE_COSTS = {'3_módúla': 269_700, '2_módúla': 290_000, '1_módúla': 304_500, '½_módúla': 330_000}
     FIXED_COST = 34_800_000
 
     share_df = pd.read_excel(share_file, engine="openpyxl")
@@ -164,30 +164,32 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
     yearly_units = df_all.groupby("ár")["einingar"].sum().reset_index()
     yearly_units['heildarfermetrar'] = yearly_units['einingar'] * 6.5
 
+    # Útreikningur á fjölda móduleininga út frá fermetrum og hlutfalli
     for key in MODULE_SHARES:
         share = MODULE_SHARES[key]
         size = MODULE_SIZES[key]
-        yearly_units[f'{key} einingar'] = (yearly_units['heildarfermetrar'] * share / size).round(0)
+        yearly_units[f"{key} einingar"] = (yearly_units['heildarfermetrar'] * share / size).round(0)
 
+    # Kostnaðarútreikningur
     cost_df = yearly_units[['ár']].copy()
     for key in MODULE_SHARES:
-        col_name = f'kostnaður_{key}'
-        cost_df[col_name] = yearly_units[f'{key} einingar'] * MODULE_SIZES[key] * MODULE_COSTS[key]
+        col_name = f"kostnaður_{key}"
+        cost_df[col_name] = yearly_units[f"{key} einingar"] * MODULE_SIZES[key] * MODULE_COSTS[key]
 
-    mod_cols = [f'kostnaður_{k}' for k in MODULE_SHARES]
+    mod_cols = [f"kostnaður_{k}" for k in MODULE_SHARES]
     cost_df['kostnaðarverð eininga'] = cost_df[mod_cols].sum(axis=1)
     cost_df['flutningskostnaður'] = yearly_units['heildarfermetrar'] * 74_000
     cost_df['afhending innanlands'] = yearly_units['heildarfermetrar'] * 80 * 8
     cost_df['fastur kostnaður'] = FIXED_COST
     cost_df['heildarkostnaður'] = cost_df[['kostnaðarverð eininga', 'flutningskostnaður', 'afhending innanlands', 'fastur kostnaður']].sum(axis=1)
 
+    # Tekjur og hagnaður
     margin_map = {2025: margin_2025, 2026: margin_2026, 2027: margin_2027, 2028: margin_2028}
     cost_df['arðsemiskrafa'] = cost_df['ár'].map(margin_map)
     cost_df['tekjur'] = cost_df['heildarkostnaður'] * (1 + cost_df['arðsemiskrafa'])
     cost_df['hagnaður'] = cost_df['tekjur'] - cost_df['heildarkostnaður']
 
     return yearly_units, cost_df
-
 
 
 #tilboðsreiknivél
