@@ -152,24 +152,22 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
                 margin_2026=margin_2026,
                 margin_2027=margin_2027,
                 margin_2028=margin_2028
-            )
+                )
 
-            if df_units is not None and not df_units.empty:
-                st.success(success_msg)
+                if df_units is not None and not df_units.empty:
+                    st.success(success_msg)
 
-                st.subheader("1. Einingafjöldi og fermetrar")
-                st.dataframe(df_units)
+                    st.subheader("1. Einingafjöldi og fermetrar")
+                    st.dataframe(df_units)
 
-                st.subheader("2. Kostnaður, tekjur og hagnaður")
-                st.dataframe(df_cost)
+                    st.subheader("2. Kostnaður, tekjur og hagnaður")
+                    st.dataframe(df_cost)
 
-                st.download_button("Sækja CSV (fermetrar og einingar)", df_units.to_csv(index=False).encode("utf-8-sig"), "einingar.csv", mime="text/csv")
-                st.download_button("Sækja CSV (kostnaður)", df_cost.to_csv(index=False).encode("utf-8-sig"), "kostnadur.csv", mime="text/csv")
-            else:
-                st.warning(warning_msg)
-
-
-
+                    st.download_button("Sækja CSV (fermetrar og einingar)", df_units.to_csv(index=False).encode("utf-8-sig"), "einingar.csv", mime="text/csv")
+                    st.download_button("Sækja CSV (kostnaður)", df_cost.to_csv(index=False).encode("utf-8-sig"), "kostnadur.csv", mime="text/csv")
+                else:
+                    st.warning(warning_msg)
+                    
 elif "Tilboðsreiknivél" in page or "Quotation Calculator" in page:
     st.title("Tilboðsreiknivél" if language == "Íslenska" else "Quotation Calculator")
 
