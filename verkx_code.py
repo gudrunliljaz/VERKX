@@ -257,7 +257,7 @@ def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10
         "samtals_breytilegur": breytilegur,
         "uthlutadur_fastur_kostnadur": fastur_kostn,
         "alagsstudull": alagsstudull,
-        "asemiskrafa": markup,
+        "arðsemiskrafa": markup,
         "tilbod": tilbod,
         "tilbod_eur": tilbod_eur,
         "dags": date.today()
@@ -302,7 +302,7 @@ def generate_offer_pdf(verkkaupi, stadsetning, result, language="Íslenska"):
             ("Samtals breytilegur kostnaður", f"{result['samtals_breytilegur']:,.0f} kr."),
             ("Úthlutaður fastur kostnaður", f"{result['uthlutadur_fastur_kostnadur']:,.0f} kr."),
             ("Álagsstuðull", f"{result['alagsstudull']:.2f}"),
-            ("Arðsemiskrafa", f"{int(result['asemiskrafa'] * 100)}%"),
+            ("Arðsemiskrafa", f"{int(result['arðsemiskrafa'] * 100)}%"),
             ("Tilboðsverð (ISK)", f"{result['tilbod']:,.0f} kr."),
             ("Tilboðsverð (EUR)", f"€{result['tilbod_eur']:,.2f}")
         ],
@@ -319,7 +319,7 @@ def generate_offer_pdf(verkkaupi, stadsetning, result, language="Íslenska"):
             ("Total variable cost", f"{result['samtals_breytilegur']:,.0f} ISK"),
             ("Allocated fixed cost", f"{result['uthlutadur_fastur_kostnadur']:,.0f} ISK"),
             ("Markup factor", f"{result['alagsstudull']:.2f}"),
-            ("Profit margin", f"{int(result['asemiskrafa'] * 100)}%"),
+            ("Profit margin", f"{int(result['arðsemiskrafa'] * 100)}%"),
             ("Offer price (ISK)", f"{result['tilbod']:,.0f} ISK"),
             ("Offer price (EUR)", f"€{result['tilbod_eur']:,.2f}")
         ]
