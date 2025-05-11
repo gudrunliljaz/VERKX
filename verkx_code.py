@@ -115,15 +115,13 @@ def main_forecast(housing_type, region, future_years, final_market_share):
         ]
         return df, figures, len(future_values)
 
-def main_opperational_forecast(past_file, future_file, share_file,
-                                margin_2025=0.15, margin_2026=0.15, margin_2027=0.15, margin_2028=0.15):
+def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0.15, margin_2026=0.15, margin_2027=0.15, margin_2028=0.15):
     SCENARIO_SHARE = {'lágspá': 0.01, 'miðspá': 0.03, 'háspá': 0.05}
     MODULE_SHARES = {'3_módúla': 0.19, '2_módúla': 0.80, '1_módúla': 0.01, '½_módúla': 0.001}
-    MODULE_COSTS = {'3_módúla': 269700, '2_módúla': 290000, '1_módúla': 304500, '½_módúla': 330000}
+    MODULE_COSTS = {'3_módúla': 269_700, '2_módúla': 290_000, '1_módúla': 304_500, '½_módúla': 330_000}
     MODULE_SIZES = {'3_módúla': 19.5, '2_módúla': 13, '1_módúla': 6.5, '½_módúla': 3.25}
-    FIXED_COST = 34800000
-
-    mean_unit_size = sum(MODULE_SIZES[k] * MODULE_SHARES[k] for k in MODULE_SIZES)
+    FIXED_COST = 34_800_000
+    SQM_PER_UNIT = 6.5  # All base units assumed to be 6.5 m²
 
     share_df = pd.read_excel(share_file, engine="openpyxl")
     share_df.columns = [normalize(c) for c in share_df.columns]
@@ -157,22 +155,26 @@ def main_opperational_forecast(past_file, future_file, share_file,
                         df_result['framtíð'] = fut_pred
                         df_result['meðaltal'] = (df_result['fortíð'] + df_result['framtíð']) / 2
 
-                base = df_result['meðaltal'] if 'meðaltal' in df_result.columns else df_result['fortíð']
+                base_units = df_result['meðaltal'] if 'meðaltal' in df_result.columns else df_result['fortíð']
                 factor = SCENARIO_SHARE.get(scen, 1)
-                units = base * share * factor
-                df_result['fermetrar'] = (units * mean_unit_size).round(0)
-                all_rows.append(df_result[['ár', 'fermetrar']])
+                total_units = base_units * share * factor
+
+                df_result['einingar'] = total_units.round(0)
+                df_result['fermetrar'] = df_result['einingar'] * SQM_PER_UNIT
+                all_rows.append(df_result[['ár', 'einingar', 'fermetrar']])
 
     df_all = pd.concat(all_rows)
-    summary = df_all.groupby("ár")["fermetrar"].sum().reset_index()
+    summary = df_all.groupby("ár").sum().reset_index()
 
     for key in MODULE_SHARES:
+        units_of_type = summary['einingar'] * MODULE_SHARES[key]
+        sqm_of_type = units_of_type * MODULE_SIZES[key]
         col_name = f'kostnaður_{key}'
-        summary[col_name] = summary['fermetrar'] * MODULE_SHARES[key] * MODULE_COSTS[key]
+        summary[col_name] = sqm_of_type * MODULE_COSTS[key]
 
     mod_cols = [f'kostnaður_{k}' for k in MODULE_SHARES]
     summary['kostnaðarverð eininga'] = summary[mod_cols].sum(axis=1)
-    summary['flutningskostnaður'] = summary['fermetrar'] * 74000
+    summary['flutningskostnaður'] = summary['fermetrar'] * 74_000
     summary['afhending innanlands'] = summary['fermetrar'] * 80 * 8
     summary['fastur kostnaður'] = FIXED_COST
     summary['heildarkostnaður'] = summary[['kostnaðarverð eininga', 'flutningskostnaður', 'afhending innanlands', 'fastur kostnaður']].sum(axis=1)
@@ -183,6 +185,7 @@ def main_opperational_forecast(past_file, future_file, share_file,
     summary['hagnaður'] = summary['tekjur'] - summary['heildarkostnaður']
 
     return summary
+
 
 
 
