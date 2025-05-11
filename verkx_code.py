@@ -7,12 +7,11 @@ from datetime import date
 from fpdf import FPDF
 from io import BytesIO
 
-# Constants
 PAST_FILE = "data/GÖGN_VERKX.xlsx"
 FUTURE_FILE = "data/Framtidarspa.xlsx"
 SHARE_FILE = "data/markadshlutdeild.xlsx"
 UNIT_SIZE_SQM = 6.5
-FIXED_COST = 37_200_000
+FIXED_COST = 37200000
 
 def normalize(text):
     nfkd = unicodedata.normalize('NFKD', str(text))
@@ -43,8 +42,8 @@ def linear_forecast(df, demand_column, start_year, future_years):
     return future_years_range, predictions
 
 def monte_carlo_simulation(values, market_shares, simulations=10000, volatility=0.1):
-    mean_val = np.mean(values)
-    scale = abs(mean_val * volatility)
+    mean_value = np.mean(values)
+    scale = abs(mean_value * volatility)
     results = []
     for _ in range(simulations):
         noise = np.random.normal(0, scale, len(values))
@@ -62,7 +61,7 @@ def plot_distribution(sim_data, title):
     plt.tight_layout()
     return fig
 
-def main_forecast_logic(housing_type, region, future_years, final_market_share):
+def main_forecast(housing_type, region, future_years, final_market_share):
     sheet_name = f"{housing_type} eftir landshlutum"
     use_forecast = housing_type.lower() in ["íbúðir", "leikskólar"]
 
@@ -70,7 +69,7 @@ def main_forecast_logic(housing_type, region, future_years, final_market_share):
     demand_column = 'fjoldi eininga'
     past_data = filter_data(past_df, region, demand_column)
     if past_data.empty:
-        raise ValueError("Engin fortíðargögn fundust fyrir valinn landshluta.")
+        raise ValueError("Engin fortíðargögn fundust.")
 
     initial_share = final_market_share * np.random.uniform(0.05, 0.1)
 
