@@ -116,42 +116,6 @@ def main_forecast(housing_type, region, future_years, final_market_share):
         return df, figures, len(future_values)
 
 def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0.15, margin_2026=0.15, margin_2027=0.15, margin_2028=0.15):
-    import pandas as pd
-    import numpy as np
-    from sklearn.linear_model import LinearRegression
-    import unicodedata
-
-    def normalize(text):
-        nfkd = unicodedata.normalize('NFKD', str(text))
-        return ''.join(c for c in nfkd if not unicodedata.combining(c)).lower().strip()
-
-    def load_excel(path, sheet_name):
-        book = pd.ExcelFile(path, engine="openpyxl")
-        target = normalize(sheet_name)
-        for sheet in book.sheet_names:
-            if normalize(sheet) == target:
-                return pd.read_excel(path, sheet_name=sheet, engine="openpyxl")
-        raise ValueError(f"Sheet '{sheet_name}' fannst ekki.")
-
-    def filter_data(df, region, col):
-        df = df.copy()
-        df.columns = [normalize(c) for c in df.columns]
-        df = df[df['landshluti'].map(normalize) == normalize(region)]
-        df.loc[:, 'ar'] = pd.to_numeric(df['ar'], errors='coerce')
-        demand = normalize(col)
-        df = df.dropna(subset=['ar', demand]).sort_values('ar')
-        return df[['ar', demand]]
-
-    def linear_forecast(df, col, start_year, n_years):
-        if df.empty:
-            return np.array([]), np.array([])
-        X = df[['ar']].values
-        y = df[col].values
-        model = LinearRegression().fit(X, y)
-        years = np.arange(start_year, start_year + n_years)
-        preds = model.predict(years.reshape(-1,1))
-        preds = np.maximum(0, preds)
-        return years, preds
 
     SCENARIO_SHARE = {
         'lágspá': 0.01,
@@ -180,7 +144,7 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
         '½_módúla': 3.25,
     }
 
-    FIXED_COST = 34_800_000
+    FIXED_COST = 34800000
 
     share_df = pd.read_excel(share_file, engine="openpyxl")
     share_df.columns = [normalize(c) for c in share_df.columns]
