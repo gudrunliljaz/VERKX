@@ -189,6 +189,9 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
 
 
 #tilboðsreiknivél
+from datetime import date
+
+# tilboðsreiknivél
 def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10000, fixed_cost=37_200_000):
     data = {
         "3m": {"fm": 19.5, "verd_eur": 1800, "kg": 9750},
@@ -220,13 +223,20 @@ def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10
         for e in einingar.values()
     )
     kostnadur_per_fm = einingakostnadur / heildarfm if heildarfm else 0
+
+    # ✅ Flutningskostnaður og afhending reiknað eins og upphaflega
     flutningskostn = heildarfm * 43424
     sendingarkostn = heildarfm * distance_km * 8
+
     breytilegur = einingakostnadur + flutningskostn + sendingarkostn
     fastur_kostn = (heildarfm / annual_sqm) * fixed_cost if heildarfm else 0
     alagsstudull = 1 + (fastur_kostn / breytilegur) if breytilegur else 0
     tilbod = breytilegur * alagsstudull * (1 + markup)
     tilbod_eur = tilbod / eur_to_isk if eur_to_isk else 0
+
+    # ➕ Tekjur og hagnaður
+    tekjur = tilbod
+    hagnaður = tekjur - (breytilegur + fastur_kostn)
 
     return {
         "heildarfm": heildarfm,
@@ -242,8 +252,11 @@ def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10
         "arðsemiskrafa": markup,
         "tilbod": tilbod,
         "tilbod_eur": tilbod_eur,
+        "tekjur": tekjur,
+        "hagnaður": hagnaður,
         "dags": date.today()
     }
+
 
 
 def generate_offer_pdf(verkkaupi, stadsetning, result, language="Íslenska"):
