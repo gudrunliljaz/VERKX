@@ -118,9 +118,9 @@ def main_forecast(housing_type, region, future_years, final_market_share):
 def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0.15, margin_2026=0.15, margin_2027=0.15, margin_2028=0.15):
     SCENARIO_SHARE = {'lágspá': 0.01, 'miðspá': 0.03, 'háspá': 0.05}
     MODULE_SIZES = {'3_módúla': 19.5, '2_módúla': 13, '1_módúla': 6.5, '½_módúla': 3.25}
-    MODULE_COSTS = {'3_módúla': 269_700, '2_módúla': 290_000, '1_módúla': 304_500, '½_módúla': 330_000}
+    MODULE_COSTS = {'3_módúla': 269700, '2_módúla': 290000, '1_módúla': 304500, '½_módúla': 330000}
     MODULE_SHARES = {'3_módúla': 0.19, '2_módúla': 0.80, '1_módúla': 0.01, '½_módúla': 0.0001}
-    FIXED_COST = 34_800_000
+    FIXED_COST = 34800000
 
     share_df = pd.read_excel(share_file, engine="openpyxl")
     share_df.columns = [normalize(c) for c in share_df.columns]
@@ -174,7 +174,7 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
 
     mod_cols = [f'kostnaður_{k}' for k in MODULE_SIZES]
     df_cost['kostnaðarverð eininga'] = df_cost[mod_cols].sum(axis=1)
-    df_cost['flutningskostnaður'] = yearly_units['heildarfermetrar'] * 74_000
+    df_cost['flutningskostnaður'] = yearly_units['heildarfermetrar'] * 43424
     df_cost['afhending innanlands'] = yearly_units['heildarfermetrar'] * 80 * 8
     df_cost['fastur kostnaður'] = FIXED_COST
     df_cost['heildarkostnaður'] = df_cost[['kostnaðarverð eininga', 'flutningskostnaður', 'afhending innanlands', 'fastur kostnaður']].sum(axis=1)
