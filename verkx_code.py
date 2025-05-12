@@ -218,8 +218,9 @@ def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10
         e["fjoldi"] * e["fm"] * e["verd_eur"] * eur_to_isk * (1 - afslattur)
         for e in einingar.values()
     )
+    
     kostnadur_per_fm = einingakostnadur / heildarfm if heildarfm else 0
-    flutningskostn = heildarfm * 43424
+    flutningskostn = heildarfm * 2
     sendingarkostn = heildarfm * distance_km * 8
     breytilegur = einingakostnadur + flutningskostn + sendingarkostn
     fastur_kostn = (heildarfm / annual_sqm) * fixed_cost if heildarfm else 0
