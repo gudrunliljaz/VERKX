@@ -191,10 +191,10 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
 #tilboðsreiknivél
 def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10000, fixed_cost=37_200_000):
     data = {
-        "3m": {"fm": 19.5, "verd_eur": 475, "kg": 6000},
-        "2m": {"fm": 13, "verd_eur": 415, "kg": 4100},
-        "1m": {"fm": 6.5, "verd_eur": 380, "kg": 2200},
-        "0.5m": {"fm": 3.25, "verd_eur": 370, "kg": 1100},
+        "3m": {"fm": 19.5, "verd_eur": 1800, "kg": 9750},
+        "2m": {"fm": 13, "verd_eur": 1950, "kg": 6500},
+        "1m": {"fm": 6.5, "verd_eur": 2050, "kg": 3250},
+        "0.5m": {"fm": 3.25, "verd_eur": 2175, "kg": 1625},
     }
 
     einingar = {
@@ -244,8 +244,6 @@ def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10
         "tilbod_eur": tilbod_eur,
         "dags": date.today()
     }
-
-
 
 
 def generate_offer_pdf(verkkaupi, stadsetning, result, language="Íslenska"):
