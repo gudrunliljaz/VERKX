@@ -165,7 +165,7 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
                         'kostnaður_2_módúla': "Kostnaður - tvær einingarr" if language == "Íslenska" else "Cost - two modules",
                         'kostnaður_3_módúla': "Kostnaður - þrjár einingar" if language == "Íslenska" else "Cost - three modules",
                         'kostnaðarverð eininga': "Kostnaðarverð eininga" if language == "Íslenska" else "Unit cost",
-                        'flutningskostnaður': "Flutningskostnaður" if language == "Íslenska" else "Shipping to Iceland",
+                        'flutningur_til_islands': "Flutningskostnaður" if language == "Íslenska" else "Shipping to Iceland",
                         'afhending innanlands': "Afhending innanlands" if language == "Íslenska" else "Domestic delivery",
                         'fastur kostnaður': "Fastur kostnaður" if language == "Íslenska" else "Fixed cost",
                         'heildarkostnaður': "Heildarkostnaður" if language == "Íslenska" else "Total cost",
