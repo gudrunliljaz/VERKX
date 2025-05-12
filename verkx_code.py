@@ -220,7 +220,7 @@ def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10
     )
     
     kostnadur_per_fm = einingakostnadur / heildarfm if heildarfm else 0
-    flutningskostn = heildarfm * 2
+    flutningskostn = heildarfm * 43424
     sendingarkostn = heildarfm * distance_km * 8
     breytilegur = einingakostnadur + flutningskostn + sendingarkostn
     fastur_kostn = (heildarfm / annual_sqm) * fixed_cost if heildarfm else 0
