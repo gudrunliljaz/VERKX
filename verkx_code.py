@@ -188,7 +188,7 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
 
 
 
-def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=10000, fixed_cost=37_200_000):
+def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=2400, fixed_cost=34800000):
     data = {
         "3m": {"fm": 19.5, "verd_eur": 1800, "kg": 9750},
         "2m": {"fm": 13, "verd_eur": 1950, "kg": 6500},
