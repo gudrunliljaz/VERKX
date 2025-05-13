@@ -143,7 +143,7 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
                 df_past = load_excel(past_file, sheet_name)
                 past = filter_data(df_past, region, "fjoldi eininga")
                 years, past_pred = linear_forecast(past, "fjoldi eininga", 2025, 4)
-                df_result = pd.DataFrame({'ár': years, 'fortíð': past_pred})
+                df_result = pd.DataFrame({'Ár': years, 'fortíð': past_pred})
 
                 if scen:
                     df_fut = load_excel(future_file, sheet_name)
@@ -157,18 +157,18 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
                 base = df_result['meðaltal'] if 'meðaltal' in df_result.columns else df_result['fortíð']
                 factor = SCENARIO_SHARE.get(scen, 1)
                 df_result['einingar'] = base * share * factor
-                df_result['ár'] = years
-                all_rows.append(df_result[['ár', 'einingar']])
+                df_result['Ár'] = years
+                all_rows.append(df_result[['Ár', 'einingar']])
 
     df_all = pd.concat(all_rows)
-    yearly_units = df_all.groupby("ár")["einingar"].sum().reset_index()
+    yearly_units = df_all.groupby("Ár")["einingar"].sum().reset_index()
     yearly_units['heildarfermetrar'] = yearly_units['einingar'] * 6.5
 
     for key in MODULE_SIZES:
         size = MODULE_SIZES[key]
         yearly_units[f'{key} einingar'] = (yearly_units['heildarfermetrar'] / size * MODULE_SHARES[key]).round(2)
 
-    df_cost = yearly_units[['ár']].copy()
+    df_cost = yearly_units[['Ár']].copy()
     for key in MODULE_SIZES:
         df_cost[f'kostnaður_{key}'] = yearly_units[f'{key} einingar'] * MODULE_SIZES[key] * MODULE_COSTS[key]
 
@@ -180,7 +180,7 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
     df_cost['heildarkostnaður'] = df_cost[['kostnaðarverð eininga', 'flutningskostnaður', 'afhending innanlands', 'fastur kostnaður']].sum(axis=1)
 
     margin_map = {2025: margin_2025, 2026: margin_2026, 2027: margin_2027, 2028: margin_2028}
-    df_cost['arðsemiskrafa'] = df_cost['ár'].map(margin_map)
+    df_cost['arðsemiskrafa'] = df_cost['Ár'].map(margin_map)
     df_cost['tekjur'] = df_cost['heildarkostnaður'] * (1 + df_cost['arðsemiskrafa'])
     df_cost['hagnaður'] = df_cost['tekjur'] - df_cost['heildarkostnaður']
 
