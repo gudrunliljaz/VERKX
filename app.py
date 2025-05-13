@@ -162,7 +162,7 @@ elif "Rekstrarspá" in page or "Operational Forecast" in page:
                     rename_cost = {
                         'kostnaður_½_módúla': "Kostnaður - hálf eining" if language == "Íslenska" else "Cost - half a module",
                         'kostnaður_1_módúla': "Kostnaður - ein eining" if language == "Íslenska" else "Cost - one module",
-                        'kostnaður_2_módúla': "Kostnaður - tvær einingarr" if language == "Íslenska" else "Cost - two modules",
+                        'kostnaður_2_módúla': "Kostnaður - tvær einingar" if language == "Íslenska" else "Cost - two modules",
                         'kostnaður_3_módúla': "Kostnaður - þrjár einingar" if language == "Íslenska" else "Cost - three modules",
                         'kostnaðarverð eininga': "Kostnaðarverð eininga" if language == "Íslenska" else "Unit cost",
                         'flutningskostnaður': "Flutningskostnaður" if language == "Íslenska" else "Shipping to Iceland",
