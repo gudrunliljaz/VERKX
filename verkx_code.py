@@ -11,7 +11,7 @@ PAST_FILE = "data/GÖGN_VERKX.xlsx"
 FUTURE_FILE = "data/Framtidarspa.xlsx"
 SHARE_FILE = "data/markadshlutdeild.xlsx"
 UNIT_SIZE_SQM = 6.5
-FIXED_COST = 37200000
+FIXED_COST = 34800000
 
 def normalize(text):
     nfkd = unicodedata.normalize('NFKD', str(text))
@@ -280,7 +280,7 @@ def generate_offer_pdf(verkkaupi, stadsetning, result, language="Íslenska"):
             ("Sendingarkostnaður innanlands", f"{result['sendingarkostnadur']:,.0f} kr."),
             ("Samtals breytilegur kostnaður", f"{result['samtals_breytilegur']:,.0f} kr."),
             ("Úthlutaður fastur kostnaður", f"{result['uthlutadur_fastur_kostnadur']:,.0f} kr."),
-            ("Álagsstuðull", f"{result['alagsstudull']:.2f}"),
+            ("Álagsstuðull fasta kostnaðar", f"{result['alagsstudull']:.2f}"),
             ("Arðsemiskrafa", f"{int(result['arðsemiskrafa'] * 100)}%"),
             ("Tilboðsverð (ISK)", f"{result['tilbod']:,.0f} kr."),
             ("Tilboðsverð (EUR)", f"€{result['tilbod_eur']:,.2f}")
@@ -297,7 +297,7 @@ def generate_offer_pdf(verkkaupi, stadsetning, result, language="Íslenska"):
             ("Domestic delivery", f"{result['sendingarkostnadur']:,.0f} ISK"),
             ("Total variable cost", f"{result['samtals_breytilegur']:,.0f} ISK"),
             ("Allocated fixed cost", f"{result['uthlutadur_fastur_kostnadur']:,.0f} ISK"),
-            ("Markup factor", f"{result['alagsstudull']:.2f}"),
+            ("Markup factor for the fixed cost", f"{result['alagsstudull']:.2f}"),
             ("Profit margin", f"{int(result['arðsemiskrafa'] * 100)}%"),
             ("Offer price (ISK)", f"{result['tilbod']:,.0f} ISK"),
             ("Offer price (EUR)", f"€{result['tilbod_eur']:,.2f}")
