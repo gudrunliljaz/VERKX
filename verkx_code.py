@@ -188,7 +188,7 @@ def main_opperational_forecast(past_file, future_file, share_file, margin_2025=0
 
 
 
-def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=2400, fixed_cost=34800000):
+def calculate_offer(modules, km_fra_thorlakshofn, eur_to_isk, markup=0.15, annual_sqm=2400, fixed_cost=34800000):
     data = {
         "3m": {"fm": 19.5, "verd_eur": 1800, "kg": 9750},
         "2m": {"fm": 13, "verd_eur": 1950, "kg": 6500},
@@ -221,7 +221,7 @@ def calculate_offer(modules, distance_km, eur_to_isk, markup=0.15, annual_sqm=24
     
     kostnadur_per_fm = einingakostnadur / heildarfm if heildarfm else 0
     flutningskostn = heildarfm * 43424
-    sendingarkostn = heildarfm * distance_km * 8
+    sendingarkostn = heildarfm * km_fra_thorlakshofn * 8
     breytilegur = einingakostnadur + flutningskostn + sendingarkostn
     fastur_kostn = (heildarfm / annual_sqm) * fixed_cost if heildarfm else 0
     alagsstudull = 1 + (fastur_kostn / breytilegur) if breytilegur else 0
