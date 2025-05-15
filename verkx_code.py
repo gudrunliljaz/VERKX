@@ -56,8 +56,8 @@ def plot_distribution(sim_data, title):
     totals = np.sum(sim_data, axis=1)
     ax.hist(totals, bins=40, alpha=0.7, edgecolor='black')
     ax.set_title(title, fontsize=14, color='#003366')
-    ax.set_xlabel("Heildar spáð þörf")
-    ax.set_ylabel("Tíðni")
+    ax.set_xlabel("Total Forecasted Demand")
+    ax.set_ylabel("Frequency")
     plt.tight_layout()
     return fig
 
@@ -109,9 +109,9 @@ def main_forecast(housing_type, region, future_years, final_market_share):
             'Meðaltal': avg_vals_adj
         })
         figures = [
-            plot_distribution(monte_carlo_simulation(linear_pred, market_shares), "Monte Carlo - Fortíðargögn"),
-            plot_distribution(monte_carlo_simulation(future_values, market_shares), "Monte Carlo - Framtíðarspá"),
-            plot_distribution(sim_avg, "Monte Carlo - Meðaltal")
+            plot_distribution(monte_carlo_simulation(linear_pred, market_shares), "Monte Carlo - Historical Data"),
+            plot_distribution(monte_carlo_simulation(future_values, market_shares), "Monte Carlo - Future Forecast"),
+            plot_distribution(sim_avg, "Monte Carlo - Average")
         ]
         return df, figures, len(future_values)
 
