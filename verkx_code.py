@@ -89,7 +89,7 @@ def main_forecast(housing_type, region, future_years, final_market_share):
         past_pred_adj = linear_pred * market_shares
         sim_past = monte_carlo_simulation(linear_pred, market_shares)
         df = pd.DataFrame({'Ár': linear_years, 'Spá útfrá fortíðargögnum': past_pred_adj})
-        figures = [plot_distribution(sim_past, "Monte Carlo - Fortíðargögn")]
+        figures = [plot_distribution(sim_past, "Monte Carlo - Historical Data")]
         return df, figures, future_years
     else:
         future_values = future_data['fjoldi eininga'].values[:future_years]
